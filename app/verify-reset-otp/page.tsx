@@ -18,7 +18,7 @@ const RESEND_COOLDOWN = 60;
 const STORAGE_KEY = "otp_expires_at";
 
 export default function VerifyResetOtpPage() {
-  const email = sessionStorage.getItem("verify_reset_otp") || "";
+  const [email, setEmail] = useState("");
   const router = useRouter();
   const [serverError, setServerError] = useState("");
   const [message, setMessage] = useState("");
@@ -91,6 +91,10 @@ export default function VerifyResetOtpPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [secondsLeft]);
+
+  useEffect(() => {
+    setEmail(sessionStorage.getItem("verify_reset_otp") || "");
+  }, []);
 
   const handleResendOtp = async (e: React.FormEvent) => {
     if (secondsLeft > 0 || isResending) return;
