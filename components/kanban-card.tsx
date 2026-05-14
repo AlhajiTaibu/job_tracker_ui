@@ -1,0 +1,166 @@
+"use client"
+
+import {
+  Building2,
+  Calendar,
+  ExternalLink,
+  MapPin,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  ArrowRight,
+  DollarSign,
+  Paperclip,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import type { JobApplication, JobStatus } from "@/lib/types"
+
+interface KanbanCardProps {
+  job: JobApplication
+  onEdit: (job: JobApplication) => void
+  onDelete: (id: string) => void
+  onMove: (id: string, newStatus: JobStatus) => void
+}
+
+const allStatuses: { value: JobStatus; label: string }[] = [
+  { value: "saved", label: "Saved" },
+  { value: "applied", label: "Applied" },
+  { value: "interview", label: "Interview" },
+  { value: "offer", label: "Offer" },
+  { value: "rejected", label: "Rejected" },
+]
+
+export function KanbanCard({ job, onEdit, onDelete, onMove }: KanbanCardProps) {
+  const formattedDate = new Date(job.appliedDate).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  })
+
+  return (
+    <Card className="group cursor-pointer border-border/50 bg-card p-3.5 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 text-sm font-semibold text-primary">
+            {job.company.charAt(0)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <h4 className="truncate text-sm font-medium text-foreground">
+              {job.position}
+            </h4>
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Building2 className="h-3 w-3" />
+              <span className="truncate">{job.company}</span>
+            </div>
+          </div>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 opacity-0 transition-opacity group-hover:opacity-100"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={() => onEdit(job)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit
+            </DropdownMenuItem>
+            {job.url && (
+              <DropdownMenuItem asChild>
+                <a href={job.url} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  View Posting
+                </a>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <ArrowRight className="mr-2 h-4 w-4" />
+                Move to
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                {allStatuses
+                  .filter((s) => s.value !== job.status)
+                  .map((status) => (
+                    <DropdownMenuItem
+                      key={status.value}
+                      onClick={() => onMove(job.id, status.value)}
+                    >
+                      {status.label}
+                    </DropdownMenuItem>
+                  ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => onDelete(job.id)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1 rounded-md bg-secondary/50 px-1.5 py-0.5">
+          <MapPin className="h-3 w-3 shrink-0" />
+          <span className="truncate">{job.location}</span>
+        </div>
+        {job.salary && (
+          <div className="flex items-center gap-1 rounded-md bg-secondary/50 px-1.5 py-0.5">
+            <DollarSign className="h-3 w-3 shrink-0" />
+            <span className="truncate">{job.salary}</span>
+          </div>
+        )}
+      </div>
+
+      {job.notes && (
+        <p className="mt-2.5 line-clamp-2 text-xs text-muted-foreground/80">
+          {job.notes}
+        </p>
+      )}
+
+      <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2.5">
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            <span>{formattedDate}</span>
+          </div>
+          {job.documents && job.documents.length > 0 && (
+            <div className="flex items-center gap-1 text-primary/70">
+              <Paperclip className="h-3 w-3" />
+              <span>{job.documents.length}</span>
+            </div>
+          )}
+        </div>
+        {job.url && (
+          <a
+            href={job.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary/70 transition-colors hover:text-primary"
+          >
+            View job
+          </a>
+        )}
+      </div>
+    </Card>
+  )
+}
