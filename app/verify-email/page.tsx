@@ -6,16 +6,14 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ConfirmEmailInput, confirmEmailSchema } from "@/lib/schemas/auth";
-import { useSearchParams } from "next/navigation";
 import { clientPost } from "@/lib/client-auth";
 import Link from "next/link";
-import { ArrowRight, Loader2, User } from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const RESEND_COOLDOWN = 60;
 const STORAGE_KEY = "otp_expires_at";
 export default function VerifyEmailPage() {
-  const searchParams = useSearchParams();
   const email = sessionStorage.getItem("verify_email") || "";
   const router = useRouter();
   const [serverError, setServerError] = useState("");
