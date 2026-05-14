@@ -1,5 +1,5 @@
 "use client";
-import { Briefcase, Mail } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import { OtpInput } from "@/components/otp-input";
 import { Controller, useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 const RESEND_COOLDOWN = 60;
 const STORAGE_KEY = "otp_expires_at";
 export default function VerifyEmailPage() {
-  const email = sessionStorage.getItem("verify_email") || "";
+  const [email, setEmail] = useState("");
   const router = useRouter();
   const [serverError, setServerError] = useState("");
   const [message, setMessage] = useState("");
@@ -84,6 +84,10 @@ export default function VerifyEmailPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [secondsLeft]);
+
+  useEffect(() => {
+    setEmail(sessionStorage.getItem("verify_email") || "");
+  }, []);
 
   const handleResendOtp = async (e: React.FormEvent) => {
     if (secondsLeft > 0 || isResending) return;
