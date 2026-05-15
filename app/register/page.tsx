@@ -293,7 +293,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Social Login */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* <div className="grid grid-cols-2 gap-3">
               <Button variant="outline" type="button" className="w-full">
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path
@@ -325,7 +325,7 @@ export default function RegisterPage() {
                 </svg>
                 GitHub
               </Button>
-            </div>
+            </div> */}
           </form>
 
           {/* Sign In Link */}

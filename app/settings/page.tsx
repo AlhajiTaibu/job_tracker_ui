@@ -1,20 +1,64 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Bell, Mail, Shield, User, Palette, Download, Trash2 } from "lucide-react"
+import { useState } from "react";
+import { AppSidebar } from "@/components/app-sidebar";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Bell,
+  Shield,
+  User,
+  Palette,
+  Download,
+  Trash2,
+  LogOut,
+  UserCog,
+  Loader2,
+} from "lucide-react";
+import { clientPost } from "@/lib/client-auth";
+import { useRouter } from "next/navigation";
 
 export default function SettingsPage() {
-  const [emailNotifications, setEmailNotifications] = useState(true)
-  const [pushNotifications, setPushNotifications] = useState(false)
-  const [weeklyDigest, setWeeklyDigest] = useState(true)
+  const router = useRouter();
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(false);
+  const [weeklyDigest, setWeeklyDigest] = useState(true);
+  const [message, setMessage] = useState("");
+  const [serverError, setServerError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogOut = async () => {
+    setMessage("");
+    setServerError("");
+    setIsLoading(true);
+    try {
+      const res = await clientPost<{ message?: string }>(
+        "/api/auth/logout",
+        {},
+      );
+      setMessage(res.message || "Logout successful");
+      router.push("/login");
+    } catch (error) {
+      setServerError(
+        error instanceof Error ? error?.message : "Log out failed",
+      );
+    } finally {
+      setIsLoading(false);
+      setMessage("");
+      setServerError("");
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -22,7 +66,9 @@ export default function SettingsPage() {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="border-b border-border bg-background px-4 py-4 sm:px-6">
-          <h1 className="text-lg font-semibold text-foreground sm:text-xl">Settings</h1>
+          <h1 className="text-lg font-semibold text-foreground sm:text-xl">
+            Settings
+          </h1>
           <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
             Manage your account and preferences
           </p>
@@ -50,7 +96,9 @@ export default function SettingsPage() {
                     <Button variant="outline" size="sm">
                       Change Avatar
                     </Button>
-                    <p className="mt-1 text-xs text-muted-foreground">JPG, PNG or GIF. 1MB max.</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      JPG, PNG or GIF. 1MB max.
+                    </p>
                   </div>
                 </div>
                 <Separator />
@@ -65,7 +113,11 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" defaultValue="john.doe@example.com" />
+                    <Input
+                      id="email"
+                      type="email"
+                      defaultValue="john.doe@example.com"
+                    />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="title">Job Title</Label>
@@ -83,7 +135,9 @@ export default function SettingsPage() {
                   <Bell className="h-5 w-5 text-muted-foreground" />
                   <CardTitle>Notifications</CardTitle>
                 </div>
-                <CardDescription>Configure how you receive notifications</CardDescription>
+                <CardDescription>
+                  Configure how you receive notifications
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -93,7 +147,10 @@ export default function SettingsPage() {
                       Receive updates about your applications via email
                     </p>
                   </div>
-                  <Switch checked={emailNotifications} onCheckedChange={setEmailNotifications} />
+                  <Switch
+                    checked={emailNotifications}
+                    onCheckedChange={setEmailNotifications}
+                  />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
@@ -103,7 +160,10 @@ export default function SettingsPage() {
                       Get notified in your browser
                     </p>
                   </div>
-                  <Switch checked={pushNotifications} onCheckedChange={setPushNotifications} />
+                  <Switch
+                    checked={pushNotifications}
+                    onCheckedChange={setPushNotifications}
+                  />
                 </div>
                 <Separator />
                 <div className="flex items-center justify-between">
@@ -113,7 +173,10 @@ export default function SettingsPage() {
                       Receive a weekly summary of your job search progress
                     </p>
                   </div>
-                  <Switch checked={weeklyDigest} onCheckedChange={setWeeklyDigest} />
+                  <Switch
+                    checked={weeklyDigest}
+                    onCheckedChange={setWeeklyDigest}
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -139,7 +202,39 @@ export default function SettingsPage() {
                 </div>
               </CardContent>
             </Card>
-
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <UserCog className="h-5 w-5 text-muted-foreground" />
+                  <CardTitle>User Management</CardTitle>
+                </div>
+                <CardDescription>Manage user session</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  onClick={handleLogOut}
+                  disabled={isLoading}
+                  variant="outline"
+                  className="w-full justify-start text-destructive hover:text-destructive"
+                >
+                  {isLoading ? (
+                    <>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Logging Out...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log Out
+                    </>
+                  )}
+                </Button>
+                {serverError && (
+                  <p className="text-xs text-red-600">{serverError}</p>
+                )}
+              </CardContent>
+            </Card>
             {/* Data & Privacy Section */}
             <Card>
               <CardHeader>
@@ -147,14 +242,19 @@ export default function SettingsPage() {
                   <Shield className="h-5 w-5 text-muted-foreground" />
                   <CardTitle>Data & Privacy</CardTitle>
                 </div>
-                <CardDescription>Manage your data and privacy settings</CardDescription>
+                <CardDescription>
+                  Manage your data and privacy settings
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Button variant="outline" className="w-full justify-start">
                   <Download className="mr-2 h-4 w-4" />
                   Export All Data
                 </Button>
-                <Button variant="outline" className="w-full justify-start text-destructive hover:text-destructive">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-destructive hover:text-destructive"
+                >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete Account
                 </Button>
@@ -164,5 +264,5 @@ export default function SettingsPage() {
         </main>
       </div>
     </div>
-  )
+  );
 }

@@ -54,6 +54,5 @@ export async function serverProtectedApiFetch<T>(
     if (!res.ok) {
         throw new Error(data?.message || data?.detail || "Protected request failed")
     }
-
     return data as T
 }

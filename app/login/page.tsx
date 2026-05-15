@@ -50,10 +50,7 @@ export default function LoginPage() {
         values,
       );
       setMessage(response.message || "Login successful! Redirecting...");
-      // Redirect after a short delay to show the success message
-      setTimeout(() => {
-        router.push("/");
-      }, 500);
+      router.push("/");
     } catch (error: any) {
       setServerError(error instanceof Error ? error.message : "Login failed");
     }

@@ -1,4 +1,4 @@
-export type JobStatus = "applied" | "interview" | "offer" | "rejected" | "saved"
+export type JobStatus = "applied" | "screening" | "assessment" | "interviewing" | "offer" | "rejected" | "saved" | "accepted" | "withdrawn" | "stale"
 
 export type DocumentType = "cv" | "cover_letter" | "portfolio" | "other"
 
@@ -13,15 +13,25 @@ export interface JobDocument {
 
 export interface JobApplication {
   id: string
-  company: string
-  position: string
+  company_name: string
+  job_title: string
   location: string
   salary?: string
   status: JobStatus
-  appliedDate: string
+  date_applied: string
   notes?: string
-  url?: string
+  job_url?: string
   documents?: JobDocument[]
+}
+
+export interface Payload {
+  data?: JobApplication[]
+}
+
+export interface JobApplicationResponse {
+  success?: boolean
+  payload: Payload
+  error: string
 }
 
 export const statusConfig: Record<
@@ -38,7 +48,17 @@ export const statusConfig: Record<
     color: "text-blue-700",
     bgColor: "bg-blue-50",
   },
-  interview: {
+  screening: {
+    label: "Screening",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+  },
+  assessment: {
+    label: "Assessment",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+  },
+  interviewing: {
     label: "Interview",
     color: "text-amber-700",
     bgColor: "bg-amber-50",
@@ -48,10 +68,25 @@ export const statusConfig: Record<
     color: "text-emerald-700",
     bgColor: "bg-emerald-50",
   },
+  accepted: {
+    label: "Accepted",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
+  },
   rejected: {
     label: "Rejected",
     color: "text-rose-700",
     bgColor: "bg-rose-50",
+  },
+  withdrawn: {
+    label: "Withdrawn",
+    color: "text-red-700",
+    bgColor: "bg-red-50",
+  },
+  stale: {
+    label: "Stale",
+    color: "text-brown-700",
+    bgColor: "bg-brown-50",
   },
 }
 
