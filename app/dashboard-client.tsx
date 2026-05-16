@@ -1,25 +1,42 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AppSidebar } from "@/components/app-sidebar";
 import { KanbanColumn } from "@/components/kanban-column";
 import { AddJobSheet } from "@/components/add-job-sheet";
-import type { JobApplication, JobStatus } from "@/lib/types";
+import type {
+  JobApplication,
+  JobApplicationResponse,
+  JobStatus,
+} from "@/lib/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import { fetchJobs, useJobs } from "@/hooks/use-jobs";
+import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
+import {
+  DndContext,
+  DragEndEvent,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 
 const columns: { status: JobStatus; title: string; color: string }[] = [
   { status: "saved", title: "Saved", color: "bg-slate-400" },
   { status: "applied", title: "Applied", color: "bg-blue-500" },
   { status: "screening", title: "Screening", color: "bg-amber-500" },
-  { status: "interviewing", title: "Interview", color: "bg-amber-500" },
+  { status: "assessment", title: "Assessment", color: "bg-green-500" },
+  { status: "interviewing", title: "Interview", color: "bg-green-500" },
   { status: "offer", title: "Offer", color: "bg-emerald-500" },
+  { status: "accepted", title: "Accepted", color: "bg-emerald-500" },
   { status: "rejected", title: "Rejected", color: "bg-rose-500" },
+  { status: "withdrawn", title: "Withdrawn", color: "bg-red-500" },
+  { status: "stale", title: "Stale", color: "bg-red-500" },
 ];
 
 export default function DashboardClient() {
@@ -29,9 +46,85 @@ export default function DashboardClient() {
   const [editingJob, setEditingJob] = useState<JobApplication | null>(null);
   const [defaultStatus, setDefaultStatus] = useState<JobStatus>("saved");
 
-  const { data: jobsData, isPending, isFetching } = useJobs();
+  const { data: jobsData } = useJobs();
+
+  const [activeJob, setActiveJob] = useState<JobApplication | null>(null);
 
   const jobs = jobsData?.payload?.data ?? [];
+
+  const [localJobs, setLocalJobs] = useState<JobApplication[]>([]);
+
+  useEffect(() => {
+    if (jobsData?.payload?.data) setLocalJobs(jobsData?.payload?.data);
+  }, [jobsData]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+  );
+
+  function canMove(from: JobStatus, to: JobStatus) {
+    const allowed: Record<JobStatus, JobStatus[]> = {
+      saved: ["applied", "withdrawn"],
+      applied: ["screening", "assessment", "stale", "rejected", "withdrawn"],
+      screening: [
+        "interviewing",
+        "assessment",
+        "stale",
+        "rejected",
+        "withdrawn",
+      ],
+      assessment: ["interviewing", "stale", "rejected", "withdrawn"],
+      interviewing: ["offer", "assessment", "stale", "rejected", "withdrawn"],
+      offer: ["accepted", "rejected", "withdrawn"],
+      accepted: [],
+      rejected: [],
+      withdrawn: [],
+      stale: ["withdrawn", "applied"],
+    };
+
+    return allowed[from]?.includes(to) ?? false;
+  }
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const jobId = event.active.id as string;
+    const job = jobs.find((j) => j.id === jobId) ?? null;
+    setActiveJob(job);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    console.log(`active: ${active.id}, over: ${over?.id}`);
+
+    if (!over) {
+      setActiveJob(null);
+      return;
+    }
+
+    const jobId = String(active.id);
+    const newStatus = String(over.id) as JobStatus;
+    const job = jobs.find((j) => j.id === jobId);
+    if (!job) return;
+
+    if (!canMove(job.status, newStatus)) {
+      setActiveJob(null);
+    }
+
+    setLocalJobs((prev) =>
+      prev.map((job) =>
+        String(job.id) === jobId ? { ...job, status: newStatus } : job,
+      ),
+    );
+    console.log(localJobs);
+    setActiveJob(null);
+  };
+
+  const handleDragCancel = () => {
+    setActiveJob(null);
+  };
 
   const filteredJobs = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -158,19 +251,28 @@ export default function DashboardClient() {
         {/* Kanban Board */}
         <main className="flex-1 overflow-auto p-4 sm:p-6">
           <div className="flex h-full min-h-[500px] flex-col gap-4 md:flex-row">
-            {columns.map((column) => (
-              <KanbanColumn
-                key={column.status}
-                status={column.status}
-                title={column.title}
-                color={column.color}
-                jobs={jobsByStatus[column.status]}
-                onAddClick={handleAddClick}
-                onEditJob={handleEditJob}
-                onDeleteJob={handleDeleteJob}
-                onMoveJob={handleMoveJob}
-              />
-            ))}
+            <DndContext
+              sensors={sensors}
+              onDragEnd={handleDragEnd}
+              onDragStart={handleDragStart}
+              onDragCancel={handleDragCancel}
+            >
+              {columns.map((column) => (
+                <KanbanColumn
+                  key={column.status}
+                  status={column.status}
+                  title={column.title}
+                  color={column.color}
+                  jobs={jobsByStatus[column.status]}
+                  activeJob={activeJob}
+                  onAddClick={handleAddClick}
+                  onEditJob={handleEditJob}
+                  onDeleteJob={handleDeleteJob}
+                  onMoveJob={handleMoveJob}
+                  canMove={canMove}
+                />
+              ))}
+            </DndContext>
           </div>
         </main>
       </div>

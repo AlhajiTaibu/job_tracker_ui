@@ -4,16 +4,20 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { KanbanCard } from "@/components/kanban-card";
 import type { JobApplication, JobStatus } from "@/lib/types";
+import { useDroppable } from "@dnd-kit/core";
+import { cn } from "@/lib/utils";
 
 interface KanbanColumnProps {
   status: JobStatus;
   title: string;
   color: string;
   jobs: JobApplication[];
+  activeJob: JobApplication | null;
   onAddClick: (status: JobStatus) => void;
   onEditJob: (job: JobApplication) => void;
   onDeleteJob: (id: string) => void;
   onMoveJob: (id: string, newStatus: JobStatus) => void;
+  canMove: (fromStatus: JobStatus, targetStatus: JobStatus) => boolean;
 }
 
 export function KanbanColumn({
@@ -21,11 +25,21 @@ export function KanbanColumn({
   title,
   color,
   jobs,
+  activeJob,
   onAddClick,
   onEditJob,
   onDeleteJob,
   onMoveJob,
+  canMove,
 }: KanbanColumnProps) {
+  const isDroppable: boolean = activeJob
+    ? canMove(activeJob.status, status)
+    : true;
+  const { setNodeRef, isOver } = useDroppable({
+    id: status,
+    disabled: !isDroppable,
+  });
+
   return (
     <div className="flex w-full flex-col md:min-w-[260px] md:flex-1">
       <div className="mb-3 flex items-center justify-between">
@@ -49,8 +63,16 @@ export function KanbanColumn({
           </>
         )}
       </div>
-      <div className="flex flex-col gap-2.5 rounded-lg bg-muted/50 p-2 md:flex-1">
-        {jobs.length === 0 && status === "applied" ? (
+      <div
+        ref={setNodeRef}
+        className={cn(
+          "flex flex-col gap-2.5 rounded-lg p-2 md:flex-1 transition-colors",
+          !isDroppable && "bg-red-50 ring-2 ring-red-300",
+          isDroppable && "bg-muted/50",
+          isDroppable && isOver && "ring-2 ring-primary/30 bg-primary/5",
+        )}
+      >
+        {jobs.length === 0 && (status === "saved" || status === "applied") ? (
           <div className="flex flex-col items-center justify-center py-6 text-center md:flex-1 md:py-8">
             <p className="text-sm text-muted-foreground">No applications</p>
             <Button

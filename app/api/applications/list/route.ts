@@ -3,11 +3,12 @@ import { serverProtectedApiFetch } from "@/lib/server-protected-api"
 import { JobApplication, JobApplicationResponse } from "@/lib/types"
 
 
-export async function GET(req: Request) {
+export async function GET(req: Request, options: RequestInit = {}) {
     try {
         const data = await serverProtectedApiFetch<JobApplicationResponse>(
             "job_application/list", {
-            method: "GET"
+            method: "GET",
+            ...(options || {})
         }
         )
         return NextResponse.json(data)
