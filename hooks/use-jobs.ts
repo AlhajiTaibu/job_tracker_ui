@@ -1,5 +1,5 @@
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query"
-import { JobApplication, JobApplicationResponse } from "@/lib/types"
+import { JobApplicationResponse } from "@/lib/types"
 
 
 const fetchJobs = async (): Promise<JobApplicationResponse> => {
@@ -17,7 +17,9 @@ const fetchJobs = async (): Promise<JobApplicationResponse> => {
 const useJobs = () => {
     return useQuery({
         queryKey: ["jobs"],
-        queryFn: fetchJobs
+        queryFn: fetchJobs,
+        staleTime: 60_000,
+        refetchOnMount: true
     })
 }
 

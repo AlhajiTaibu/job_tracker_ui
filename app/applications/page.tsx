@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AddJobSheet } from "@/components/add-job-sheet";
+import { ViewJobSheet } from "@/components/view-job-sheet";
 import { KanbanCard } from "@/components/kanban-card";
 import {
   Select,
@@ -16,14 +17,23 @@ import {
 } from "@/components/ui/select";
 import type { JobApplication, JobStatus } from "@/lib/types";
 import { statusConfig } from "@/lib/types";
-import { fetchJobs, useJobs } from "@/hooks/use-jobs";
+import { useJobs } from "@/hooks/use-jobs";
+import { useJobStore } from "@/hooks/use-job-store";
 
 export default function ApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingJob, setEditingJob] = useState<JobApplication | null>(null);
   const { data: jobsData, isPending, isFetching } = useJobs();
+
+  const isViewOpen = useJobStore((state) => state.isViewOpen);
+  const selectedJob = useJobStore((state) => state.selectedJob);
+  const setIsViewOpen = useJobStore((state) => state.setIsViewOpen);
+
+  const sheetOpen = useJobStore((state) => state.sheetOpen);
+  const setSheetOpen = useJobStore((state) => state.setSheetOpen);
+  const editingJob = useJobStore((state) => state.editingJob);
+  const defaultStatus = useJobStore((state) => state.defaultStatus);
+  const handleAddClick = useJobStore((state) => state.handleAddClick);
 
   const jobs = jobsData?.payload?.data ?? [];
 
@@ -35,11 +45,6 @@ export default function ApplicationsPage() {
         job.job_title?.toLowerCase().includes(query);
     });
   }, [jobs, searchQuery]);
-
-  const handleEditJob = (job: JobApplication) => {
-    setEditingJob(job);
-    setSheetOpen(true);
-  };
 
   const handleSaveJob = (
     jobData: Omit<JobApplication, "id"> & { id?: string },
@@ -61,16 +66,6 @@ export default function ApplicationsPage() {
     // }
   };
 
-  const handleDeleteJob = (id: string) => {
-    // setJobs((prev) => prev.filter((job) => job.id !== id));
-  };
-
-  const handleMoveJob = (id: string, newStatus: JobStatus) => {
-    // setJobs((prev) =>
-    //   prev.map((job) => (job.id === id ? { ...job, status: newStatus } : job)),
-    // );
-  };
-
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar totalJobs={jobs.length} />
@@ -89,10 +84,7 @@ export default function ApplicationsPage() {
             <Button
               size="sm"
               className="sm:hidden"
-              onClick={() => {
-                setEditingJob(null);
-                setSheetOpen(true);
-              }}
+              onClick={() => handleAddClick("saved")}
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -125,10 +117,7 @@ export default function ApplicationsPage() {
               </SelectContent>
             </Select>
             <Button
-              onClick={() => {
-                setEditingJob(null);
-                setSheetOpen(true);
-              }}
+              onClick={() => handleAddClick("saved")}
               className="hidden sm:flex"
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -151,13 +140,7 @@ export default function ApplicationsPage() {
                   ? "Try adjusting your filters"
                   : "Start by adding your first job application"}
               </p>
-              <Button
-                className="mt-4"
-                onClick={() => {
-                  setEditingJob(null);
-                  setSheetOpen(true);
-                }}
-              >
+              <Button className="mt-4" onClick={() => handleAddClick("saved")}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Application
               </Button>
@@ -165,13 +148,7 @@ export default function ApplicationsPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredJobs.map((job) => (
-                <KanbanCard
-                  key={job.id}
-                  job={job}
-                  onEdit={handleEditJob}
-                  onDelete={handleDeleteJob}
-                  onMove={handleMoveJob}
-                />
+                <KanbanCard key={job.id} job={job} />
               ))}
             </div>
           )}
@@ -183,7 +160,12 @@ export default function ApplicationsPage() {
         onOpenChange={setSheetOpen}
         onSave={handleSaveJob}
         job={editingJob}
-        defaultStatus="saved"
+        defaultStatus={defaultStatus}
+      />
+      <ViewJobSheet
+        open={isViewOpen}
+        onOpenChange={setIsViewOpen}
+        job={selectedJob}
       />
     </div>
   );

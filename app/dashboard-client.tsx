@@ -7,11 +7,8 @@ import { Input } from "@/components/ui/input";
 import { AppSidebar } from "@/components/app-sidebar";
 import { KanbanColumn } from "@/components/kanban-column";
 import { AddJobSheet } from "@/components/add-job-sheet";
-import type {
-  JobApplication,
-  JobApplicationResponse,
-  JobStatus,
-} from "@/lib/types";
+import { ViewJobSheet } from "@/components/view-job-sheet";
+import type { JobApplication, JobStatus } from "@/lib/types";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { fetchJobs, useJobs } from "@/hooks/use-jobs";
@@ -25,6 +22,8 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { DashboardSkeleton } from "@/components/dashboard-skeleton";
+import { useJobStore } from "@/hooks/use-job-store";
+import { useHandleMove } from "@/hooks/use-move-job";
 
 const columns: { status: JobStatus; title: string; color: string }[] = [
   { status: "saved", title: "Saved", color: "bg-slate-400" },
@@ -42,9 +41,17 @@ const columns: { status: JobStatus; title: string; color: string }[] = [
 export default function DashboardClient() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [sheetOpen, setSheetOpen] = useState(false);
-  const [editingJob, setEditingJob] = useState<JobApplication | null>(null);
-  const [defaultStatus, setDefaultStatus] = useState<JobStatus>("saved");
+
+  const isViewOpen = useJobStore((state) => state.isViewOpen);
+  const selectedJob = useJobStore((state) => state.selectedJob);
+  const setIsViewOpen = useJobStore((state) => state.setIsViewOpen);
+
+  const sheetOpen = useJobStore((state) => state.sheetOpen);
+  const setSheetOpen = useJobStore((state) => state.setSheetOpen);
+  const editingJob = useJobStore((state) => state.editingJob);
+  const defaultStatus = useJobStore((state) => state.defaultStatus);
+  const handleAddClick = useJobStore((state) => state.handleAddClick);
+  const { handleMove } = useHandleMove();
 
   const { data: jobsData } = useJobs();
 
@@ -52,11 +59,11 @@ export default function DashboardClient() {
 
   const jobs = jobsData?.payload?.data ?? [];
 
-  const [localJobs, setLocalJobs] = useState<JobApplication[]>([]);
+  // const [localJobs, setLocalJobs] = useState<JobApplication[]>([]);
 
-  useEffect(() => {
-    if (jobsData?.payload?.data) setLocalJobs(jobsData?.payload?.data);
-  }, [jobsData]);
+  // useEffect(() => {
+  //   if (jobsData?.payload?.data) setLocalJobs(jobsData?.payload?.data);
+  // }, [jobsData]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -97,7 +104,6 @@ export default function DashboardClient() {
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    console.log(`active: ${active.id}, over: ${over?.id}`);
 
     if (!over) {
       setActiveJob(null);
@@ -112,13 +118,7 @@ export default function DashboardClient() {
     if (!canMove(job.status, newStatus)) {
       setActiveJob(null);
     }
-
-    setLocalJobs((prev) =>
-      prev.map((job) =>
-        String(job.id) === jobId ? { ...job, status: newStatus } : job,
-      ),
-    );
-    console.log(localJobs);
+    handleMove(jobId, newStatus);
     setActiveJob(null);
   };
 
@@ -150,17 +150,6 @@ export default function DashboardClient() {
     };
   }, [filteredJobs]);
 
-  const handleAddClick = (status: JobStatus) => {
-    setEditingJob(null);
-    setDefaultStatus(status);
-    setSheetOpen(true);
-  };
-
-  const handleEditJob = (job: JobApplication) => {
-    setEditingJob(job);
-    setSheetOpen(true);
-  };
-
   const handleSaveJob = (
     jobData: Omit<JobApplication, "id"> & { id?: string },
   ) => {
@@ -179,16 +168,6 @@ export default function DashboardClient() {
     //   };
     //   setJobs((prev) => [newJob, ...prev]);
     // }
-  };
-
-  const handleDeleteJob = (id: string) => {
-    // setJobs((prev) => prev.filter((job) => job.id !== id));
-  };
-
-  const handleMoveJob = (id: string, newStatus: JobStatus) => {
-    // setJobs((prev) =>
-    //   prev.map((job) => (job.id === id ? { ...job, status: newStatus } : job)),
-    // );
   };
 
   const totalApplications = jobs.length;
@@ -265,10 +244,6 @@ export default function DashboardClient() {
                   color={column.color}
                   jobs={jobsByStatus[column.status]}
                   activeJob={activeJob}
-                  onAddClick={handleAddClick}
-                  onEditJob={handleEditJob}
-                  onDeleteJob={handleDeleteJob}
-                  onMoveJob={handleMoveJob}
                   canMove={canMove}
                 />
               ))}
@@ -283,6 +258,12 @@ export default function DashboardClient() {
         onSave={handleSaveJob}
         job={editingJob}
         defaultStatus={defaultStatus}
+      />
+
+      <ViewJobSheet
+        open={isViewOpen}
+        onOpenChange={setIsViewOpen}
+        job={selectedJob}
       />
     </div>
   );

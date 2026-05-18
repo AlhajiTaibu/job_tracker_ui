@@ -6,6 +6,7 @@ import { KanbanCard } from "@/components/kanban-card";
 import type { JobApplication, JobStatus } from "@/lib/types";
 import { useDroppable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
+import { useJobStore } from "@/hooks/use-job-store";
 
 interface KanbanColumnProps {
   status: JobStatus;
@@ -13,10 +14,6 @@ interface KanbanColumnProps {
   color: string;
   jobs: JobApplication[];
   activeJob: JobApplication | null;
-  onAddClick: (status: JobStatus) => void;
-  onEditJob: (job: JobApplication) => void;
-  onDeleteJob: (id: string) => void;
-  onMoveJob: (id: string, newStatus: JobStatus) => void;
   canMove: (fromStatus: JobStatus, targetStatus: JobStatus) => boolean;
 }
 
@@ -26,12 +23,9 @@ export function KanbanColumn({
   color,
   jobs,
   activeJob,
-  onAddClick,
-  onEditJob,
-  onDeleteJob,
-  onMoveJob,
   canMove,
 }: KanbanColumnProps) {
+  const handleAddClick = useJobStore((state) => state.handleAddClick);
   const isDroppable: boolean = activeJob
     ? canMove(activeJob.status, status)
     : true;
@@ -56,7 +50,7 @@ export function KanbanColumn({
               variant="ghost"
               size="icon"
               className="h-7 w-7 text-muted-foreground hover:text-foreground"
-              onClick={() => onAddClick(status)}
+              onClick={() => handleAddClick(status)}
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -79,22 +73,14 @@ export function KanbanColumn({
               variant="ghost"
               size="sm"
               className="mt-2 text-xs text-primary hover:text-primary"
-              onClick={() => onAddClick(status)}
+              onClick={() => handleAddClick(status)}
             >
               <Plus className="mr-1 h-3 w-3" />
               Add one
             </Button>
           </div>
         ) : (
-          jobs.map((job) => (
-            <KanbanCard
-              key={job.id}
-              job={job}
-              onEdit={onEditJob}
-              onDelete={onDeleteJob}
-              onMove={onMoveJob}
-            />
-          ))
+          jobs.map((job) => <KanbanCard key={job.id} job={job} />)
         )}
       </div>
     </div>

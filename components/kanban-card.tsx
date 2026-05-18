@@ -9,8 +9,10 @@ import {
   Pencil,
   Trash2,
   ArrowRight,
-  DollarSign,
+  FileText,
+  StickyNote,
   Paperclip,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -28,12 +30,11 @@ import type { JobApplication, JobStatus } from "@/lib/types";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
+import { useJobStore } from "@/hooks/use-job-store";
+import { useHandleMove, useMoveJob, useMoveStore } from "@/hooks/use-move-job";
 
 interface KanbanCardProps {
   job: JobApplication;
-  onEdit: (job: JobApplication) => void;
-  onDelete: (id: string) => void;
-  onMove: (id: string, newStatus: JobStatus) => void;
 }
 
 const allStatuses: {
@@ -85,11 +86,22 @@ const allStatuses: {
   { value: "stale", label: "Stale", availableState: ["withdrawn", "applied"] },
 ];
 
-export function KanbanCard({ job, onEdit, onDelete, onMove }: KanbanCardProps) {
-  const formattedDate = new Date(job.date_applied).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+const truncateText = (text: string, maxLength: number) =>
+  text.length > maxLength ? `${text.slice(0, maxLength).trim()}...` : text;
+
+export function KanbanCard({ job }: KanbanCardProps) {
+  const viewJob = useJobStore((state) => state.viewJob);
+  const editJob = useJobStore((state) => state.editJob);
+  const handleDelete = useJobStore((state) => state.handleDelete);
+  const { handleMove } = useHandleMove();
+  const isMoving = useMoveStore((state) => !!state.movingIds[job.id]);
+
+  const formattedDate =
+    job.date_applied &&
+    new Date(job.date_applied).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
@@ -106,7 +118,10 @@ export function KanbanCard({ job, onEdit, onDelete, onMove }: KanbanCardProps) {
       style={style}
       {...listeners}
       {...attributes}
-      className={cn("touch-none", isDragging && "opacity-50 z-50")}
+      className={cn("touch-none", {
+        "pointer-events-none opacity-60": isMoving,
+        "opacity-50 z-50": isDragging,
+      })}
     >
       <Card className="group cursor-pointer overflow-hidden border-border/50 bg-card p-3.5 transition-all hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5">
         <div className="flex min-w-0 items-start justify-between gap-2">
@@ -135,7 +150,7 @@ export function KanbanCard({ job, onEdit, onDelete, onMove }: KanbanCardProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={() => onEdit(job)}>
+              <DropdownMenuItem onClick={() => editJob(job)}>
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit
               </DropdownMenuItem>
@@ -153,7 +168,7 @@ export function KanbanCard({ job, onEdit, onDelete, onMove }: KanbanCardProps) {
               )}
               <DropdownMenuSeparator />
               <DropdownMenuSub>
-                <DropdownMenuSubTrigger>
+                <DropdownMenuSubTrigger disabled={isMoving}>
                   <ArrowRight className="mr-2 h-4 w-4" />
                   Move to
                 </DropdownMenuSubTrigger>
@@ -165,7 +180,7 @@ export function KanbanCard({ job, onEdit, onDelete, onMove }: KanbanCardProps) {
                     .map((status) => (
                       <DropdownMenuItem
                         key={status}
-                        onClick={() => onMove(job.id, status)}
+                        onClick={() => handleMove(job.id, status)}
                       >
                         {status}
                       </DropdownMenuItem>
@@ -175,7 +190,7 @@ export function KanbanCard({ job, onEdit, onDelete, onMove }: KanbanCardProps) {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
-                onClick={() => onDelete(job.id)}
+                onClick={() => handleDelete(job.id)}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
@@ -183,35 +198,39 @@ export function KanbanCard({ job, onEdit, onDelete, onMove }: KanbanCardProps) {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-
         <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
           <div className="flex items-center gap-1 rounded-md bg-secondary/50 px-1.5 py-0.5">
-            {job.location && (
+            {job.source && (
               <>
-                <MapPin className="h-3 w-3 shrink-0" />
-                <span className="truncate">{job.location}</span>
+                <Globe className="h-3 w-3 shrink-0" />
+                <span className="truncate">{job.source}</span>
               </>
             )}
           </div>
-          {job.salary && (
-            <div className="flex items-center gap-1 rounded-md bg-secondary/50 px-1.5 py-0.5">
-              <DollarSign className="h-3 w-3 shrink-0" />
-              <span className="truncate">{job.salary}</span>
-            </div>
-          )}
         </div>
+        {job.description && (
+          <div className="mt-2.5 flex items-start gap-1.5 text-xs text-muted-foreground/80">
+            <FileText className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <p className="line-clamp-2">{truncateText(job.description, 80)}</p>
+          </div>
+        )}
 
         {job.notes && (
-          <p className="mt-2.5 line-clamp-2 text-xs text-muted-foreground/80">
-            {job.notes}
-          </p>
+          <div className="mt-2.5 flex items-start gap-1.5 text-xs text-muted-foreground/80">
+            <StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <p className="line-clamp-2">{truncateText(job.notes, 60)}</p>
+          </div>
         )}
 
         <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2.5">
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {formattedDate && <span>{formattedDate}</span>}
+              {formattedDate && (
+                <>
+                  <Calendar className="h-3 w-3" />
+                  <span>{formattedDate}</span>
+                </>
+              )}
             </div>
             {job.documents && job.documents.length > 0 && (
               <div className="flex items-center gap-1 text-primary/70">
@@ -220,16 +239,13 @@ export function KanbanCard({ job, onEdit, onDelete, onMove }: KanbanCardProps) {
               </div>
             )}
           </div>
-          {job.job_url && (
-            <a
-              href={job.job_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-primary/70 transition-colors hover:text-primary"
-            >
-              View job
-            </a>
-          )}
+          <button
+            type="submit"
+            onClick={() => viewJob(job)}
+            className="text-xs text-primary/70 transition-colors hover:text-primary"
+          >
+            View job
+          </button>
         </div>
       </Card>
     </div>

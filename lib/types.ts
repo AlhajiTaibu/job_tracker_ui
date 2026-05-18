@@ -1,4 +1,8 @@
+import { Interface } from "readline"
+
 export type JobStatus = "applied" | "screening" | "assessment" | "interviewing" | "offer" | "rejected" | "saved" | "accepted" | "withdrawn" | "stale"
+
+export type JobSource = "LinkedIn" | "Referral" | "Company Career Page" | "Job Board" | "Other"
 
 export type DocumentType = "cv" | "cover_letter" | "portfolio" | "other"
 
@@ -11,17 +15,22 @@ export interface JobDocument {
   url: string
 }
 
+export interface Contacts {
+  name: string
+}
+
 export interface JobApplication {
   id: string
   company_name: string
   job_title: string
-  location: string
-  salary?: string
+  description: string
   status: JobStatus
+  source: JobSource
   date_applied: string
   notes?: string
   job_url?: string
   documents?: JobDocument[]
+  contacts?: Contacts[]
 }
 
 export interface Payload {
