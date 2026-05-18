@@ -23,10 +23,10 @@ export interface JobApplication {
   id: string
   company_name: string
   job_title: string
-  description: string
+  description?: string
   status: JobStatus
   source: JobSource
-  date_applied: string
+  date_applied?: string
   notes?: string
   job_url?: string
   documents?: JobDocument[]

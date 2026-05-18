@@ -59,12 +59,6 @@ export default function DashboardClient() {
 
   const jobs = jobsData?.payload?.data ?? [];
 
-  // const [localJobs, setLocalJobs] = useState<JobApplication[]>([]);
-
-  // useEffect(() => {
-  //   if (jobsData?.payload?.data) setLocalJobs(jobsData?.payload?.data);
-  // }, [jobsData]);
-
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -73,7 +67,7 @@ export default function DashboardClient() {
     }),
   );
 
-  function canMove(from: JobStatus, to: JobStatus) {
+  const canMove = (from: JobStatus, to: JobStatus) => {
     const allowed: Record<JobStatus, JobStatus[]> = {
       saved: ["applied", "withdrawn"],
       applied: ["screening", "assessment", "stale", "rejected", "withdrawn"],
@@ -94,7 +88,7 @@ export default function DashboardClient() {
     };
 
     return allowed[from]?.includes(to) ?? false;
-  }
+  };
 
   const handleDragStart = (event: DragStartEvent) => {
     const jobId = event.active.id as string;

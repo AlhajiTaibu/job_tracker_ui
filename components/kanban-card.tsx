@@ -4,7 +4,6 @@ import {
   Building2,
   Calendar,
   ExternalLink,
-  MapPin,
   MoreHorizontal,
   Pencil,
   Trash2,
@@ -31,7 +30,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { useJobStore } from "@/hooks/use-job-store";
-import { useHandleMove, useMoveJob, useMoveStore } from "@/hooks/use-move-job";
+import { useHandleMove, useMoveStore } from "@/hooks/use-move-job";
 
 interface KanbanCardProps {
   job: JobApplication;

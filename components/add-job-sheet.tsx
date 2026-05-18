@@ -51,8 +51,15 @@ import {
   X,
   Paperclip,
   LinkedinIcon,
+  Glasses,
+  TestTube2,
+  StopCircle,
+  CheckIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import { AddJobInput, addJobSchema } from "@/lib/schemas/job";
 
 interface AddJobSheetProps {
   open: boolean;
@@ -79,6 +86,54 @@ const statuses: {
     label: "Applied",
     icon: <Send className="h-4 w-4" />,
     color: "text-indigo-500",
+  },
+  {
+    value: "screening",
+    label: "Screening",
+    icon: <Glasses className="h-4 w-4" />,
+    color: "text-indigo-500",
+  },
+  {
+    value: "assessment",
+    label: "Assessment",
+    icon: <TestTube2 className="h-4 w-4" />,
+    color: "text-indigo-500",
+  },
+  {
+    value: "interviewing",
+    label: "Interview",
+    icon: <Users className="h-4 w-4" />,
+    color: "text-amber-500",
+  },
+  {
+    value: "offer",
+    label: "Offer",
+    icon: <Trophy className="h-4 w-4" />,
+    color: "text-emerald-500",
+  },
+  {
+    value: "accepted",
+    label: "Accepted",
+    icon: <CheckIcon className="h-4 w-4" />,
+    color: "text-emerald-500",
+  },
+  {
+    value: "rejected",
+    label: "Rejected",
+    icon: <XCircle className="h-4 w-4" />,
+    color: "text-rose-500",
+  },
+  {
+    value: "withdrawn",
+    label: "Withdrawn",
+    icon: <XCircle className="h-4 w-4" />,
+    color: "text-rose-500",
+  },
+  {
+    value: "stale",
+    label: "Stale",
+    icon: <StopCircle className="h-4 w-4" />,
+    color: "text-rose-500",
   },
 ];
 
@@ -119,6 +174,19 @@ const sources: {
     color: "text-rose-500",
   },
 ];
+
+const allowedStatus: Record<JobStatus, JobStatus[]> = {
+  saved: ["applied", "withdrawn"],
+  applied: ["screening", "assessment", "stale", "rejected", "withdrawn"],
+  screening: ["interviewing", "assessment", "stale", "rejected", "withdrawn"],
+  assessment: ["interviewing", "stale", "rejected", "withdrawn"],
+  interviewing: ["offer", "assessment", "stale", "rejected", "withdrawn"],
+  offer: ["accepted", "rejected", "withdrawn"],
+  accepted: [],
+  rejected: [],
+  withdrawn: [],
+  stale: ["withdrawn", "applied"],
+};
 
 // const documentTypes: {
 //   value: DocumentType;
@@ -166,31 +234,41 @@ export function AddJobSheet({
   // const [selectedDocType, setSelectedDocType] = useState<DocumentType>("cv");
   // const [isDragging, setIsDragging] = useState(false);
 
-  const [formData, setFormData] = useState({
-    company_name: "",
-    job_title: "",
-    status: defaultStatus as JobStatus,
-    source: "Referral" as JobSource,
-    date_applied: new Date().toISOString().split("T")[0],
-    job_url: "",
-    description: "",
-    notes: "",
+  const {
+    register,
+    control,
+    watch,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<AddJobInput>({
+    resolver: zodResolver(addJobSchema),
+    defaultValues: {
+      company_name: "",
+      job_title: "",
+      status: defaultStatus,
+      source: "Referral",
+      date_applied: new Date().toISOString().split("T")[0],
+      job_url: "",
+      description: "",
+      notes: "",
+    },
   });
 
   useEffect(() => {
     if (job) {
-      setFormData({
-        company_name: job.company_name,
-        job_title: job.job_title,
-        status: job.status,
-        source: job.source,
-        date_applied: job.date_applied,
-        job_url: job.job_url || "",
-        description: job.description || "",
-        notes: job.notes || "",
+      reset({
+        company_name: job.company_name ?? "",
+        job_title: job.job_title ?? "",
+        status: job.status.toLowerCase() ?? defaultStatus,
+        source: job.source ?? "Referral",
+        date_applied: job.date_applied ?? "",
+        job_url: job.job_url ?? "",
+        description: job.description ?? "",
+        notes: job.notes ?? "",
       });
     } else {
-      setFormData({
+      reset({
         company_name: "",
         job_title: "",
         status: defaultStatus,
@@ -201,7 +279,44 @@ export function AddJobSheet({
         notes: "",
       });
     }
-  }, [job, defaultStatus, open]);
+  }, [job, reset, defaultStatus]);
+
+  // const [formData, setFormData] = useState({
+  //   company_name: "",
+  //   job_title: "",
+  //   status: defaultStatus as JobStatus,
+  //   source: "Referral" as JobSource,
+  //   date_applied: new Date().toISOString().split("T")[0],
+  //   job_url: "",
+  //   description: "",
+  //   notes: "",
+  // });
+
+  // useEffect(() => {
+  //   if (job) {
+  //     setFormData({
+  //       company_name: job.company_name,
+  //       job_title: job.job_title,
+  //       status: job.status,
+  //       source: job.source,
+  //       date_applied: job.date_applied || "",
+  //       job_url: job.job_url || "",
+  //       description: job.description || "",
+  //       notes: job.notes || "",
+  //     });
+  //   } else {
+  //     setFormData({
+  //       company_name: "",
+  //       job_title: "",
+  //       status: defaultStatus,
+  //       source: "Referral",
+  //       date_applied: new Date().toISOString().split("T")[0],
+  //       job_url: "",
+  //       description: "",
+  //       notes: "",
+  //     });
+  //   }
+  // }, [job, defaultStatus, open]);
 
   // const handleFileSelect = (files: FileList | null) => {
   //   if (!files) return;
@@ -244,18 +359,29 @@ export function AddJobSheet({
   //   }));
   // };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave({
-      ...formData,
-      id: job?.id,
-    });
+  const onSubmit = (value: AddJobInput) => {
+    if (job) {
+      console.log(`${job.id} : ${value}`);
+    } else {
+      console.log(value);
+    }
+    // onSave({
+    //   ...formData,
+    //   id: job?.id,
+    // });
     onOpenChange(false);
   };
 
-  const currentStatus = statuses.find((s) => s.value === formData.status);
+  const currentStatus = statuses.find((s) => s.value === watch("status"));
 
-  const currentSource = sources.find((s) => s.value === formData.source);
+  const currentSource = sources.find((s) => s.value === watch("source"));
+
+  const allowed: JobStatus[] =
+    allowedStatus[watch("status") as JobStatus] ?? [];
+
+  const formStatuses = job
+    ? statuses.filter((s) => allowed.includes(s.value))
+    : statuses.filter((s) => s.value === "saved" || s.value === "applied");
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -278,7 +404,7 @@ export function AddJobSheet({
           </div>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="mt-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6">
           {/* Company Details Section */}
           <div className="space-y-5">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -300,10 +426,7 @@ export function AddJobSheet({
                   </InputGroupAddon>
                   <InputGroupInput
                     id="company"
-                    value={formData.company_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, company_name: e.target.value })
-                    }
+                    {...register("company_name")}
                     placeholder="Google, Apple, Meta..."
                     required
                   />
@@ -323,10 +446,7 @@ export function AddJobSheet({
                   </InputGroupAddon>
                   <InputGroupInput
                     id="position"
-                    value={formData.job_title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, job_title: e.target.value })
-                    }
+                    {...register("job_title")}
                     placeholder="Senior Software Engineer"
                     required
                   />
@@ -351,33 +471,39 @@ export function AddJobSheet({
                   >
                     Status
                   </FieldLabel>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, status: value as JobStatus })
-                    }
-                  >
-                    <SelectTrigger id="status" className="h-10">
-                      <SelectValue>
-                        <div className="flex items-center gap-2">
-                          <span className={currentStatus?.color}>
-                            {currentStatus?.icon}
-                          </span>
-                          <span>{currentStatus?.label}</span>
-                        </div>
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statuses.map((status) => (
-                        <SelectItem key={status.value} value={status.value}>
-                          <div className="flex items-center gap-2">
-                            <span className={status.color}>{status.icon}</span>
-                            <span>{status.label}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Controller
+                    control={control}
+                    name="status"
+                    render={({ field }) => (
+                      <Select
+                        value={field.value ?? ""}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger id="status" className="h-10">
+                          <SelectValue>
+                            <div className="flex items-center gap-2">
+                              <span className={currentStatus?.color}>
+                                {currentStatus?.icon}
+                              </span>
+                              <span>{currentStatus?.label}</span>
+                            </div>
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {formStatuses.map((status) => (
+                            <SelectItem key={status.value} value={status.value}>
+                              <div className="flex items-center gap-2">
+                                <span className={status.color}>
+                                  {status.icon}
+                                </span>
+                                <span>{status.label}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </Field>
 
                 <Field>
@@ -394,13 +520,7 @@ export function AddJobSheet({
                     <InputGroupInput
                       id="date"
                       type="date"
-                      value={formData.date_applied}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          date_applied: e.target.value,
-                        })
-                      }
+                      {...register("date_applied")}
                       required
                     />
                   </InputGroup>
@@ -424,10 +544,7 @@ export function AddJobSheet({
                   <InputGroupInput
                     id="url"
                     type="url"
-                    value={formData.job_url}
-                    onChange={(e) =>
-                      setFormData({ ...formData, job_url: e.target.value })
-                    }
+                    {...register("job_url")}
                     placeholder="https://careers.company.com/job/..."
                   />
                 </InputGroup>
@@ -439,33 +556,39 @@ export function AddJobSheet({
                 >
                   Source
                 </FieldLabel>
-                <Select
-                  value={formData.source}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, source: value as JobSource })
-                  }
-                >
-                  <SelectTrigger id="status" className="h-10">
-                    <SelectValue>
-                      <div className="flex items-center gap-2">
-                        <span className={currentSource?.color}>
-                          {currentSource?.icon}
-                        </span>
-                        <span>{currentSource?.label}</span>
-                      </div>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sources.map((source) => (
-                      <SelectItem key={source.value} value={source.value}>
-                        <div className="flex items-center gap-2">
-                          <span className={source.color}>{source.icon}</span>
-                          <span>{source.label}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  control={control}
+                  name="source"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ?? ""}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger id="status" className="h-10">
+                        <SelectValue>
+                          <div className="flex items-center gap-2">
+                            <span className={currentSource?.color}>
+                              {currentSource?.icon}
+                            </span>
+                            <span>{currentSource?.label}</span>
+                          </div>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sources.map((source) => (
+                          <SelectItem key={source.value} value={source.value}>
+                            <div className="flex items-center gap-2">
+                              <span className={source.color}>
+                                {source.icon}
+                              </span>
+                              <span>{source.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </Field>
             </FieldGroup>
           </div>
@@ -597,11 +720,8 @@ export function AddJobSheet({
 
             <div className="pl-6">
               <Textarea
-                id="notes"
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
+                id="description"
+                {...register("description")}
                 placeholder="Add job description"
                 rows={4}
                 className="resize-none"
@@ -618,10 +738,7 @@ export function AddJobSheet({
             <div className="pl-6">
               <Textarea
                 id="notes"
-                value={formData.notes}
-                onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
-                }
+                {...register("notes")}
                 placeholder="Add interview notes, contact info, or anything else you want to remember..."
                 rows={4}
                 className="resize-none"
