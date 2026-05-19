@@ -5,22 +5,23 @@ import { useCallback } from 'react'
 import { useToast } from "./use-toast";
 
 
-type JobApplicationInput = {
+type JobApplicationUpdateInput = {
     company_name: string
     job_title: string
     description?: string
-    status: JobStatus
+    // status: JobStatus
     source: JobSource
     date_applied?: string
     notes?: string
     job_url?: string
 }
 
-const addJob = async (data: JobApplicationInput) => {
+const editJob = async (data: JobApplicationUpdateInput, id: string) => {
     const baseUrl = typeof window !== 'undefined'
         ? ''
         : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
-    const res = await fetch(`${baseUrl}/api/applications/add`,
+
+    const res = await fetch(`${baseUrl}/api/applications/update/${id}`,
         {
             method: "POST",
             body: JSON.stringify(data)
@@ -28,37 +29,37 @@ const addJob = async (data: JobApplicationInput) => {
     )
 
     if (!res.ok) {
-        throw new Error("Job Application creation failed")
+        const errorText = await res.text()
+        throw new Error(errorText || "Job Application update failed")
     }
 
     return res.json()
 }
 
 
-const useAddJob = () => {
+const useEditJob = () => {
     const queryClient = useQueryClient()
 
     return useMutation({
-        mutationFn: (data: JobApplicationInput) => addJob(data),
+        mutationFn: ({ data, id }: { data: JobApplicationUpdateInput, id: string }) => editJob(data, id),
 
-        onMutate: async (newJob) => {
+        onMutate: async ({ data, id }) => {
             await queryClient.cancelQueries({ queryKey: ["jobs"] })
             const previousJobs = queryClient.getQueryData<JobApplicationResponse>(['jobs'])
+            const cleanedData = Object.fromEntries(
+                Object.entries(data).filter(([, value]) => value !== undefined)
+            )
 
             queryClient.setQueryData<JobApplicationResponse>(['jobs'], (old) => {
                 if (!old) return old
-
-                const optimisticJob = {
-                    ...newJob,
-                    id: crypto.randomUUID(),
-                    created_at: new Date().toISOString()
-                }
 
                 return {
                     ...old,
                     payload: {
                         ...old.payload,
-                        data: [...(old.payload.data ?? []), optimisticJob],
+                        data: old?.payload?.data?.map((app) =>
+                            app.id === id ? { ...app, ...cleanedData } : app
+                        ),
                     },
                 }
             })
@@ -78,39 +79,39 @@ const useAddJob = () => {
     })
 }
 
-type AddJob = {
+type EditJob = {
     isSubmitting: boolean
     setIsSubmitting: (value: boolean) => void
 }
 
-const useAddJobStore = create<AddJob>((set) => ({
+const useEditJobStore = create<EditJob>((set) => ({
     isSubmitting: false,
     setIsSubmitting: (value) => set({ isSubmitting: value })
 }))
 
 
-const useHandleJobAdd = () => {
-    const { mutateAsync } = useAddJob()
-    const setIsSubmitting = useAddJobStore((state) => state.setIsSubmitting)
+const useHandleJobEdit = () => {
+    const { mutateAsync } = useEditJob()
+    const setIsSubmitting = useEditJobStore((state) => state.setIsSubmitting)
     const { toast } = useToast()
 
 
-    const handleJobAdd = useCallback(
-        async (data: JobApplicationInput) => {
+    const handleJobEdit = useCallback(
+        async (data: JobApplicationUpdateInput, id: string) => {
             setIsSubmitting(true)
             try {
-                const result = await mutateAsync(data)
+                const result = await mutateAsync({ data, id })
                 if (result?.success === false || result?.message.includes("Error")) {
                     throw new Error(result.error || "Job Application update failed")
                 }
                 toast({
-                    title: "Job Application Creation",
-                    description: "New Job Application added"
+                    title: "Job Application Update",
+                    description: "Job Application updated"
                 })
             } catch {
                 toast({
-                    title: "Job Application Creation Failed",
-                    description: "New Job Application addition failed",
+                    title: "Job Application Update Failed",
+                    description: "Job Application update failed",
                     variant: "destructive"
                 })
             }
@@ -121,7 +122,7 @@ const useHandleJobAdd = () => {
         [mutateAsync, setIsSubmitting, toast]
     )
 
-    return { handleJobAdd }
+    return { handleJobEdit }
 }
 
-export { useAddJobStore, useHandleJobAdd }
+export { useEditJobStore, useHandleJobEdit }

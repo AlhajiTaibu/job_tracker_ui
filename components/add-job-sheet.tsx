@@ -55,16 +55,18 @@ import {
   TestTube2,
   StopCircle,
   CheckIcon,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { AddJobInput, addJobSchema } from "@/lib/schemas/job";
+import { useAddJobStore, useHandleJobAdd } from "@/hooks/use-add-job";
+import { useEditJobStore, useHandleJobEdit } from "@/hooks/use-edit-job";
 
 interface AddJobSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (job: Omit<JobApplication, "id"> & { id?: string }) => void;
   job?: JobApplication | null;
   defaultStatus?: JobStatus;
 }
@@ -226,7 +228,6 @@ const allowedStatus: Record<JobStatus, JobStatus[]> = {
 export function AddJobSheet({
   open,
   onOpenChange,
-  onSave,
   job,
   defaultStatus = "saved",
 }: AddJobSheetProps) {
@@ -255,6 +256,12 @@ export function AddJobSheet({
     },
   });
 
+  const { handleJobAdd } = useHandleJobAdd();
+  const submitting = useAddJobStore((state) => state.isSubmitting);
+
+  const { handleJobEdit } = useHandleJobEdit();
+  const editSubmitting = useEditJobStore((state) => state.isSubmitting);
+
   useEffect(() => {
     if (job) {
       reset({
@@ -281,94 +288,22 @@ export function AddJobSheet({
     }
   }, [job, reset, defaultStatus]);
 
-  // const [formData, setFormData] = useState({
-  //   company_name: "",
-  //   job_title: "",
-  //   status: defaultStatus as JobStatus,
-  //   source: "Referral" as JobSource,
-  //   date_applied: new Date().toISOString().split("T")[0],
-  //   job_url: "",
-  //   description: "",
-  //   notes: "",
-  // });
-
-  // useEffect(() => {
-  //   if (job) {
-  //     setFormData({
-  //       company_name: job.company_name,
-  //       job_title: job.job_title,
-  //       status: job.status,
-  //       source: job.source,
-  //       date_applied: job.date_applied || "",
-  //       job_url: job.job_url || "",
-  //       description: job.description || "",
-  //       notes: job.notes || "",
-  //     });
-  //   } else {
-  //     setFormData({
-  //       company_name: "",
-  //       job_title: "",
-  //       status: defaultStatus,
-  //       source: "Referral",
-  //       date_applied: new Date().toISOString().split("T")[0],
-  //       job_url: "",
-  //       description: "",
-  //       notes: "",
-  //     });
-  //   }
-  // }, [job, defaultStatus, open]);
-
-  // const handleFileSelect = (files: FileList | null) => {
-  //   if (!files) return;
-
-  //   const newDocuments: JobDocument[] = Array.from(files).map((file) => ({
-  //     id: crypto.randomUUID(),
-  //     name: file.name,
-  //     type: selectedDocType,
-  //     size: file.size,
-  //     uploadedAt: new Date().toISOString(),
-  //     url: URL.createObjectURL(file),
-  //   }));
-
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     documents: [...prev.documents, ...newDocuments],
-  //   }));
-  // };
-
-  // const handleDragOver = (e: React.DragEvent) => {
-  //   e.preventDefault();
-  //   setIsDragging(true);
-  // };
-
-  // const handleDragLeave = (e: React.DragEvent) => {
-  //   e.preventDefault();
-  //   setIsDragging(false);
-  // };
-
-  // const handleDrop = (e: React.DragEvent) => {
-  //   e.preventDefault();
-  //   setIsDragging(false);
-  //   handleFileSelect(e.dataTransfer.files);
-  // };
-
-  // const removeDocument = (id: string) => {
-  //   setFormData((prev) => ({
-  //     ...prev,
-  //     documents: prev.documents.filter((doc) => doc.id !== id),
-  //   }));
-  // };
-
   const onSubmit = (value: AddJobInput) => {
     if (job) {
-      console.log(`${job.id} : ${value}`);
+      const data = {
+        ...value,
+        status: value.status as JobStatus,
+        source: value.source as JobSource,
+      };
+      handleJobEdit(data, job.id);
     } else {
-      console.log(value);
+      const data = {
+        ...value,
+        status: value.status as JobStatus,
+        source: value.source as JobSource,
+      };
+      handleJobAdd(data);
     }
-    // onSave({
-    //   ...formData,
-    //   id: job?.id,
-    // });
     onOpenChange(false);
   };
 
@@ -432,6 +367,11 @@ export function AddJobSheet({
                   />
                 </InputGroup>
               </Field>
+              {errors.company_name && (
+                <p className="text-red-600 text-sm">
+                  {errors.company_name.message}
+                </p>
+              )}
 
               <Field>
                 <FieldLabel
@@ -452,6 +392,11 @@ export function AddJobSheet({
                   />
                 </InputGroup>
               </Field>
+              {errors.job_title && (
+                <p className="text-red-600 text-sm">
+                  {errors.job_title.message}
+                </p>
+              )}
             </FieldGroup>
           </div>
 
@@ -463,70 +408,81 @@ export function AddJobSheet({
             </div>
 
             <FieldGroup className="gap-4 pl-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field>
-                  <FieldLabel
-                    htmlFor="status"
-                    className="text-xs text-muted-foreground"
+              {job ? null : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field
+                    className={
+                      currentStatus?.value !== "applied" ? "sm:col-span-2" : ""
+                    }
                   >
-                    Status
-                  </FieldLabel>
-                  <Controller
-                    control={control}
-                    name="status"
-                    render={({ field }) => (
-                      <Select
-                        value={field.value ?? ""}
-                        onValueChange={field.onChange}
-                      >
-                        <SelectTrigger id="status" className="h-10">
-                          <SelectValue>
-                            <div className="flex items-center gap-2">
-                              <span className={currentStatus?.color}>
-                                {currentStatus?.icon}
-                              </span>
-                              <span>{currentStatus?.label}</span>
-                            </div>
-                          </SelectValue>
-                        </SelectTrigger>
-                        <SelectContent>
-                          {formStatuses.map((status) => (
-                            <SelectItem key={status.value} value={status.value}>
+                    <FieldLabel
+                      htmlFor="status"
+                      className="text-xs text-muted-foreground"
+                    >
+                      Status
+                    </FieldLabel>
+                    <Controller
+                      control={control}
+                      name="status"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value ?? ""}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger id="status" className="h-10">
+                            <SelectValue>
                               <div className="flex items-center gap-2">
-                                <span className={status.color}>
-                                  {status.icon}
+                                <span className={currentStatus?.color}>
+                                  {currentStatus?.icon}
                                 </span>
-                                <span>{status.label}</span>
+                                <span>{currentStatus?.label}</span>
                               </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </Field>
-
-                <Field>
-                  <FieldLabel
-                    htmlFor="date"
-                    className="text-xs text-muted-foreground"
-                  >
-                    Date
-                  </FieldLabel>
-                  <InputGroup>
-                    <InputGroupAddon>
-                      <Calendar className="h-4 w-4" />
-                    </InputGroupAddon>
-                    <InputGroupInput
-                      id="date"
-                      type="date"
-                      {...register("date_applied")}
-                      required
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {formStatuses.map((status) => (
+                              <SelectItem
+                                key={status.value}
+                                value={status.value}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className={status.color}>
+                                    {status.icon}
+                                  </span>
+                                  <span>{status.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     />
-                  </InputGroup>
-                </Field>
-              </div>
+                  </Field>
 
+                  {currentStatus?.value === "applied" ? (
+                    <Field>
+                      <FieldLabel
+                        htmlFor="date"
+                        className="text-xs text-muted-foreground"
+                      >
+                        Date
+                      </FieldLabel>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <Calendar className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          // readOnly={job ? true : false}
+                          id="date"
+                          type="date"
+                          {...register("date_applied")}
+                          required
+                        />
+                      </InputGroup>
+                    </Field>
+                  ) : null}
+                </div>
+              )}
               <Field>
                 <FieldLabel
                   htmlFor="url"
@@ -549,6 +505,9 @@ export function AddJobSheet({
                   />
                 </InputGroup>
               </Field>
+              {errors.job_url && (
+                <p className="text-red-600 text-sm">{errors.job_url.message}</p>
+              )}
               <Field>
                 <FieldLabel
                   htmlFor="status"
@@ -727,6 +686,11 @@ export function AddJobSheet({
                 className="resize-none"
               />
             </div>
+            {errors.description && (
+              <p className="text-red-600 text-sm">
+                {errors.description.message}
+              </p>
+            )}
           </div>
           {/* Notes Section */}
           <div className="mt-8 space-y-5">
@@ -744,6 +708,9 @@ export function AddJobSheet({
                 className="resize-none"
               />
             </div>
+            {errors.notes && (
+              <p className="text-red-600 text-sm">{errors.notes.message}</p>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -756,16 +723,40 @@ export function AddJobSheet({
             >
               Cancel
             </Button>
-            <Button type="submit" className="flex-1 gap-2">
-              {job ? (
-                "Save Changes"
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  Add Application
-                </>
-              )}
-            </Button>
+            {job ? (
+              <Button
+                type="submit"
+                className="flex-1 gap-2"
+                disabled={editSubmitting}
+              >
+                {editSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving Changes...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                className="flex-1 gap-2"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding Application...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Add Application
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </form>
       </SheetContent>

@@ -46,26 +46,6 @@ export default function ApplicationsPage() {
     });
   }, [jobs, searchQuery]);
 
-  const handleSaveJob = (
-    jobData: Omit<JobApplication, "id"> & { id?: string },
-  ) => {
-    // if (jobData.id) {
-    //   setJobs((prev) =>
-    //     prev.map((job) =>
-    //       job.id === jobData.id
-    //         ? ({ ...job, ...jobData } as JobApplication)
-    //         : job,
-    //     ),
-    //   );
-    // } else {
-    //   const newJob: JobApplication = {
-    //     ...jobData,
-    //     id: Date.now().toString(),
-    //   };
-    //   setJobs((prev) => [newJob, ...prev]);
-    // }
-  };
-
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar totalJobs={jobs.length} />
@@ -158,7 +138,6 @@ export default function ApplicationsPage() {
       <AddJobSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        onSave={handleSaveJob}
         job={editingJob}
         defaultStatus={defaultStatus}
       />

@@ -144,26 +144,6 @@ export default function DashboardClient() {
     };
   }, [filteredJobs]);
 
-  const handleSaveJob = (
-    jobData: Omit<JobApplication, "id"> & { id?: string },
-  ) => {
-    // if (jobData.id) {
-    //   setJobs((prev) =>
-    //     prev.map((job) =>
-    //       job.id === jobData.id
-    //         ? ({ ...job, ...jobData } as JobApplication)
-    //         : job,
-    //     ),
-    //   );
-    // } else {
-    //   const newJob: JobApplication = {
-    //     ...jobData,
-    //     id: Date.now().toString(),
-    //   };
-    //   setJobs((prev) => [newJob, ...prev]);
-    // }
-  };
-
   const totalApplications = jobs.length;
   const activeApplications = jobs.filter(
     (j) =>
@@ -249,7 +229,6 @@ export default function DashboardClient() {
       <AddJobSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        onSave={handleSaveJob}
         job={editingJob}
         defaultStatus={defaultStatus}
       />

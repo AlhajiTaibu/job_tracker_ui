@@ -95,12 +95,15 @@ export function KanbanCard({ job }: KanbanCardProps) {
   const { handleMove } = useHandleMove();
   const isMoving = useMoveStore((state) => !!state.movingIds[job.id]);
 
-  const formattedDate =
-    job.date_applied &&
-    new Date(job.date_applied).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
+  const formattedDate = job.date_applied
+    ? new Date(job.date_applied).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      })
+    : new Date(job.updated_at as string).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
 
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({

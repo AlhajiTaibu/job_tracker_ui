@@ -313,8 +313,17 @@ function ContactsSection({
 }
 
 export function ViewJobSheet({ open, onOpenChange, job }: ViewJobSheetProps) {
-  if (!job) return null;
+  const formattedDate = job?.date_applied
+    ? new Date(job.date_applied).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      })
+    : new Date(job?.updated_at as string).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
 
+  if (!job) return null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-[85vw] sm:w-full overflow-y-auto bg-slate-50 p-0 sm:max-w-[600px]">
@@ -347,7 +356,7 @@ export function ViewJobSheet({ open, onOpenChange, job }: ViewJobSheetProps) {
 
                   <div className="inline-flex items-center gap-1 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
-                    <span>{job.date_applied?.trim() || "No date"}</span>
+                    <span>{formattedDate || "No date"}</span>
                   </div>
 
                   {job.source?.trim() ? (
@@ -380,7 +389,7 @@ export function ViewJobSheet({ open, onOpenChange, job }: ViewJobSheetProps) {
               />
               <InfoRow
                 label="Date Applied"
-                value={job.date_applied}
+                value={formattedDate}
                 icon={<Calendar className="h-4 w-4" />}
               />
               <InfoRow

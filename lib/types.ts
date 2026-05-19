@@ -1,5 +1,3 @@
-import { Interface } from "readline"
-
 export type JobStatus = "applied" | "screening" | "assessment" | "interviewing" | "offer" | "rejected" | "saved" | "accepted" | "withdrawn" | "stale"
 
 export type JobSource = "LinkedIn" | "Referral" | "Company Career Page" | "Job Board" | "Other"
@@ -29,6 +27,7 @@ export interface JobApplication {
   date_applied?: string
   notes?: string
   job_url?: string
+  updated_at?: string
   documents?: JobDocument[]
   contacts?: Contacts[]
 }
@@ -40,7 +39,7 @@ export interface Payload {
 export interface JobApplicationResponse {
   success?: boolean
   payload: Payload
-  error: string
+  error?: string
 }
 
 export const statusConfig: Record<
@@ -99,6 +98,26 @@ export const statusConfig: Record<
   },
 }
 
+export interface Profile {
+  id: string
+  first_name?: string
+  last_name?: string
+  email: string
+  title?: string
+  notification_type?: string
+  avatar_url?: string
+}
+
+
+export interface ProfilePayload {
+  data?: Profile
+}
+
+export interface ProfileResponse {
+  success?: boolean
+  payload: ProfilePayload
+  error?: string
+}
 
 export type User = {
   id?: string
