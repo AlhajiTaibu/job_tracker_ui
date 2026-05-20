@@ -67,14 +67,12 @@ export default function SettingsClient() {
   const jobs = jobsData?.payload?.data ?? [];
 
   const initials =
-    profile?.first_name +
-      " " +
-      profile?.last_name
-        ?.split(" ")
-        .map((n: Array<string>) => n[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase() || "JD";
+    `${profile?.first_name} ${profile?.last_name}`
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "JD";
 
   const handleLogOut = async () => {
     setMessage("");

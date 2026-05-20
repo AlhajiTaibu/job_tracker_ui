@@ -37,6 +37,19 @@ const editJob = async (data: JobApplicationUpdateInput, id: string) => {
 }
 
 
+const deleteJob = async (id: string) => {
+    const res = await fetch(`/api/applications/delete/${id}`, {
+        method: "DELETE"
+    })
+
+    if (!res.ok) {
+        throw new Error("Failed to delete Job Application")
+    }
+
+    return res.json()
+}
+
+
 const useEditJob = () => {
     const queryClient = useQueryClient()
 
@@ -75,6 +88,43 @@ const useEditJob = () => {
 
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['jobs'] })
+        }
+    })
+}
+
+const useDeleteJob = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ id }: { id: string }) => deleteJob(id),
+
+        onMutate: async ({ id }) => {
+            const previousJobs = queryClient.getQueryData<JobApplicationResponse>(['jobs'])
+
+            queryClient.setQueryData<JobApplicationResponse>(['jobs'], (old) => {
+                if (!old) return old
+
+                return {
+                    ...old,
+                    payload: {
+                        ...old.payload,
+                        data: old?.payload?.data?.filter((app) =>
+                            app.id !== id
+                        ),
+                    },
+                }
+            })
+            return { previousJobs }
+        },
+
+        onError: (_err, _vars, context) => {
+            if (context?.previousJobs) {
+                queryClient.setQueryData<JobApplicationResponse>(['jobs'], context?.previousJobs)
+            }
+        },
+
+        onSettled: () => {
+            queryClient.cancelQueries({ queryKey: ['jobs'] })
         }
     })
 }
@@ -125,4 +175,31 @@ const useHandleJobEdit = () => {
     return { handleJobEdit }
 }
 
-export { useEditJobStore, useHandleJobEdit }
+const useHandleJobDelete = () => {
+    const { mutateAsync } = useDeleteJob()
+    const { toast } = useToast()
+
+    const handleJobDelete = useCallback(async (id: string) => {
+        try {
+            const result = await mutateAsync({ id })
+
+            if (result?.success === false || result?.message.includes("Error")) {
+                throw new Error(result.error || "Job Application deletion failed")
+            }
+            toast({
+                title: "Job Application Deleted",
+                description: "Job Application deleted successfully"
+            })
+        } catch {
+            toast({
+                title: "Job Application Deletion Failed",
+                description: "Job Application deletion failed",
+                variant: "destructive"
+            })
+        }
+
+    }, [toast, mutateAsync])
+    return { handleJobDelete }
+}
+
+export { useEditJobStore, useHandleJobEdit, useHandleJobDelete }

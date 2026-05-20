@@ -31,6 +31,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { useJobStore } from "@/hooks/use-job-store";
 import { useHandleMove, useMoveStore } from "@/hooks/use-move-job";
+import { useHandleJobDelete } from "@/hooks/use-edit-job";
 
 interface KanbanCardProps {
   job: JobApplication;
@@ -91,7 +92,7 @@ const truncateText = (text: string, maxLength: number) =>
 export function KanbanCard({ job }: KanbanCardProps) {
   const viewJob = useJobStore((state) => state.viewJob);
   const editJob = useJobStore((state) => state.editJob);
-  const handleDelete = useJobStore((state) => state.handleDelete);
+  const { handleJobDelete } = useHandleJobDelete();
   const { handleMove } = useHandleMove();
   const isMoving = useMoveStore((state) => !!state.movingIds[job.id]);
 
@@ -192,7 +193,7 @@ export function KanbanCard({ job }: KanbanCardProps) {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"
-                onClick={() => handleDelete(job.id)}
+                onClick={() => handleJobDelete(job.id)}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete

@@ -12,7 +12,6 @@ interface JobStore {
     editJob: (job: JobApplication) => void
     defaultStatus: JobStatus
     handleAddClick: (status: JobStatus) => void
-    handleDelete: (id: string) => void
 }
 
 
@@ -34,5 +33,4 @@ export const useJobStore = create<JobStore>((set) => ({
     editJob: (val) => set({ editingJob: val, sheetOpen: true }),
     defaultStatus: "saved",
     handleAddClick: (val) => set({ editingJob: null, sheetOpen: true, defaultStatus: val }),
-    handleDelete: (id) => set({})
 }))

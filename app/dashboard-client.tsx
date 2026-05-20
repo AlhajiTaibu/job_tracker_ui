@@ -156,14 +156,12 @@ export default function DashboardClient() {
   const { data: profileData } = useProfile();
   const profile = profileData?.payload ?? {};
   const initials =
-    profile?.first_name +
-      " " +
-      profile?.last_name
-        ?.split(" ")
-        .map((n: Array<string>) => n[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase() || "JD";
+    `${profile?.first_name} ${profile?.last_name}`
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "JD";
 
   return (
     <div className="flex h-screen overflow-hidden">
