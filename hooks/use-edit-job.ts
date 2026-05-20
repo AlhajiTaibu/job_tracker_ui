@@ -19,7 +19,7 @@ type JobApplicationUpdateInput = {
 const editJob = async (data: JobApplicationUpdateInput, id: string) => {
     const baseUrl = typeof window !== 'undefined'
         ? ''
-        : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+        : process.env.NEXT_PUBLIC_SITE_URL
 
     const res = await fetch(`${baseUrl}/api/applications/update/${id}`,
         {

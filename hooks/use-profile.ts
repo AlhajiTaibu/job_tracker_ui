@@ -30,7 +30,7 @@ const getProfile = async () => {
 const updateProfile = async (data: ProfileInput) => {
     const baseUrl = typeof window !== 'undefined'
         ? ''
-        : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+        : process.env.NEXT_PUBLIC_SITE_URL
 
     const res = await fetch(`${baseUrl}/api/me/update`, {
         method: "POST",

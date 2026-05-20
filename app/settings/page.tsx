@@ -7,9 +7,7 @@ import { ProfileResponse } from "@/lib/types";
 const getProfile = async (): Promise<ProfileResponse> => {
   const cookieStore = await cookies();
   const baseUrl =
-    typeof window !== "undefined"
-      ? ""
-      : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    typeof window !== "undefined" ? "" : process.env.NEXT_PUBLIC_SITE_URL;
   const res = await fetch(`${baseUrl}/api/me/get`, {
     headers: {
       cookie: cookieStore.toString(),

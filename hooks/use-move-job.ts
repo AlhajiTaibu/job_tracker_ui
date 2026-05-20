@@ -8,7 +8,7 @@ import { useToast } from "./use-toast";
 const moveJob = async (id: string, status: JobStatus): Promise<JobApplicationResponse> => {
     const baseUrl = typeof window !== 'undefined'
         ? ''
-        : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+        : process.env.NEXT_PUBLIC_SITE_URL
     const job_id = id
     const res = await fetch(`${baseUrl}/api/applications/move/${job_id}`, {
         method: "POST",
