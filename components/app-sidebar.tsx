@@ -1,31 +1,33 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Briefcase,
+  FileText,
   LayoutDashboard,
   Settings,
   TrendingUp,
   Users,
-} from "lucide-react"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { cn } from "@/lib/utils"
+} from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { cn } from "@/lib/utils";
 
 interface AppSidebarProps {
-  totalJobs: number
+  totalJobs: number;
 }
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: Briefcase, label: "Applications", href: "/applications" },
+  { icon: FileText, label: "Documents", href: "/documents" },
   { icon: TrendingUp, label: "Analytics", href: "/analytics" },
   { icon: Users, label: "Contacts", href: "/contacts" },
   { icon: Settings, label: "Settings", href: "/settings" },
-]
+];
 
 export function AppSidebar({ totalJobs }: AppSidebarProps) {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   return (
     <aside className="hidden md:flex h-full w-16 flex-col items-center border-r border-border bg-sidebar py-6 lg:w-56 lg:items-start lg:px-4">
@@ -40,7 +42,7 @@ export function AppSidebar({ totalJobs }: AppSidebarProps) {
 
       <nav className="flex flex-1 flex-col gap-1.5 w-full">
         {navItems.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href;
           return (
             <Link
               key={item.label}
@@ -49,7 +51,7 @@ export function AppSidebar({ totalJobs }: AppSidebarProps) {
                 "flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors lg:justify-start",
                 isActive
                   ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground",
               )}
             >
               <item.icon className="h-5 w-5" />
@@ -60,7 +62,7 @@ export function AppSidebar({ totalJobs }: AppSidebarProps) {
                 </span>
               )}
             </Link>
-          )
+          );
         })}
       </nav>
 
@@ -76,5 +78,5 @@ export function AppSidebar({ totalJobs }: AppSidebarProps) {
         </div>
       </div>
     </aside>
-  )
+  );
 }
