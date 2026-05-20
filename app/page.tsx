@@ -20,7 +20,7 @@ const getJobs = async (): Promise<JobApplicationResponse> => {
     headers: {
       cookie: cookieStore.toString(),
     },
-    // next: { revalidate: 60 },
+    next: { revalidate: 60 },
   });
 
   if (!res.ok) {

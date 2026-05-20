@@ -28,8 +28,14 @@ import {
 } from "lucide-react";
 import { clientPost } from "@/lib/client-auth";
 import { useRouter } from "next/navigation";
-import { useProfile } from "@/hooks/use-profile";
+import {
+  useHandleUpdateProfile,
+  useProfile,
+  useHandleUploadAvatar,
+  useProfileStore,
+} from "@/hooks/use-profile";
 import { useJobs } from "@/hooks/use-jobs";
+import { error } from "console";
 
 export default function SettingsClient() {
   const router = useRouter();
@@ -46,19 +52,29 @@ export default function SettingsClient() {
 
   const profile = profileData?.payload ?? {};
 
-  const [firstName, setFirstName] = useState(profile?.first_name || "");
-  const [lastName, setLastName] = useState(profile?.last_name || "");
-  const [title, setTitle] = useState(profile?.title || "");
+  const [form, setForm] = useState({
+    firstName: profile?.first_name || "",
+    lastName: profile?.last_name || "",
+    title: profile?.title || "",
+  });
+
+  const [formError, setFormError] = useState<string>("");
+  const isUpdating = useProfileStore((state) => state.isUpdating);
+  const { handleUpdateProfile } = useHandleUpdateProfile();
+  const { handleUploadAvatar } = useHandleUploadAvatar();
+  const [preview, setPreview] = useState<string | null>(null);
 
   const jobs = jobsData?.payload?.data ?? [];
 
   const initials =
-    profile?.fullName
-      ?.split(" ")
-      .map((n: Array<string>) => n[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "JD";
+    profile?.first_name +
+      " " +
+      profile?.last_name
+        ?.split(" ")
+        .map((n: Array<string>) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase() || "JD";
 
   const handleLogOut = async () => {
     setMessage("");
@@ -82,9 +98,55 @@ export default function SettingsClient() {
     }
   };
 
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log(firstName, lastName, title);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleProfileUpdate = async () => {
+    setFormError("");
+    try {
+      const email = profile?.email ?? "";
+      const payload = {
+        first_name: form.firstName.trim(),
+        last_name: form.lastName.trim(),
+        title: form.title.trim(),
+        email: email,
+      };
+
+      const original = {
+        first_name: (profile?.first_name ?? "").trim(),
+        last_name: (profile?.last_name ?? "").trim(),
+        title: (profile?.title ?? "").trim(),
+        email: email,
+      };
+
+      const hasChanged =
+        payload.first_name !== original.first_name ||
+        payload.last_name !== original.last_name ||
+        payload.title !== original.title ||
+        payload.email !== original.email;
+
+      if (!hasChanged) return;
+
+      await handleUpdateProfile(payload);
+    } catch (error) {
+      setFormError(
+        error instanceof Error ? error?.message : "Error updating profile",
+      );
+    }
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const previewUrl = URL.createObjectURL(file);
+    setPreview(previewUrl);
+    handleUploadAvatar(file);
   };
 
   return (
@@ -116,7 +178,7 @@ export default function SettingsClient() {
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16">
                     <AvatarImage
-                      src={profile?.avatar_url || ""}
+                      src={preview || profile?.avatar_url || ""}
                       alt={profile?.first_name || "User avatar"}
                     />
                     <AvatarFallback className="bg-primary/10 text-lg text-primary">
@@ -124,7 +186,18 @@ export default function SettingsClient() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <Button variant="outline" size="sm">
+                    <Input
+                      id="avatar"
+                      name="avatar"
+                      className="hidden"
+                      type="file"
+                      onChange={handleAvatarChange}
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => document.getElementById("avatar")?.click()}
+                    >
                       Change Avatar
                     </Button>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -138,20 +211,18 @@ export default function SettingsClient() {
                     <Label htmlFor="firstName">First Name</Label>
                     <Input
                       id="firstName"
-                      value={firstName}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setFirstName(e.target.value)
-                      }
+                      name="firstName"
+                      value={form.firstName}
+                      onChange={handleChange}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name</Label>
                     <Input
                       id="lastName"
-                      value={lastName}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setLastName(e.target.value)
-                      }
+                      name="lastName"
+                      value={form.lastName}
+                      onChange={handleChange}
                     />
                   </div>
                   <div className="space-y-2 sm:col-span-2">
@@ -167,14 +238,25 @@ export default function SettingsClient() {
                     <Label htmlFor="title">Job Title</Label>
                     <Input
                       id="title"
-                      value={title}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setTitle(e.target.value)
-                      }
+                      name="title"
+                      value={form.title}
+                      onChange={handleChange}
                     />
                   </div>
                 </div>
-                <Button onClick={handleUpdateProfile}>Save Changes</Button>
+                <Button disabled={isUpdating} onClick={handleProfileUpdate}>
+                  {isUpdating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving Changes
+                    </>
+                  ) : (
+                    <p>Save Changes</p>
+                  )}
+                </Button>
+                {formError && (
+                  <p className="text-xs text-red-600">{formError}</p>
+                )}
               </CardContent>
             </Card>
 

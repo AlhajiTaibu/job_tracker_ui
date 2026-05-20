@@ -11,6 +11,10 @@ type ProfileInput = {
     notification_type?: string
 }
 
+type UploadAvatarResponse = {
+    avatar_url: string
+}
+
 const getProfile = async () => {
     const res = await fetch("/api/me/get")
 
@@ -24,7 +28,12 @@ const getProfile = async () => {
 
 
 const updateProfile = async (data: ProfileInput) => {
-    const res = await fetch("/api/me/update", {
+    const baseUrl = typeof window !== 'undefined'
+        ? ''
+        : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+    const res = await fetch(`${baseUrl}/api/me/update`, {
+        method: "POST",
         body: JSON.stringify(data)
     })
 
@@ -36,6 +45,33 @@ const updateProfile = async (data: ProfileInput) => {
     return res.json()
 }
 
+const uploadAvatar = async (file: File) => {
+    const formData = new FormData()
+    formData.append("file", file)
+
+    const res = await fetch("/api/me/upload-avatar", {
+        body: formData,
+        method: "POST"
+    })
+
+    if (!res.ok) {
+        throw new Error("Failed to upload avatar")
+    }
+
+    return res.json()
+}
+
+
+const useUploadAvatar = () => {
+    const queryClient = useQueryClient()
+
+    return useMutation({
+        mutationFn: ({ file }: { file: File }) => uploadAvatar(file),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["profile"] })
+        }
+    })
+}
 
 const useProfile = () => {
     return useQuery({
@@ -93,6 +129,7 @@ const useProfileStore = create<ProfileUpdate>((set) => ({
     setIsUpdating: (val) => set({ isUpdating: val })
 }))
 
+
 const useHandleUpdateProfile = () => {
     const { mutateAsync } = useUpdateProfile()
     const { toast } = useToast()
@@ -100,7 +137,7 @@ const useHandleUpdateProfile = () => {
     const handleUpdateProfile = useCallback(async (data: ProfileInput) => {
         try {
             const result = await mutateAsync({ data })
-
+            console.log(result)
             if (result?.error || result?.message.includes("error")) {
                 throw new Error("Profile update failed")
             }
@@ -124,4 +161,33 @@ const useHandleUpdateProfile = () => {
     return { handleUpdateProfile }
 }
 
-export { getProfile, useProfile, useHandleUpdateProfile, useProfileStore }
+
+const useHandleUploadAvatar = () => {
+    const { mutateAsync } = useUploadAvatar()
+    const { toast } = useToast()
+
+    const handleUploadAvatar = useCallback(
+        async (file: File) => {
+            try {
+                const res = await mutateAsync({ file })
+                if (res?.error || res?.message.includes("Error")) {
+                    throw new Error("Avatar upload failed")
+                }
+                toast({
+                    title: "Avatar Upload",
+                    description: "Avatar uploaded successfully"
+                })
+            } catch {
+                toast({
+                    title: "Avatar Upload Failed",
+                    description: "Avatar upload failed",
+                    variant: "destructive"
+                })
+            }
+
+        }, [mutateAsync, toast])
+
+    return { handleUploadAvatar }
+}
+
+export { getProfile, useProfile, useHandleUpdateProfile, useProfileStore, useHandleUploadAvatar }

@@ -14,6 +14,7 @@ const getProfile = async (): Promise<ProfileResponse> => {
     headers: {
       cookie: cookieStore.toString(),
     },
+    next: { revalidate: 60 },
   });
 
   if (!res.ok) {

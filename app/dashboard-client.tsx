@@ -9,7 +9,7 @@ import { KanbanColumn } from "@/components/kanban-column";
 import { AddJobSheet } from "@/components/add-job-sheet";
 import { ViewJobSheet } from "@/components/view-job-sheet";
 import type { JobApplication, JobStatus } from "@/lib/types";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { fetchJobs, useJobs } from "@/hooks/use-jobs";
 import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
@@ -24,6 +24,7 @@ import {
 import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 import { useJobStore } from "@/hooks/use-job-store";
 import { useHandleMove } from "@/hooks/use-move-job";
+import { useProfile } from "@/hooks/use-profile";
 
 const columns: { status: JobStatus; title: string; color: string }[] = [
   { status: "saved", title: "Saved", color: "bg-slate-400" },
@@ -152,6 +153,17 @@ export default function DashboardClient() {
       j.status !== "stale" &&
       j.status !== "withdrawn",
   ).length;
+  const { data: profileData } = useProfile();
+  const profile = profileData?.payload ?? {};
+  const initials =
+    profile?.first_name +
+      " " +
+      profile?.last_name
+        ?.split(" ")
+        .map((n: Array<string>) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase() || "JD";
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -193,8 +205,12 @@ export default function DashboardClient() {
               className="inline-flex rounded-full hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
             >
               <Avatar className="h-9 w-9 ">
+                <AvatarImage
+                  src={profile?.avatar_url || ""}
+                  alt={initials || "User avatar"}
+                />
                 <AvatarFallback className="bg-primary/10 text-lg text-primary">
-                  JD
+                  {initials}
                 </AvatarFallback>
               </Avatar>
             </button>
