@@ -10,14 +10,36 @@ import { RoleAnalyticsSection } from "@/components/role-analytics-section";
 import { InterviewAnalyticsSection } from "@/components/interview-analytics-section";
 import { FollowUpAnalyticsSection } from "@/components/follow-up-analytics-section";
 import { AnalyticsInsightsSection } from "@/components/analytics-insights-section";
+import { useState } from "react";
+import { Hamburger } from "@/components/ui/hamburger";
 
 export default function AnalyticsPage() {
   const totalApplications = 48;
+  const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <div className="flex h-screen overflow-hidden">
-      <AppSidebar totalJobs={totalApplications} />
+      <AppSidebar
+        totalJobs={totalApplications}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="border-b border-border bg-background px-4 py-4 sm:px-6">
+        <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-semibold text-foreground sm:text-xl">
+                Analytics
+              </h1>
+              <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+                Funnel, activity, sourcing, interviews, follow-ups, and pipeline
+                health
+              </p>
+            </div>
+          </div>
+        </header>
+        {/* <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
           <h1 className="text-lg font-semibold text-foreground sm:text-xl">
             Analytics
           </h1>
@@ -25,7 +47,7 @@ export default function AnalyticsPage() {
             Funnel, activity, sourcing, interviews, follow-ups, and pipeline
             health
           </p>
-        </header>
+        </header> */}
 
         <main className="flex-1 overflow-auto p-4 sm:p-6 space-y-6">
           <AnalyticsOverviewCards

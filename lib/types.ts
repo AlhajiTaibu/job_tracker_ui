@@ -119,6 +119,34 @@ export interface ProfileResponse {
   error?: string
 }
 
+export type DocumentStatus = "uploaded" | "processing" | "ready" | "failed";
+
+export const documentsConfig: Record<
+  DocumentStatus,
+  { label: string; color: string; bgColor: string }
+> = {
+  uploaded: {
+    label: "Uploaded",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
+  },
+  processing: {
+    label: "Processing",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+  },
+  ready: {
+    label: "Ready",
+    color: "text-emerald-700",
+    bgColor: "bg-emerald-50",
+  },
+  failed: {
+    label: "Failed",
+    color: "text-rose-700",
+    bgColor: "bg-rose-50",
+  },
+}
+
 export type User = {
   id?: string
   email: string

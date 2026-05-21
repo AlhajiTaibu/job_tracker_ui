@@ -19,6 +19,7 @@ import type { JobApplication, JobStatus } from "@/lib/types";
 import { statusConfig } from "@/lib/types";
 import { useJobs } from "@/hooks/use-jobs";
 import { useJobStore } from "@/hooks/use-job-store";
+import { Hamburger } from "@/components/ui/hamburger";
 
 export default function ApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,12 +47,19 @@ export default function ApplicationsPage() {
     });
   }, [jobs, searchQuery]);
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
     <div className="flex h-screen overflow-hidden">
-      <AppSidebar totalJobs={jobs.length} />
+      <AppSidebar
+        totalJobs={jobs.length}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-lg font-semibold text-foreground sm:text-xl">

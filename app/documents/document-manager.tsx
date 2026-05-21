@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   FileText,
   Upload,
@@ -14,10 +14,25 @@ import {
   CheckCircle2,
   Clock3,
   AlertCircle,
+  FileCheck,
+  FolderOpen,
+  File,
+  Paperclip,
+  X,
 } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar";
-
-type DocumentStatus = "uploaded" | "processing" | "ready" | "failed";
+import { Hamburger } from "@/components/ui/hamburger";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DocumentType, DocumentStatus, documentsConfig } from "@/lib/types";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type DocumentItem = {
   id: string;
@@ -98,6 +113,41 @@ function StatusIcon({ status }: { status: DocumentStatus }) {
     case "failed":
       return <AlertCircle className="h-4 w-4" />;
   }
+}
+
+const documentTypes: {
+  value: DocumentType;
+  label: string;
+  icon: React.ReactNode;
+}[] = [
+  { value: "cv", label: "CV / Resume", icon: <FileText className="h-4 w-4" /> },
+  {
+    value: "cover_letter",
+    label: "Cover Letter",
+    icon: <FileCheck className="h-4 w-4" />,
+  },
+  {
+    value: "portfolio",
+    label: "Portfolio",
+    icon: <FolderOpen className="h-4 w-4" />,
+  },
+  { value: "other", label: "Other", icon: <File className="h-4 w-4" /> },
+];
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+function getDocumentTypeIcon(type: DocumentType) {
+  const docType = documentTypes.find((d) => d.value === type);
+  return docType?.icon || <File className="h-4 w-4" />;
+}
+
+function getDocumentTypeLabel(type: DocumentType) {
+  const docType = documentTypes.find((d) => d.value === type);
+  return docType?.label || "Document";
 }
 
 export function DocumentManager() {
@@ -191,21 +241,101 @@ export function DocumentManager() {
   }
 
   const totalApplications = 10;
+
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedDocType, setSelectedDocType] = useState<DocumentType>("cv");
+  const [isDragging, setIsDragging] = useState(false);
+
   return (
     <div className="flex h-screen overflow-hidden">
-      <AppSidebar totalJobs={totalApplications} />
+      <AppSidebar
+        totalJobs={totalApplications}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="border-b border-border bg-background px-4 py-4 sm:px-6">
-          <h1 className="text-lg font-semibold text-foreground sm:text-xl">
-            Documents
-          </h1>
-          <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-            Upload, review, track, and link documents to job applications.
-          </p>
+        <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-semibold text-foreground sm:text-xl">
+                Documents
+              </h1>
+              <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+                Upload, review, track, and link documents applications.
+              </p>
+            </div>
+            <div>
+              <input
+                id="document"
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => handleUpload(e.target.files)}
+              />
+              <Button
+                className="sm:hidden"
+                onClick={() => document.getElementById("document")?.click()}
+              >
+                <Upload className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="relative flex-1 sm:flex-none">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 sm:w-64"
+              />
+            </div>
+            <Select
+              value={statusFilter}
+              onValueChange={(v) =>
+                setStatusFilter(v as DocumentStatus | "all")
+              }
+            >
+              <SelectTrigger className="w-[130px]">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                {(Object.keys(documentsConfig) as DocumentStatus[]).map(
+                  (status) => (
+                    <SelectItem key={status} value={status}>
+                      {documentsConfig[status].label}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+            <div>
+              <input
+                id="document"
+                type="file"
+                multiple
+                className="hidden"
+                onChange={(e) => handleUpload(e.target.files)}
+              />
+              <Button
+                className="hidden sm:flex"
+                onClick={() => document.getElementById("document")?.click()}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Upload Document
+              </Button>
+            </div>
+          </div>
         </header>
-        <main className="min-h-screen bg-background p-6">
+        <main className="flex-1 overflow-auto p-4 sm:p-6">
           <div className="mx-auto max-w-7xl space-y-6">
             <div className="space-y-6">
+              {/* Stats Section */}
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <StatCard
                   label="Total Documents"
@@ -228,53 +358,79 @@ export function DocumentManager() {
                   icon={<Link2 className="h-5 w-5" />}
                 />
               </div>
+              {/* Documents Section */}
+              <div className="space-y-5">
+                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                  <Paperclip className="h-4 w-4 text-muted-foreground" />
+                  <span>Upload Documents</span>
+                </div>
 
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                  <div className="flex flex-1 flex-col gap-3 md:flex-row">
-                    <div className="relative flex-1">
-                      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search documents, type, or linked application..."
-                        className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-4 text-sm outline-none ring-0 placeholder:text-muted-foreground focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="relative md:w-56">
-                      <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                      <select
-                        value={statusFilter}
-                        onChange={(e) =>
-                          setStatusFilter(
-                            e.target.value as "all" | DocumentStatus,
-                          )
-                        }
-                        className="h-11 w-full appearance-none rounded-xl border border-border bg-background pl-10 pr-4 text-sm outline-none focus:border-primary"
+                <div className="pl-6 space-y-4">
+                  {/* Document Type Selector */}
+                  <div className="flex flex-wrap gap-2">
+                    {documentTypes.map((docType) => (
+                      <button
+                        key={docType.value}
+                        type="button"
+                        onClick={() => setSelectedDocType(docType.value)}
+                        className={cn(
+                          "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
+                          selectedDocType === docType.value
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/50 hover:text-foreground",
+                        )}
                       >
-                        <option value="all">All statuses</option>
-                        <option value="uploaded">Uploaded</option>
-                        <option value="processing">Processing</option>
-                        <option value="ready">Ready</option>
-                        <option value="failed">Failed</option>
-                      </select>
-                    </div>
+                        {docType.icon}
+                        {docType.label}
+                      </button>
+                    ))}
                   </div>
-
-                  <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition hover:opacity-90">
-                    <Upload className="h-4 w-4" />
-                    Upload Document
+                  {/* Upload Area */}
+                  <div
+                    // onDragOver={handleDragOver}
+                    // onDragLeave={handleDragLeave}
+                    // onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                      "relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-all",
+                      isDragging
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50 hover:bg-secondary/30",
+                    )}
+                  >
                     <input
+                      ref={fileInputRef}
                       type="file"
                       multiple
+                      accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
+                      // onChange={(e) => handleFileSelect(e.target.files)}
                       className="hidden"
-                      onChange={(e) => handleUpload(e.target.files)}
                     />
-                  </label>
+                    <div
+                      className={cn(
+                        "flex h-12 w-12 items-center justify-center rounded-full transition-colors",
+                        isDragging ? "bg-primary/20" : "bg-secondary",
+                      )}
+                    >
+                      <Upload
+                        className={cn(
+                          "h-6 w-6 transition-colors",
+                          isDragging ? "text-primary" : "text-muted-foreground",
+                        )}
+                      />
+                    </div>
+                    <p className="mt-3 text-sm font-medium text-foreground">
+                      {isDragging ? "Drop files here" : "Upload documents"}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Drag & drop or click to browse
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground/60">
+                      PDF, DOC, DOCX, TXT, PNG, JPG up to 5MB
+                    </p>
+                  </div>
                 </div>
               </div>
-
               <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-border">

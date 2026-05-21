@@ -1,31 +1,40 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Plus, Search, Mail, Phone, Linkedin, Building2, MoreHorizontal } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { AppSidebar } from "@/components/app-sidebar"
-import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useState } from "react";
+import {
+  Plus,
+  Search,
+  Mail,
+  Phone,
+  Linkedin,
+  Building2,
+  MoreHorizontal,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { AppSidebar } from "@/components/app-sidebar";
+import { Card, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+import { Hamburger } from "@/components/ui/hamburger";
 
 interface Contact {
-  id: string
-  name: string
-  role: string
-  company: string
-  email: string
-  phone?: string
-  linkedin?: string
-  type: "recruiter" | "hiring-manager" | "referral" | "other"
-  notes?: string
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  email: string;
+  phone?: string;
+  linkedin?: string;
+  type: "recruiter" | "hiring-manager" | "referral" | "other";
+  notes?: string;
 }
 
 const initialContacts: Contact[] = [
@@ -86,42 +95,54 @@ const initialContacts: Contact[] = [
     type: "referral",
     notes: "Connected on LinkedIn, working on referral",
   },
-]
+];
 
 const typeConfig = {
   recruiter: { label: "Recruiter", className: "bg-blue-100 text-blue-700" },
-  "hiring-manager": { label: "Hiring Manager", className: "bg-purple-100 text-purple-700" },
+  "hiring-manager": {
+    label: "Hiring Manager",
+    className: "bg-purple-100 text-purple-700",
+  },
   referral: { label: "Referral", className: "bg-emerald-100 text-emerald-700" },
   other: { label: "Other", className: "bg-slate-100 text-slate-700" },
-}
+};
 
 export default function ContactsPage() {
-  const [contacts, setContacts] = useState<Contact[]>(initialContacts)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [contacts, setContacts] = useState<Contact[]>(initialContacts);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filteredContacts = contacts.filter((contact) => {
-    if (searchQuery === "") return true
-    const query = searchQuery.toLowerCase()
+    if (searchQuery === "") return true;
+    const query = searchQuery.toLowerCase();
     return (
       contact.name.toLowerCase().includes(query) ||
       contact.company.toLowerCase().includes(query) ||
       contact.role.toLowerCase().includes(query)
-    )
-  })
+    );
+  });
 
   const handleDeleteContact = (id: string) => {
-    setContacts((prev) => prev.filter((c) => c.id !== id))
-  }
+    setContacts((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <AppSidebar totalJobs={8} />
+      <AppSidebar
+        totalJobs={8}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-semibold text-foreground sm:text-xl">Contacts</h1>
+              <h1 className="text-lg font-semibold text-foreground sm:text-xl">
+                Contacts
+              </h1>
               <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
                 {filteredContacts.length} professional contacts
               </p>
@@ -153,7 +174,9 @@ export default function ContactsPage() {
               <div className="mb-4 rounded-full bg-muted p-4">
                 <Search className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-medium text-foreground">No contacts found</h3>
+              <h3 className="text-lg font-medium text-foreground">
+                No contacts found
+              </h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {searchQuery
                   ? "Try adjusting your search"
@@ -180,8 +203,12 @@ export default function ContactsPage() {
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <h3 className="font-medium text-foreground">{contact.name}</h3>
-                          <p className="text-sm text-muted-foreground">{contact.role}</p>
+                          <h3 className="font-medium text-foreground">
+                            {contact.name}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            {contact.role}
+                          </p>
                         </div>
                       </div>
                       <DropdownMenu>
@@ -210,21 +237,36 @@ export default function ContactsPage() {
 
                     <div className="mt-3 flex items-center gap-2">
                       <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">{contact.company}</span>
-                      <Badge variant="secondary" className={typeConfig[contact.type].className}>
+                      <span className="text-sm text-muted-foreground">
+                        {contact.company}
+                      </span>
+                      <Badge
+                        variant="secondary"
+                        className={typeConfig[contact.type].className}
+                      >
                         {typeConfig[contact.type].label}
                       </Badge>
                     </div>
 
                     <div className="mt-4 flex flex-wrap items-center gap-2">
-                      <Button variant="outline" size="sm" className="h-8" asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8"
+                        asChild
+                      >
                         <a href={`mailto:${contact.email}`}>
                           <Mail className="mr-1.5 h-3.5 w-3.5" />
                           Email
                         </a>
                       </Button>
                       {contact.phone && (
-                        <Button variant="outline" size="sm" className="h-8" asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8"
+                          asChild
+                        >
                           <a href={`tel:${contact.phone}`}>
                             <Phone className="mr-1.5 h-3.5 w-3.5" />
                             Call
@@ -232,7 +274,12 @@ export default function ContactsPage() {
                         </Button>
                       )}
                       {contact.linkedin && (
-                        <Button variant="outline" size="sm" className="h-8" asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8"
+                          asChild
+                        >
                           <a
                             href={`https://${contact.linkedin}`}
                             target="_blank"
@@ -258,5 +305,5 @@ export default function ContactsPage() {
         </main>
       </div>
     </div>
-  )
+  );
 }

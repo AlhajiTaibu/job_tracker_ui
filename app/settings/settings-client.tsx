@@ -35,7 +35,7 @@ import {
   useProfileStore,
 } from "@/hooks/use-profile";
 import { useJobs } from "@/hooks/use-jobs";
-import { error } from "console";
+import { Hamburger } from "@/components/ui/hamburger";
 
 export default function SettingsClient() {
   const router = useRouter();
@@ -147,18 +147,29 @@ export default function SettingsClient() {
     handleUploadAvatar(file);
   };
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
     <div className="flex h-screen overflow-hidden">
-      <AppSidebar totalJobs={jobs.length} />
+      <AppSidebar
+        totalJobs={jobs.length}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="border-b border-border bg-background px-4 py-4 sm:px-6">
-          <h1 className="text-lg font-semibold text-foreground sm:text-xl">
-            Settings
-          </h1>
-          <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-            Manage your account and preferences
-          </p>
+        <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-lg font-semibold text-foreground sm:text-xl">
+                Settings
+              </h1>
+              <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
+                Manage your account and preferences{" "}
+              </p>
+            </div>
+          </div>
         </header>
 
         <main className="flex-1 overflow-auto p-4 sm:p-6">

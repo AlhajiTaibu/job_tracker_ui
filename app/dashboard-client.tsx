@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Plus, Search } from "lucide-react";
+import { Menu, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -25,6 +25,7 @@ import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 import { useJobStore } from "@/hooks/use-job-store";
 import { useHandleMove } from "@/hooks/use-move-job";
 import { useProfile } from "@/hooks/use-profile";
+import { Hamburger } from "@/components/ui/hamburger";
 
 const columns: { status: JobStatus; title: string; color: string }[] = [
   { status: "saved", title: "Saved", color: "bg-slate-400" },
@@ -163,13 +164,20 @@ export default function DashboardClient() {
       .slice(0, 2)
       .toUpperCase() || "JD";
 
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
     <div className="flex h-screen overflow-hidden">
-      <AppSidebar totalJobs={totalApplications} />
+      <AppSidebar
+        totalJobs={totalApplications}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
 
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
         <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-lg font-semibold text-foreground sm:text-xl">
@@ -179,6 +187,13 @@ export default function DashboardClient() {
                 {activeApplications} active out of {totalApplications} total
               </p>
             </div>
+            <Button
+              size="sm"
+              onClick={() => handleAddClick("saved")}
+              className="sm:hidden"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="relative flex-1 sm:flex-none">
@@ -193,7 +208,7 @@ export default function DashboardClient() {
 
             <Button
               onClick={() => handleAddClick("saved")}
-              className="flex sm:flex"
+              className="hidden sm:flex"
             >
               <Plus className="mr-2 h-4 w-4" />
               Add Application
