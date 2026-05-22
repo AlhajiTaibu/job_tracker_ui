@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import { serverProtectedApiFetch } from "@/lib/server-protected-api"
-import { JobApplication, JobApplicationResponse } from "@/lib/types"
 
 type RouteContext = {
     params: Promise<{ job_id: string }>

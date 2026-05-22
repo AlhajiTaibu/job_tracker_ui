@@ -29,7 +29,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DocumentType, DocumentStatus, documentsConfig } from "@/lib/types";
+import {
+  DocumentType,
+  DocumentStatus,
+  documentsConfig,
+  JobDocument,
+} from "@/lib/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -247,6 +252,50 @@ export function DocumentManager() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedDocType, setSelectedDocType] = useState<DocumentType>("cv");
   const [isDragging, setIsDragging] = useState(false);
+  const [formData, setFormData] = useState({
+    documents: [] as JobDocument[],
+  });
+
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files) return;
+
+    const newDocuments: JobDocument[] = Array.from(files).map((file) => ({
+      id: crypto.randomUUID(),
+      name: file.name,
+      type: selectedDocType,
+      size: file.size,
+      uploadedAt: new Date().toISOString(),
+      url: URL.createObjectURL(file),
+    }));
+
+    setFormData((prev) => ({
+      ...prev,
+      documents: [...prev.documents, ...newDocuments],
+    }));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileSelect(e.dataTransfer.files);
+  };
+
+  const removeDocument = (id: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      documents: prev.documents.filter((doc) => doc.id !== id),
+    }));
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -387,9 +436,9 @@ export function DocumentManager() {
                   </div>
                   {/* Upload Area */}
                   <div
-                    // onDragOver={handleDragOver}
-                    // onDragLeave={handleDragLeave}
-                    // onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
                     className={cn(
                       "relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-all",
@@ -403,7 +452,7 @@ export function DocumentManager() {
                       type="file"
                       multiple
                       accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
-                      // onChange={(e) => handleFileSelect(e.target.files)}
+                      onChange={(e) => handleFileSelect(e.target.files)}
                       className="hidden"
                     />
                     <div
@@ -431,6 +480,44 @@ export function DocumentManager() {
                   </div>
                 </div>
               </div>
+              {formData.documents.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Attached ({formData.documents.length})
+                  </p>
+                  <div className="space-y-2">
+                    {formData.documents.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center gap-3 rounded-lg border border-border bg-secondary/30 p-3"
+                      >
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                          {getDocumentTypeIcon(doc.type)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {doc.name}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>{getDocumentTypeLabel(doc.type)}</span>
+                            <span>•</span>
+                            <span>{formatFileSize(doc.size)}</span>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => removeDocument(doc.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-border">

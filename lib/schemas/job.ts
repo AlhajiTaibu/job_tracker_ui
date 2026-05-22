@@ -8,7 +8,7 @@ export const addJobSchema = z.object({
     source: z.string().min(5, "Source is required"),
     description: z.string(),
     notes: z.string(),
-    job_url: z.string(),
+    job_url: z.string().url(),
     date_applied: z.string()
 })
 

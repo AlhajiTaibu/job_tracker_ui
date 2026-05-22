@@ -21,10 +21,10 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: Briefcase, label: "Applications", href: "/applications" },
-  { icon: FileText, label: "Documents", href: "/documents" },
-  { icon: TrendingUp, label: "Analytics", href: "/analytics" },
   { icon: Users, label: "Contacts", href: "/contacts" },
   { icon: ActivityIcon, label: "Tasks", href: "/tasks" },
+  { icon: FileText, label: "Documents", href: "/documents" },
+  { icon: TrendingUp, label: "Analytics", href: "/analytics" },
   { icon: Settings, label: "Settings", href: "/settings" },
 ];
 

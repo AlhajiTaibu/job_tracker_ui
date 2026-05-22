@@ -4,6 +4,8 @@ export type JobSource = "LinkedIn" | "Referral" | "Company Career Page" | "Job B
 
 export type DocumentType = "cv" | "cover_letter" | "portfolio" | "other"
 
+export type ContactType = "recruiter" | "hiring manager" | "referral" | "employee" | "other"
+
 export interface JobDocument {
   id: string
   name: string
@@ -13,8 +15,34 @@ export interface JobDocument {
   url: string
 }
 
-export interface Contacts {
+export interface NoteLog {
+  id: string
+  notes: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Contact {
+  id: string
   name: string
+  role?: string
+  company?: string
+  email?: string
+  phone?: string
+  linkedIn_url?: string
+  relationship_type: ContactType
+  notes?: NoteLog[]
+  created_at?: string
+  job_applications?: JobApplication[]
+}
+export interface ContactPayload {
+  data?: Contact[]
+}
+
+export interface ContactResponse {
+  success?: boolean
+  payload: ContactPayload
+  error?: string
 }
 
 export interface JobApplication {
@@ -29,7 +57,7 @@ export interface JobApplication {
   job_url?: string
   updated_at?: string
   documents?: JobDocument[]
-  contacts?: Contacts[]
+  contacts?: Contact[]
 }
 
 export interface Payload {
