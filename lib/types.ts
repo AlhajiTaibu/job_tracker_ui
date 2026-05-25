@@ -33,6 +33,7 @@ export interface Contact {
   relationship_type: ContactType
   notes?: NoteLog[]
   created_at?: string
+  updated_at?: string
   job_applications?: JobApplication[]
 }
 export interface ContactPayload {

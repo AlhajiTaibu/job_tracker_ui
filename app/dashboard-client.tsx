@@ -10,7 +10,7 @@ import { AddJobSheet } from "@/components/add-job-sheet";
 import { ViewJobSheet } from "@/components/view-job-sheet";
 import type { JobApplication, JobStatus } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { fetchJobs, useJobs } from "@/hooks/use-jobs";
 import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
 import {
@@ -54,6 +54,15 @@ export default function DashboardClient() {
   const defaultStatus = useJobStore((state) => state.defaultStatus);
   const handleAddClick = useJobStore((state) => state.handleAddClick);
   const { handleMove } = useHandleMove();
+
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("token")) {
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, "", cleanUrl);
+    }
+  }, [searchParams]);
 
   const { data: jobsData } = useJobs();
 

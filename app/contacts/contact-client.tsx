@@ -9,6 +9,9 @@ import {
   Linkedin,
   Building2,
   MoreHorizontal,
+  Calendar,
+  FileText,
+  StickyNote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Hamburger } from "@/components/ui/hamburger";
 import { Contact } from "@/lib/types";
 import { AddContactSheet } from "@/components/add-contact-sheet";
+import { ViewContactSheet } from "@/components/view-contact-sheet";
 import { useContactStore } from "@/hooks/use-contact-store";
 import { useContacts, useHandleDeleteContact } from "@/hooks/use-contact";
 
@@ -39,6 +43,8 @@ const typeConfig = {
   employee: { label: "Employee", className: "bg-green-100 text-green-700" },
   other: { label: "Other", className: "bg-slate-100 text-slate-700" },
 };
+const truncateText = (text: string, maxLength: number) =>
+  text.length > maxLength ? `${text.slice(0, maxLength).trim()}...` : text;
 
 export default function ContactsClient() {
   const { data: initialContacts } = useContacts();
@@ -47,6 +53,10 @@ export default function ContactsClient() {
 
   const sheetOpen = useContactStore((state) => state.sheetOpen);
   const setSheetOpen = useContactStore((state) => state.setSheetOpen);
+  const isViewOpen = useContactStore((state) => state.isViewOpen);
+  const setIsViewOpen = useContactStore((state) => state.setIsViewOpen);
+  const selectedContact = useContactStore((state) => state.selectedContact);
+  const viewContact = useContactStore((state) => state.viewContact);
   const editingContact = useContactStore((state) => state.editingContact);
   const editContact = useContactStore((state) => state.editContact);
   const defaultRelationshipType = useContactStore(
@@ -68,6 +78,18 @@ export default function ContactsClient() {
   }, [contacts, searchQuery]);
 
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const formattedDate = (contact: Contact | undefined) => {
+    return contact?.created_at
+      ? new Date(contact.created_at).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        })
+      : new Date(contact?.updated_at ?? "").toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        });
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -245,17 +267,41 @@ export default function ContactsClient() {
                         </Button>
                       )}
                     </div>
-                    {contact.notes &&
-                      contact.notes.length > 0 &&
-                      contact.notes.map((note, index) => (
-                        <p
-                          className="mt-3 text-xs text-muted-foreground line-clamp-2"
-                          key={index}
-                        >
-                          {note.notes}
-                        </p>
-                      ))}
+                    {contact.notes && (
+                      <div className="mt-2.5 flex items-start gap-1.5 text-xs text-muted-foreground/80">
+                        <StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        {contact.notes &&
+                          contact.notes.length > 0 &&
+                          contact.notes.map((note, index) => (
+                            <p
+                              className="mt-3 text-xs text-muted-foreground line-clamp-2"
+                              key={index}
+                            >
+                              {truncateText(note.notes, 60)}
+                            </p>
+                          ))}
+                      </div>
+                    )}
                   </CardContent>
+                  <div className="mt-3 flex items-center justify-between border-t border-border/50 pt-2.5 px-4">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        {formattedDate(contact) && (
+                          <>
+                            <Calendar className="h-3 w-3" />
+                            <span>{formattedDate(contact)}</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      type="submit"
+                      onClick={() => viewContact(contact)}
+                      className="text-xs text-primary/70 transition-colors hover:text-primary"
+                    >
+                      View contact
+                    </button>
+                  </div>
                 </Card>
               ))}
             </div>
@@ -267,6 +313,11 @@ export default function ContactsClient() {
         onOpenChange={setSheetOpen}
         contact={editingContact}
         defaultRelationshipType={defaultRelationshipType}
+      />
+      <ViewContactSheet
+        open={isViewOpen}
+        onOpenChange={setIsViewOpen}
+        contact={selectedContact}
       />
     </div>
   );
