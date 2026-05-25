@@ -87,7 +87,7 @@ function InfoRow({
             href={href}
             target="_blank"
             rel="noreferrer"
-            className="truncate text-blue-600 hover:text-blue-700 hover:underline"
+            className="truncate text-primary hover:underline"
           >
             {displayValue}
           </a>
@@ -111,7 +111,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border bg-card p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
         <span className="text-muted-foreground">{icon}</span>
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
@@ -134,13 +134,13 @@ function RichSection({
   const hasValue = !!value?.trim();
 
   return (
-    <section className="rounded-2xl border bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border bg-card p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
         <span className="text-muted-foreground">{icon}</span>
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       </div>
 
-      <div className="rounded-xl bg-slate-50 px-4 py-4 text-sm leading-7 text-foreground">
+      <div className="rounded-xl bg-muted px-4 py-4 text-sm leading-7 text-foreground">
         {hasValue ? (
           <p className="whitespace-pre-wrap break-words">{value}</p>
         ) : (
@@ -164,7 +164,7 @@ function DocumentsSection({
   const hasDocuments = !!documents?.length;
 
   return (
-    <section className="rounded-2xl border bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border bg-card p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
         <span className="text-muted-foreground">
           <Paperclip className="h-4 w-4" />
@@ -179,7 +179,7 @@ function DocumentsSection({
           {documents.map((doc, index) => (
             <div
               key={doc.id || `${doc.name}-${index}`}
-              className="flex items-center justify-between rounded-xl border bg-slate-50 px-4 py-3"
+              className="flex items-center justify-between rounded-xl border bg-muted px-4 py-3"
             >
               <div className="min-w-0">
                 <p className="truncate text-sm font-medium text-foreground">
@@ -195,7 +195,7 @@ function DocumentsSection({
                   href={doc.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="ml-4 shrink-0 text-sm font-medium text-blue-600 hover:underline"
+                  className="ml-4 shrink-0 text-sm font-medium text-primary hover:underline"
                 >
                   Open
                 </a>
@@ -208,7 +208,7 @@ function DocumentsSection({
           ))}
         </div>
       ) : (
-        <div className="rounded-xl bg-slate-50 px-4 py-4 text-sm text-muted-foreground">
+        <div className="rounded-xl bg-muted px-4 py-4 text-sm text-muted-foreground">
           No linked documents
         </div>
       )}
@@ -231,7 +231,7 @@ function ContactsSection({
   const hasContacts = !!contacts?.length;
 
   return (
-    <section className="rounded-2xl border bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border bg-card p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
         <span className="text-muted-foreground">
           <Users className="h-4 w-4" />
@@ -244,7 +244,7 @@ function ContactsSection({
           {contacts.map((contact, index) => (
             <div
               key={contact.id || `${contact.name}-${index}`}
-              className="rounded-xl border bg-slate-50 p-4"
+              className="rounded-xl border bg-muted p-4"
             >
               <div className="mb-3">
                 <p className="text-sm font-semibold text-foreground">
@@ -304,7 +304,7 @@ function ContactsSection({
           ))}
         </div>
       ) : (
-        <div className="rounded-xl bg-slate-50 px-4 py-4 text-sm text-muted-foreground">
+        <div className="rounded-xl bg-muted px-4 py-4 text-sm text-muted-foreground">
           No contacts added
         </div>
       )}
@@ -324,11 +324,12 @@ export function ViewJobSheet({ open, onOpenChange, job }: ViewJobSheetProps) {
       });
 
   if (!job) return null;
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[85vw] sm:w-full overflow-y-auto bg-slate-50 p-0 sm:max-w-[600px]">
+      <SheetContent className="w-[85vw] sm:w-full overflow-y-auto bg-background p-0 sm:max-w-[600px]">
         <div className="flex min-h-full flex-col">
-          <SheetHeader className="border-b bg-white px-6 py-6 text-left">
+          <SheetHeader className="border-b bg-background px-6 py-6 text-left">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
                 <Briefcase className="h-6 w-6" />

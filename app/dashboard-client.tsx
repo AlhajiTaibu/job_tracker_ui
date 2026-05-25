@@ -43,6 +43,7 @@ const columns: { status: JobStatus; title: string; color: string }[] = [
 export default function DashboardClient() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const isViewOpen = useJobStore((state) => state.isViewOpen);
   const selectedJob = useJobStore((state) => state.selectedJob);
@@ -64,11 +65,26 @@ export default function DashboardClient() {
     }
   }, [searchParams]);
 
-  const { data: jobsData } = useJobs();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const { data: jobsData } = useJobs({
+    search: searchQuery,
+    filters: {},
+    limit: 20,
+  });
 
   const [activeJob, setActiveJob] = useState<JobApplication | null>(null);
 
-  const jobs = jobsData?.payload?.data ?? [];
+  const jobs =
+    jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
+
+  console.log("Fetched jobs:", jobs);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -134,10 +150,12 @@ export default function DashboardClient() {
   const filteredJobs = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return jobs;
-    return jobs.filter((job) => {
-      job.company_name?.toLowerCase().includes(query) ||
-        job.job_title?.toLowerCase().includes(query);
-    });
+
+    return jobs.filter(
+      (job) =>
+        job.company_name?.toLowerCase().includes(query) ||
+        job.job_title?.toLowerCase().includes(query),
+    );
   }, [jobs, searchQuery]);
 
   const jobsByStatus: Record<JobStatus, JobApplication[]> = useMemo(() => {

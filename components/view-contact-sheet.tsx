@@ -62,7 +62,7 @@ function JobsSection({
   const hasContacts = !!job_applications?.length;
 
   return (
-    <section className="rounded-2xl border bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border bg-card p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
         <span className="text-muted-foreground">
           <Briefcase className="h-4 w-4" />
@@ -77,7 +77,7 @@ function JobsSection({
               key={
                 job_application.id || `${job_application.job_title}-${index}`
               }
-              className="rounded-xl border bg-slate-50 p-4"
+              className="rounded-xl border bg-muted p-4"
             >
               <div className="mb-3">
                 <p className="text-sm font-semibold text-foreground">
@@ -91,7 +91,7 @@ function JobsSection({
 
               <div className="space-y-2">
                 <div className="flex items-start gap-2 text-sm">
-                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <Globe className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                   {job_application.source?.trim() ? (
                     <span className="break-all text-blue-600 hover:underline">
                       {job_application.source}
@@ -102,24 +102,27 @@ function JobsSection({
                 </div>
 
                 <div className="flex items-start gap-2 text-sm">
-                  <Phone className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <Tag className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                   {job_application.status?.trim() ? (
-                    <span className="text-blue-600 hover:underline">
+                    <Badge
+                      variant="outline"
+                      className={`capitalize ${getStatusClasses(job_application.status)}`}
+                    >
                       {job_application.status}
-                    </span>
+                    </Badge>
                   ) : (
-                    <span className="text-muted-foreground">No phone</span>
+                    <span className="text-muted-foreground">No status</span>
                   )}
                 </div>
 
                 <div className="flex items-start gap-2 text-sm">
-                  <Linkedin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                   {job_application.job_url?.trim() ? (
                     <a
                       href={job_application.job_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="break-all text-blue-600 hover:underline"
+                      className="break-all text-primary hover:underline"
                     >
                       {job_application.job_url}
                     </a>
@@ -132,7 +135,7 @@ function JobsSection({
           ))}
         </div>
       ) : (
-        <div className="rounded-xl bg-slate-50 px-4 py-4 text-sm text-muted-foreground">
+        <div className="rounded-xl bg-muted px-4 py-4 text-sm text-muted-foreground">
           No jobs added
         </div>
       )}
@@ -174,7 +177,7 @@ function InfoRow({
             href={href}
             target="_blank"
             rel="noreferrer"
-            className="truncate text-blue-600 hover:text-blue-700 hover:underline"
+            className="truncate text-primary hover:text-primary hover:underline"
           >
             {displayValue}
           </a>
@@ -198,7 +201,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border bg-card p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
         <span className="text-muted-foreground">{icon}</span>
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
@@ -221,13 +224,13 @@ function RichSection({
   const hasValue = !!value?.trim();
 
   return (
-    <section className="rounded-2xl border bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border bg-card p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
         <span className="text-muted-foreground">{icon}</span>
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       </div>
 
-      <div className="rounded-xl bg-slate-50 px-4 py-4 text-sm leading-7 text-foreground">
+      <div className="rounded-xl bg-muted px-4 py-4 text-sm leading-7 text-foreground">
         {hasValue ? (
           <p className="whitespace-pre-wrap break-words">{value}</p>
         ) : (
@@ -238,30 +241,34 @@ function RichSection({
   );
 }
 
+function formatDate(value?: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export function ViewContactSheet({
   open,
   onOpenChange,
   contact,
 }: ViewContactSheetProps) {
-  const formattedDate = contact?.created_at
-    ? new Date(contact.created_at).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      })
-    : new Date(contact?.updated_at ?? "").toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
+  const formattedDate =
+    formatDate(contact?.created_at) ?? formatDate(contact?.updated_at);
 
   if (!contact) return null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[85vw] sm:w-full overflow-y-auto bg-slate-50 p-0 sm:max-w-[600px]">
+      <SheetContent className="w-[85vw] sm:w-full overflow-y-auto bg-background p-0 sm:max-w-[600px]">
         <div className="flex min-h-full flex-col">
-          <SheetHeader className="border-b bg-white px-6 py-6 text-left">
+          <SheetHeader className="border-b bg-background px-6 py-6 text-left">
             <div className="flex items-start gap-4">
               <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700">
-                <Briefcase className="h-6 w-6" />
+                <User className="h-6 w-6" />
               </div>
 
               <div className="min-w-0 flex-1">
@@ -278,7 +285,7 @@ export function ViewContactSheet({
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
                   <Badge
-                    variant="outline"
+                    variant="secondary"
                     className={`rounded-full px-3 py-1 text-xs font-medium capitalize `}
                   >
                     {contact.role || "Unknown"}
@@ -310,6 +317,7 @@ export function ViewContactSheet({
               <InfoRow
                 label="Email"
                 value={contact.email}
+                href={contact.email ? `mailto:${contact.email}` : null}
                 icon={<Mail className="h-4 w-4" />}
               />
               <InfoRow
@@ -344,8 +352,9 @@ export function ViewContactSheet({
               title="Notes"
               icon={<NotebookPen className="h-4 w-4" />}
               value={
-                contact.notes?.map((note) => `- ${note.notes}`).join("\n") ??
-                "No Notes"
+                contact.notes?.length
+                  ? contact.notes?.map((note) => `- ${note.notes}`).join("\n")
+                  : null
               }
             />
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Search, Filter, Grid3X3, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,8 +23,25 @@ import { Hamburger } from "@/components/ui/hamburger";
 
 export default function ApplicationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
-  const { data: jobsData, isPending, isFetching } = useJobs();
+  const {
+    data: jobsData,
+    isPending,
+    isFetching,
+  } = useJobs({
+    search: debouncedSearch,
+    filters: statusFilter !== "all" ? { status: statusFilter } : {},
+    limit: 20,
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const isViewOpen = useJobStore((state) => state.isViewOpen);
   const selectedJob = useJobStore((state) => state.selectedJob);
@@ -36,16 +53,20 @@ export default function ApplicationsPage() {
   const defaultStatus = useJobStore((state) => state.defaultStatus);
   const handleAddClick = useJobStore((state) => state.handleAddClick);
 
-  const jobs = jobsData?.payload?.data ?? [];
+  const jobs =
+    jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
 
-  const filteredJobs = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return jobs;
-    return jobs.filter((job) => {
-      job.company_name?.toLowerCase().includes(query) ||
-        job.job_title?.toLowerCase().includes(query);
-    });
-  }, [jobs, searchQuery]);
+  const filteredJobs = jobs;
+  // const filteredJobs = useMemo(() => {
+  //   const query = searchQuery.trim().toLowerCase();
+  //   if (!query) return jobs;
+
+  //   return jobs.filter(
+  //     (job) =>
+  //       job.company_name?.toLowerCase().includes(query) ||
+  //       job.job_title?.toLowerCase().includes(query),
+  //   );
+  // }, [jobs, searchQuery]);
 
   const [mobileOpen, setMobileOpen] = useState(false);
 

@@ -63,6 +63,7 @@ export interface JobApplication {
 
 export interface Payload {
   data?: JobApplication[]
+  next_cursor?: string | null
 }
 
 export interface JobApplicationResponse {
