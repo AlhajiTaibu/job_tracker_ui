@@ -38,6 +38,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useJobs } from "@/hooks/use-jobs";
 
 type DocumentItem = {
   id: string;
@@ -245,7 +246,15 @@ export function DocumentManager() {
     );
   }
 
-  const totalApplications = 10;
+  const {
+    data: jobsData,
+    isPending,
+    isFetching,
+  } = useJobs({
+    search: "",
+    filters: {},
+    limit: 20,
+  });
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -297,10 +306,13 @@ export function DocumentManager() {
     }));
   };
 
+  const jobs =
+    jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
+
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
-        totalJobs={totalApplications}
+        totalJobs={jobs.length}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />

@@ -17,6 +17,6 @@ export async function DELETE(req: Request, context: RouteContext) {
         })
         return NextResponse.json(data)
     } catch (error) {
-        return NextResponse.json({ message: error instanceof Error ? error.message : "Contact deletion failed" })
+        return NextResponse.json({ message: error instanceof Error ? error.message : "Contact deletion failed" }, { status: 400 })
     }
 }

@@ -57,16 +57,6 @@ export default function ApplicationsPage() {
     jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
 
   const filteredJobs = jobs;
-  // const filteredJobs = useMemo(() => {
-  //   const query = searchQuery.trim().toLowerCase();
-  //   if (!query) return jobs;
-
-  //   return jobs.filter(
-  //     (job) =>
-  //       job.company_name?.toLowerCase().includes(query) ||
-  //       job.job_title?.toLowerCase().includes(query),
-  //   );
-  // }, [jobs, searchQuery]);
 
   const [mobileOpen, setMobileOpen] = useState(false);
 

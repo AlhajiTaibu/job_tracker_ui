@@ -31,6 +31,7 @@ import { AddContactSheet } from "@/components/add-contact-sheet";
 import { ViewContactSheet } from "@/components/view-contact-sheet";
 import { useContactStore } from "@/hooks/use-contact-store";
 import { useContacts, useHandleDeleteContact } from "@/hooks/use-contact";
+import { useJobs } from "@/hooks/use-jobs";
 
 const typeConfig = {
   recruiter: {
@@ -63,7 +64,7 @@ const truncateText = (text: string, maxLength: number) =>
   text.length > maxLength ? `${text.slice(0, maxLength).trim()}...` : text;
 
 const formatDate = (contact?: Contact) => {
-  const raw = contact?.created_at || contact?.updated_at;
+  const raw = contact?.updated_at || contact?.created_at;
   if (!raw) return null;
 
   const date = new Date(raw);
@@ -79,6 +80,15 @@ export default function ContactsClient() {
   const { data: initialContacts } = useContacts();
   const contacts = initialContacts?.payload?.data || [];
   const [searchQuery, setSearchQuery] = useState("");
+  const {
+    data: jobsData,
+    isPending,
+    isFetching,
+  } = useJobs({
+    search: "",
+    filters: {},
+    limit: 20,
+  });
 
   const sheetOpen = useContactStore((state) => state.sheetOpen);
   const setSheetOpen = useContactStore((state) => state.setSheetOpen);
@@ -108,10 +118,13 @@ export default function ContactsClient() {
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const jobs =
+    jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
+
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
-        totalJobs={8}
+        totalJobs={jobs.length}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />

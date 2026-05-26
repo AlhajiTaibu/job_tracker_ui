@@ -12,14 +12,27 @@ import { FollowUpAnalyticsSection } from "@/components/follow-up-analytics-secti
 import { AnalyticsInsightsSection } from "@/components/analytics-insights-section";
 import { useState } from "react";
 import { Hamburger } from "@/components/ui/hamburger";
+import { useJobs } from "@/hooks/use-jobs";
 
 export default function AnalyticsPage() {
-  const totalApplications = 48;
+  const {
+    data: jobsData,
+    isPending,
+    isFetching,
+  } = useJobs({
+    search: "",
+    filters: {},
+    limit: 20,
+  });
+
   const [mobileOpen, setMobileOpen] = useState(false);
+  const jobs =
+    jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
+
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
-        totalJobs={totalApplications}
+        totalJobs={jobs.length}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />
@@ -38,20 +51,9 @@ export default function AnalyticsPage() {
             </div>
           </div>
         </header>
-        {/* <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
-          <h1 className="text-lg font-semibold text-foreground sm:text-xl">
-            Analytics
-          </h1>
-          <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-            Funnel, activity, sourcing, interviews, follow-ups, and pipeline
-            health
-          </p>
-        </header> */}
-
         <main className="flex-1 overflow-auto p-4 sm:p-6 space-y-6">
           <AnalyticsOverviewCards
-            totalApplications={totalApplications}
+            totalApplications={jobs.length}
             interviewRate="24%"
             followUpRate="41%"
             avgTimeInStage="6d"

@@ -17,12 +17,7 @@ import {
   Link2,
   NotebookPen,
   Tag,
-  X,
-  Users,
-  Paperclip,
   Mail,
-  Phone,
-  Linkedin,
   User,
 } from "lucide-react";
 import type { Contact, JobApplication } from "@/lib/types";

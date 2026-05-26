@@ -40,7 +40,15 @@ import { Hamburger } from "@/components/ui/hamburger";
 export default function SettingsClient() {
   const router = useRouter();
   const { data: profileData } = useProfile();
-  const { data: jobsData, isPending, isFetching } = useJobs();
+  const {
+    data: jobsData,
+    isPending,
+    isFetching,
+  } = useJobs({
+    search: "",
+    filters: {},
+    limit: 20,
+  });
 
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
@@ -64,7 +72,8 @@ export default function SettingsClient() {
   const { handleUploadAvatar } = useHandleUploadAvatar();
   const [preview, setPreview] = useState<string | null>(null);
 
-  const jobs = jobsData?.payload?.data ?? [];
+  const jobs =
+    jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
 
   const initials =
     `${profile?.first_name} ${profile?.last_name}`

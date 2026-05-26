@@ -96,12 +96,12 @@ export function KanbanCard({ job }: KanbanCardProps) {
   const { handleMove } = useHandleMove();
   const isMoving = useMoveStore((state) => !!state.movingIds[job.id]);
 
-  const formattedDate = job.date_applied
-    ? new Date(job.date_applied).toLocaleDateString("en-US", {
+  const formattedDate = job?.updated_at
+    ? new Date(job?.updated_at).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
       })
-    : new Date(job.updated_at as string).toLocaleDateString("en-US", {
+    : new Date(job.date_applied as string).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
       });
@@ -114,6 +114,11 @@ export function KanbanCard({ job }: KanbanCardProps) {
   const style = {
     transform: CSS.Translate.toString(transform),
   };
+
+  const moveStatuses = allStatuses
+    .filter((s) => s.value === job.status)
+    .map((s) => s.availableState)
+    .flatMap((s) => s);
 
   return (
     <div
@@ -169,27 +174,28 @@ export function KanbanCard({ job }: KanbanCardProps) {
                   </a>
                 </DropdownMenuItem>
               )}
-              <DropdownMenuSeparator />
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger disabled={isMoving}>
-                  <ArrowRight className="mr-2 h-4 w-4" />
-                  Move to
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent>
-                  {allStatuses
-                    .filter((s) => s.value === job.status)
-                    .map((s) => s.availableState)
-                    .flatMap((s) => s)
-                    .map((status) => (
-                      <DropdownMenuItem
-                        key={status}
-                        onClick={() => handleMove(job.id, status)}
-                      >
-                        {status}
-                      </DropdownMenuItem>
-                    ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
+              {moveStatuses.length > 0 ? (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger disabled={isMoving}>
+                      <ArrowRight className="mr-2 h-4 w-4" />
+                      Move to
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      {moveStatuses.map((status) => (
+                        <DropdownMenuItem
+                          key={status}
+                          onClick={() => handleMove(job.id, status)}
+                        >
+                          {status}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </>
+              ) : null}
+
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className="text-destructive focus:text-destructive"

@@ -20,6 +20,6 @@ export async function POST(req: Request, context: RouteContext) {
         })
         return NextResponse.json(data)
     } catch (error) {
-        return NextResponse.json({ message: error instanceof Error ? error.message : "Job Application transition failed" })
+        return NextResponse.json({ message: error instanceof Error ? error.message : "Job Application transition failed" }, { status: 400 })
     }
 }

@@ -84,8 +84,6 @@ export default function DashboardClient() {
   const jobs =
     jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
 
-  console.log("Fetched jobs:", jobs);
-
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
