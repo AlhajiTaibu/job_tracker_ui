@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { b64ToDict } from "@/lib/utils"
 
 const protectedRoutes = [
     "/dashboard",
@@ -19,7 +20,13 @@ export function proxy(request: NextRequest) {
     const reset_token = request.cookies.get("reset_token")?.value
     const { pathname } = request.nextUrl
 
-    const isAuthenticated = !!(access_token || refresh_token)
+    const { searchParams } = new URL(request.url);
+    const encoded = searchParams.get("token");
+    const tokenData = encoded ? b64ToDict(encoded) : null;
+    const accessToken = tokenData?.access_token;
+    const refreshToken = tokenData?.refresh_token;
+
+    const isAuthenticated = !!(access_token || refresh_token || accessToken || refreshToken)
 
     const isProtected = pathname === "/" || protectedRoutes.some((route) => pathname.startsWith(route))
     const isAuthPage = authRoutes.some((route) => pathname.startsWith(route))
@@ -37,7 +44,26 @@ export function proxy(request: NextRequest) {
         return NextResponse.redirect(new URL("/forgot-password", request.url))
     }
 
-    return NextResponse.next()
+    const response = NextResponse.next()
+
+    if (encoded && accessToken && refreshToken) {
+        response.cookies.set("access_token", accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "lax",
+            path: "/",
+            maxAge: 60 * 15,
+        });
+        response.cookies.set("refresh_token", refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "lax",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7
+        });
+    }
+
+    return response;
 }
 
 export const config = {

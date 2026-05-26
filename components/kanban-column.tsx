@@ -1,19 +1,20 @@
-"use client"
+"use client";
 
-import { Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { KanbanCard } from "@/components/kanban-card"
-import type { JobApplication, JobStatus } from "@/lib/types"
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { KanbanCard } from "@/components/kanban-card";
+import type { JobApplication, JobStatus } from "@/lib/types";
+import { useDroppable } from "@dnd-kit/core";
+import { cn } from "@/lib/utils";
+import { useJobStore } from "@/hooks/use-job-store";
 
 interface KanbanColumnProps {
-  status: JobStatus
-  title: string
-  color: string
-  jobs: JobApplication[]
-  onAddClick: (status: JobStatus) => void
-  onEditJob: (job: JobApplication) => void
-  onDeleteJob: (id: string) => void
-  onMoveJob: (id: string, newStatus: JobStatus) => void
+  status: JobStatus;
+  title: string;
+  color: string;
+  jobs: JobApplication[];
+  activeJob: JobApplication | null;
+  canMove: (fromStatus: JobStatus, targetStatus: JobStatus) => boolean;
 }
 
 export function KanbanColumn({
@@ -21,11 +22,18 @@ export function KanbanColumn({
   title,
   color,
   jobs,
-  onAddClick,
-  onEditJob,
-  onDeleteJob,
-  onMoveJob,
+  activeJob,
+  canMove,
 }: KanbanColumnProps) {
+  const handleAddClick = useJobStore((state) => state.handleAddClick);
+  const isDroppable: boolean = activeJob
+    ? canMove(activeJob.status, status)
+    : true;
+  const { setNodeRef, isOver } = useDroppable({
+    id: status,
+    disabled: !isDroppable,
+  });
+
   return (
     <div className="flex w-full flex-col md:min-w-[260px] md:flex-1">
       <div className="mb-3 flex items-center justify-between">
@@ -36,41 +44,45 @@ export function KanbanColumn({
             {jobs.length}
           </span>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-foreground"
-          onClick={() => onAddClick(status)}
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+        {(status === "saved" || status === "applied") && (
+          <>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={() => handleAddClick(status)}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </>
+        )}
       </div>
-      <div className="flex flex-col gap-2.5 rounded-lg bg-muted/50 p-2 md:flex-1">
-        {jobs.length === 0 ? (
+      <div
+        ref={setNodeRef}
+        className={cn(
+          "flex flex-col gap-2.5 rounded-lg p-2 md:flex-1 transition-colors",
+          !isDroppable && "bg-red-50 ring-2 ring-red-300",
+          isDroppable && "bg-muted/50",
+          isDroppable && isOver && "ring-2 ring-primary/30 bg-primary/5",
+        )}
+      >
+        {jobs.length === 0 && (status === "saved" || status === "applied") ? (
           <div className="flex flex-col items-center justify-center py-6 text-center md:flex-1 md:py-8">
             <p className="text-sm text-muted-foreground">No applications</p>
             <Button
               variant="ghost"
               size="sm"
               className="mt-2 text-xs text-primary hover:text-primary"
-              onClick={() => onAddClick(status)}
+              onClick={() => handleAddClick(status)}
             >
               <Plus className="mr-1 h-3 w-3" />
               Add one
             </Button>
           </div>
         ) : (
-          jobs.map((job) => (
-            <KanbanCard
-              key={job.id}
-              job={job}
-              onEdit={onEditJob}
-              onDelete={onDeleteJob}
-              onMove={onMoveJob}
-            />
-          ))
+          jobs.map((job) => <KanbanCard key={job.id} job={job} />)
         )}
       </div>
     </div>
-  )
+  );
 }

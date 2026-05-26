@@ -1,25 +1,35 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet"
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Field, FieldLabel, FieldGroup } from "@/components/ui/field"
-import { InputGroup, InputGroupInput, InputGroupAddon } from "@/components/ui/input-group"
-import type { JobApplication, JobStatus, JobDocument, DocumentType } from "@/lib/types"
+} from "@/components/ui/select";
+import { Field, FieldLabel, FieldGroup } from "@/components/ui/field";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+} from "@/components/ui/input-group";
+import type {
+  JobApplication,
+  JobStatus,
+  JobDocument,
+  DocumentType,
+  JobSource,
+} from "@/lib/types";
 import {
   Building2,
   Briefcase,
@@ -40,154 +50,277 @@ import {
   FolderOpen,
   X,
   Paperclip,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
+  LinkedinIcon,
+  Glasses,
+  TestTube2,
+  StopCircle,
+  CheckIcon,
+  Loader2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Controller, useForm } from "react-hook-form";
+import { AddJobInput, addJobSchema } from "@/lib/schemas/job";
+import { useAddJobStore, useHandleJobAdd } from "@/hooks/use-add-job";
+import { useEditJobStore, useHandleJobEdit } from "@/hooks/use-edit-job";
 
 interface AddJobSheetProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSave: (job: Omit<JobApplication, "id"> & { id?: string }) => void
-  job?: JobApplication | null
-  defaultStatus?: JobStatus
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  job?: JobApplication | null;
+  defaultStatus?: JobStatus;
 }
 
-const statuses: { value: JobStatus; label: string; icon: React.ReactNode; color: string }[] = [
-  { value: "saved", label: "Saved", icon: <Bookmark className="h-4 w-4" />, color: "text-blue-500" },
-  { value: "applied", label: "Applied", icon: <Send className="h-4 w-4" />, color: "text-indigo-500" },
-  { value: "interview", label: "Interview", icon: <Users className="h-4 w-4" />, color: "text-amber-500" },
-  { value: "offer", label: "Offer", icon: <Trophy className="h-4 w-4" />, color: "text-emerald-500" },
-  { value: "rejected", label: "Rejected", icon: <XCircle className="h-4 w-4" />, color: "text-rose-500" },
-]
+const statuses: {
+  value: JobStatus;
+  label: string;
+  icon: React.ReactNode;
+  color: string;
+}[] = [
+  {
+    value: "saved",
+    label: "Saved",
+    icon: <Bookmark className="h-4 w-4" />,
+    color: "text-blue-500",
+  },
+  {
+    value: "applied",
+    label: "Applied",
+    icon: <Send className="h-4 w-4" />,
+    color: "text-indigo-500",
+  },
+  {
+    value: "screening",
+    label: "Screening",
+    icon: <Glasses className="h-4 w-4" />,
+    color: "text-indigo-500",
+  },
+  {
+    value: "assessment",
+    label: "Assessment",
+    icon: <TestTube2 className="h-4 w-4" />,
+    color: "text-indigo-500",
+  },
+  {
+    value: "interviewing",
+    label: "Interview",
+    icon: <Users className="h-4 w-4" />,
+    color: "text-amber-500",
+  },
+  {
+    value: "offer",
+    label: "Offer",
+    icon: <Trophy className="h-4 w-4" />,
+    color: "text-emerald-500",
+  },
+  {
+    value: "accepted",
+    label: "Accepted",
+    icon: <CheckIcon className="h-4 w-4" />,
+    color: "text-emerald-500",
+  },
+  {
+    value: "rejected",
+    label: "Rejected",
+    icon: <XCircle className="h-4 w-4" />,
+    color: "text-rose-500",
+  },
+  {
+    value: "withdrawn",
+    label: "Withdrawn",
+    icon: <XCircle className="h-4 w-4" />,
+    color: "text-rose-500",
+  },
+  {
+    value: "stale",
+    label: "Stale",
+    icon: <StopCircle className="h-4 w-4" />,
+    color: "text-rose-500",
+  },
+];
 
-const documentTypes: { value: DocumentType; label: string; icon: React.ReactNode }[] = [
-  { value: "cv", label: "CV / Resume", icon: <FileText className="h-4 w-4" /> },
-  { value: "cover_letter", label: "Cover Letter", icon: <FileCheck className="h-4 w-4" /> },
-  { value: "portfolio", label: "Portfolio", icon: <FolderOpen className="h-4 w-4" /> },
-  { value: "other", label: "Other", icon: <File className="h-4 w-4" /> },
-]
+const sources: {
+  value: JobSource;
+  label: string;
+  icon: React.ReactNode;
+  color: string;
+}[] = [
+  {
+    value: "LinkedIn",
+    label: "LinkedIn",
+    icon: <LinkedinIcon className="h-4 w-4" />,
+    color: "text-blue-500",
+  },
+  {
+    value: "Referral",
+    label: "Referral",
+    icon: <Send className="h-4 w-4" />,
+    color: "text-indigo-500",
+  },
+  {
+    value: "Company Career Page",
+    label: "Company Career Page",
+    icon: <Users className="h-4 w-4" />,
+    color: "text-amber-500",
+  },
+  {
+    value: "Job Board",
+    label: "Job Board",
+    icon: <Trophy className="h-4 w-4" />,
+    color: "text-emerald-500",
+  },
+  {
+    value: "Other",
+    label: "Other",
+    icon: <XCircle className="h-4 w-4" />,
+    color: "text-rose-500",
+  },
+];
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return bytes + " B"
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB"
-  return (bytes / (1024 * 1024)).toFixed(1) + " MB"
-}
+const allowedStatus: Record<JobStatus, JobStatus[]> = {
+  saved: ["applied", "withdrawn"],
+  applied: ["screening", "assessment", "stale", "rejected", "withdrawn"],
+  screening: ["interviewing", "assessment", "stale", "rejected", "withdrawn"],
+  assessment: ["interviewing", "stale", "rejected", "withdrawn"],
+  interviewing: ["offer", "assessment", "stale", "rejected", "withdrawn"],
+  offer: ["accepted", "rejected", "withdrawn"],
+  accepted: [],
+  rejected: [],
+  withdrawn: [],
+  stale: ["withdrawn", "applied"],
+};
 
-function getDocumentTypeIcon(type: DocumentType) {
-  const docType = documentTypes.find((d) => d.value === type)
-  return docType?.icon || <File className="h-4 w-4" />
-}
+// const documentTypes: {
+//   value: DocumentType;
+//   label: string;
+//   icon: React.ReactNode;
+// }[] = [
+//   { value: "cv", label: "CV / Resume", icon: <FileText className="h-4 w-4" /> },
+//   {
+//     value: "cover_letter",
+//     label: "Cover Letter",
+//     icon: <FileCheck className="h-4 w-4" />,
+//   },
+//   {
+//     value: "portfolio",
+//     label: "Portfolio",
+//     icon: <FolderOpen className="h-4 w-4" />,
+//   },
+//   { value: "other", label: "Other", icon: <File className="h-4 w-4" /> },
+// ];
 
-function getDocumentTypeLabel(type: DocumentType) {
-  const docType = documentTypes.find((d) => d.value === type)
-  return docType?.label || "Document"
-}
+// function formatFileSize(bytes: number): string {
+//   if (bytes < 1024) return bytes + " B";
+//   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+//   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+// }
+
+// function getDocumentTypeIcon(type: DocumentType) {
+//   const docType = documentTypes.find((d) => d.value === type);
+//   return docType?.icon || <File className="h-4 w-4" />;
+// }
+
+// function getDocumentTypeLabel(type: DocumentType) {
+//   const docType = documentTypes.find((d) => d.value === type);
+//   return docType?.label || "Document";
+// }
 
 export function AddJobSheet({
   open,
   onOpenChange,
-  onSave,
   job,
   defaultStatus = "saved",
 }: AddJobSheetProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [selectedDocType, setSelectedDocType] = useState<DocumentType>("cv")
-  const [isDragging, setIsDragging] = useState(false)
-  
-  const [formData, setFormData] = useState({
-    company: "",
-    position: "",
-    location: "",
-    salary: "",
-    status: defaultStatus as JobStatus,
-    appliedDate: new Date().toISOString().split("T")[0],
-    url: "",
-    notes: "",
-    documents: [] as JobDocument[],
-  })
+  // const fileInputRef = useRef<HTMLInputElement>(null);
+  // const [selectedDocType, setSelectedDocType] = useState<DocumentType>("cv");
+  // const [isDragging, setIsDragging] = useState(false);
+
+  const {
+    register,
+    control,
+    watch,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<AddJobInput>({
+    resolver: zodResolver(addJobSchema),
+    defaultValues: {
+      company_name: "",
+      job_title: "",
+      status: defaultStatus,
+      source: "Referral",
+      date_applied: new Date().toISOString().split("T")[0],
+      job_url: "",
+      description: "",
+      notes: "",
+    },
+  });
+
+  const { handleJobAdd } = useHandleJobAdd();
+  const submitting = useAddJobStore((state) => state.isSubmitting);
+
+  const { handleJobEdit } = useHandleJobEdit();
+  const editSubmitting = useEditJobStore((state) => state.isSubmitting);
 
   useEffect(() => {
     if (job) {
-      setFormData({
-        company: job.company,
-        position: job.position,
-        location: job.location,
-        salary: job.salary || "",
-        status: job.status,
-        appliedDate: job.appliedDate,
-        url: job.url || "",
-        notes: job.notes || "",
-        documents: job.documents || [],
-      })
+      reset({
+        company_name: job.company_name ?? "",
+        job_title: job.job_title ?? "",
+        status: job.status.toLowerCase() ?? defaultStatus,
+        source: job.source ?? "Referral",
+        date_applied: job.date_applied ?? "",
+        job_url: job.job_url ?? "",
+        description: job.description ?? "",
+        notes: job.notes ?? "",
+      });
     } else {
-      setFormData({
-        company: "",
-        position: "",
-        location: "",
-        salary: "",
+      reset({
+        company_name: "",
+        job_title: "",
         status: defaultStatus,
-        appliedDate: new Date().toISOString().split("T")[0],
-        url: "",
+        source: "Referral",
+        date_applied: new Date().toISOString().split("T")[0],
+        job_url: "",
+        description: "",
         notes: "",
-        documents: [],
-      })
+      });
     }
-  }, [job, defaultStatus, open])
+  }, [job, reset, defaultStatus]);
 
-  const handleFileSelect = (files: FileList | null) => {
-    if (!files) return
+  const onSubmit = (value: AddJobInput) => {
+    if (job) {
+      const data = {
+        ...value,
+        status: value.status as JobStatus,
+        source: value.source as JobSource,
+      };
+      handleJobEdit(data, job.id);
+    } else {
+      const data = {
+        ...value,
+        status: value.status as JobStatus,
+        source: value.source as JobSource,
+      };
+      handleJobAdd(data);
+    }
+    onOpenChange(false);
+  };
 
-    const newDocuments: JobDocument[] = Array.from(files).map((file) => ({
-      id: crypto.randomUUID(),
-      name: file.name,
-      type: selectedDocType,
-      size: file.size,
-      uploadedAt: new Date().toISOString(),
-      url: URL.createObjectURL(file),
-    }))
+  const currentStatus = statuses.find((s) => s.value === watch("status"));
 
-    setFormData((prev) => ({
-      ...prev,
-      documents: [...prev.documents, ...newDocuments],
-    }))
-  }
+  const currentSource = sources.find((s) => s.value === watch("source"));
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }
+  const allowed: JobStatus[] =
+    allowedStatus[watch("status") as JobStatus] ?? [];
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    handleFileSelect(e.dataTransfer.files)
-  }
-
-  const removeDocument = (id: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      documents: prev.documents.filter((doc) => doc.id !== id),
-    }))
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSave({
-      ...formData,
-      id: job?.id,
-    })
-    onOpenChange(false)
-  }
-
-  const currentStatus = statuses.find((s) => s.value === formData.status)
+  const formStatuses = job
+    ? statuses.filter((s) => allowed.includes(s.value))
+    : statuses.filter((s) => s.value === "saved" || s.value === "applied");
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="overflow-y-auto sm:max-w-lg">
+      <SheetContent className="overflow-y-auto sm:max-w-lg p-6">
         <SheetHeader className="pb-6 border-b border-border">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -206,7 +339,7 @@ export function AddJobSheet({
           </div>
         </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="mt-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6">
           {/* Company Details Section */}
           <div className="space-y-5">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -216,7 +349,10 @@ export function AddJobSheet({
 
             <FieldGroup className="gap-4 pl-6">
               <Field>
-                <FieldLabel htmlFor="company" className="text-xs text-muted-foreground">
+                <FieldLabel
+                  htmlFor="company"
+                  className="text-xs text-muted-foreground"
+                >
                   Company Name
                 </FieldLabel>
                 <InputGroup>
@@ -225,18 +361,23 @@ export function AddJobSheet({
                   </InputGroupAddon>
                   <InputGroupInput
                     id="company"
-                    value={formData.company}
-                    onChange={(e) =>
-                      setFormData({ ...formData, company: e.target.value })
-                    }
+                    {...register("company_name")}
                     placeholder="Google, Apple, Meta..."
                     required
                   />
                 </InputGroup>
               </Field>
+              {errors.company_name && (
+                <p className="text-red-600 text-sm">
+                  {errors.company_name.message}
+                </p>
+              )}
 
               <Field>
-                <FieldLabel htmlFor="position" className="text-xs text-muted-foreground">
+                <FieldLabel
+                  htmlFor="position"
+                  className="text-xs text-muted-foreground"
+                >
                   Position Title
                 </FieldLabel>
                 <InputGroup>
@@ -245,35 +386,17 @@ export function AddJobSheet({
                   </InputGroupAddon>
                   <InputGroupInput
                     id="position"
-                    value={formData.position}
-                    onChange={(e) =>
-                      setFormData({ ...formData, position: e.target.value })
-                    }
+                    {...register("job_title")}
                     placeholder="Senior Software Engineer"
                     required
                   />
                 </InputGroup>
               </Field>
-
-              <Field>
-                <FieldLabel htmlFor="location" className="text-xs text-muted-foreground">
-                  Location
-                </FieldLabel>
-                <InputGroup>
-                  <InputGroupAddon>
-                    <MapPin className="h-4 w-4" />
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) =>
-                      setFormData({ ...formData, location: e.target.value })
-                    }
-                    placeholder="San Francisco, CA / Remote"
-                    required
-                  />
-                </InputGroup>
-              </Field>
+              {errors.job_title && (
+                <p className="text-red-600 text-sm">
+                  {errors.job_title.message}
+                </p>
+              )}
             </FieldGroup>
           </div>
 
@@ -285,85 +408,90 @@ export function AddJobSheet({
             </div>
 
             <FieldGroup className="gap-4 pl-6">
-              <div className="grid grid-cols-2 gap-4">
-                <Field>
-                  <FieldLabel htmlFor="status" className="text-xs text-muted-foreground">
-                    Status
-                  </FieldLabel>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, status: value as JobStatus })
+              {job ? null : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field
+                    className={
+                      currentStatus?.value !== "applied" ? "sm:col-span-2" : ""
                     }
                   >
-                    <SelectTrigger id="status" className="h-10">
-                      <SelectValue>
-                        <div className="flex items-center gap-2">
-                          <span className={currentStatus?.color}>
-                            {currentStatus?.icon}
-                          </span>
-                          <span>{currentStatus?.label}</span>
-                        </div>
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {statuses.map((status) => (
-                        <SelectItem key={status.value} value={status.value}>
-                          <div className="flex items-center gap-2">
-                            <span className={status.color}>{status.icon}</span>
-                            <span>{status.label}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </Field>
-
-                <Field>
-                  <FieldLabel htmlFor="date" className="text-xs text-muted-foreground">
-                    Date
-                  </FieldLabel>
-                  <InputGroup>
-                    <InputGroupAddon>
-                      <Calendar className="h-4 w-4" />
-                    </InputGroupAddon>
-                    <InputGroupInput
-                      id="date"
-                      type="date"
-                      value={formData.appliedDate}
-                      onChange={(e) =>
-                        setFormData({ ...formData, appliedDate: e.target.value })
-                      }
-                      required
+                    <FieldLabel
+                      htmlFor="status"
+                      className="text-xs text-muted-foreground"
+                    >
+                      Status
+                    </FieldLabel>
+                    <Controller
+                      control={control}
+                      name="status"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value ?? ""}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger id="status" className="h-10">
+                            <SelectValue>
+                              <div className="flex items-center gap-2">
+                                <span className={currentStatus?.color}>
+                                  {currentStatus?.icon}
+                                </span>
+                                <span>{currentStatus?.label}</span>
+                              </div>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {formStatuses.map((status) => (
+                              <SelectItem
+                                key={status.value}
+                                value={status.value}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <span className={status.color}>
+                                    {status.icon}
+                                  </span>
+                                  <span>{status.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     />
-                  </InputGroup>
-                </Field>
-              </div>
+                  </Field>
 
+                  {currentStatus?.value === "applied" ? (
+                    <Field>
+                      <FieldLabel
+                        htmlFor="date"
+                        className="text-xs text-muted-foreground"
+                      >
+                        Date
+                      </FieldLabel>
+                      <InputGroup>
+                        <InputGroupAddon>
+                          <Calendar className="h-4 w-4" />
+                        </InputGroupAddon>
+                        <InputGroupInput
+                          // readOnly={job ? true : false}
+                          id="date"
+                          type="date"
+                          {...register("date_applied")}
+                          required
+                        />
+                      </InputGroup>
+                    </Field>
+                  ) : null}
+                </div>
+              )}
               <Field>
-                <FieldLabel htmlFor="salary" className="text-xs text-muted-foreground">
-                  Salary Range
-                  <span className="ml-1 text-muted-foreground/60">(optional)</span>
-                </FieldLabel>
-                <InputGroup>
-                  <InputGroupAddon>
-                    <DollarSign className="h-4 w-4" />
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    id="salary"
-                    value={formData.salary}
-                    onChange={(e) =>
-                      setFormData({ ...formData, salary: e.target.value })
-                    }
-                    placeholder="150,000 - 200,000"
-                  />
-                </InputGroup>
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="url" className="text-xs text-muted-foreground">
+                <FieldLabel
+                  htmlFor="url"
+                  className="text-xs text-muted-foreground"
+                >
                   Job Posting URL
-                  <span className="ml-1 text-muted-foreground/60">(optional)</span>
+                  <span className="ml-1 text-muted-foreground/60">
+                    (optional)
+                  </span>
                 </FieldLabel>
                 <InputGroup>
                   <InputGroupAddon>
@@ -372,28 +500,71 @@ export function AddJobSheet({
                   <InputGroupInput
                     id="url"
                     type="url"
-                    value={formData.url}
-                    onChange={(e) =>
-                      setFormData({ ...formData, url: e.target.value })
-                    }
+                    {...register("job_url")}
                     placeholder="https://careers.company.com/job/..."
                   />
                 </InputGroup>
+              </Field>
+              {errors.job_url && (
+                <p className="text-red-600 text-sm">{errors.job_url.message}</p>
+              )}
+              <Field>
+                <FieldLabel
+                  htmlFor="status"
+                  className="text-xs text-muted-foreground"
+                >
+                  Source
+                </FieldLabel>
+                <Controller
+                  control={control}
+                  name="source"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ?? ""}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger id="status" className="h-10">
+                        <SelectValue>
+                          <div className="flex items-center gap-2">
+                            <span className={currentSource?.color}>
+                              {currentSource?.icon}
+                            </span>
+                            <span>{currentSource?.label}</span>
+                          </div>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sources.map((source) => (
+                          <SelectItem key={source.value} value={source.value}>
+                            <div className="flex items-center gap-2">
+                              <span className={source.color}>
+                                {source.icon}
+                              </span>
+                              <span>{source.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </Field>
             </FieldGroup>
           </div>
 
           {/* Documents Section */}
-          <div className="mt-8 space-y-5">
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+          {/* <div className="mt-8 space-y-5"> */}
+          {/* <div className="flex items-center gap-2 text-sm font-medium text-foreground">
               <Paperclip className="h-4 w-4 text-muted-foreground" />
               <span>Documents</span>
-              <span className="ml-1 text-xs text-muted-foreground/60">(optional)</span>
-            </div>
+              <span className="ml-1 text-xs text-muted-foreground/60">
+                (optional)
+              </span>
+            </div> */}
 
-            <div className="pl-6 space-y-4">
-              {/* Document Type Selector */}
-              <div className="flex flex-wrap gap-2">
+          {/* <div className="pl-6 space-y-4"> */}
+          {/* Document Type Selector */}
+          {/* <div className="flex flex-wrap gap-2">
                 {documentTypes.map((docType) => (
                   <button
                     key={docType.value}
@@ -403,17 +574,17 @@ export function AddJobSheet({
                       "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
                       selectedDocType === docType.value
                         ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                        : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/50 hover:text-foreground",
                     )}
                   >
                     {docType.icon}
                     {docType.label}
                   </button>
                 ))}
-              </div>
+              </div> */}
 
-              {/* Upload Area */}
-              <div
+          {/* Upload Area */}
+          {/* <div
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -422,7 +593,7 @@ export function AddJobSheet({
                   "relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-all",
                   isDragging
                     ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50 hover:bg-secondary/30"
+                    : "border-border hover:border-primary/50 hover:bg-secondary/30",
                 )}
               >
                 <input
@@ -433,14 +604,18 @@ export function AddJobSheet({
                   onChange={(e) => handleFileSelect(e.target.files)}
                   className="hidden"
                 />
-                <div className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-full transition-colors",
-                  isDragging ? "bg-primary/20" : "bg-secondary"
-                )}>
-                  <Upload className={cn(
-                    "h-6 w-6 transition-colors",
-                    isDragging ? "text-primary" : "text-muted-foreground"
-                  )} />
+                <div
+                  className={cn(
+                    "flex h-12 w-12 items-center justify-center rounded-full transition-colors",
+                    isDragging ? "bg-primary/20" : "bg-secondary",
+                  )}
+                >
+                  <Upload
+                    className={cn(
+                      "h-6 w-6 transition-colors",
+                      isDragging ? "text-primary" : "text-muted-foreground",
+                    )}
+                  />
                 </div>
                 <p className="mt-3 text-sm font-medium text-foreground">
                   {isDragging ? "Drop files here" : "Upload documents"}
@@ -451,10 +626,10 @@ export function AddJobSheet({
                 <p className="mt-2 text-xs text-muted-foreground/60">
                   PDF, DOC, DOCX, TXT, RTF, PNG, JPG up to 10MB
                 </p>
-              </div>
+              </div> */}
 
-              {/* Uploaded Documents List */}
-              {formData.documents.length > 0 && (
+          {/* Uploaded Documents List */}
+          {/* {formData.documents.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-medium text-muted-foreground">
                     Attached ({formData.documents.length})
@@ -491,10 +666,32 @@ export function AddJobSheet({
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
+              )} */}
+          {/* </div>
+          </div> */}
 
+          {/* Job Description Section */}
+          <div className="mt-8 space-y-5">
+            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <span>Job Description</span>
+            </div>
+
+            <div className="pl-6">
+              <Textarea
+                id="description"
+                {...register("description")}
+                placeholder="Add job description"
+                rows={4}
+                className="resize-none"
+              />
+            </div>
+            {errors.description && (
+              <p className="text-red-600 text-sm">
+                {errors.description.message}
+              </p>
+            )}
+          </div>
           {/* Notes Section */}
           <div className="mt-8 space-y-5">
             <div className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -505,15 +702,15 @@ export function AddJobSheet({
             <div className="pl-6">
               <Textarea
                 id="notes"
-                value={formData.notes}
-                onChange={(e) =>
-                  setFormData({ ...formData, notes: e.target.value })
-                }
+                {...register("notes")}
                 placeholder="Add interview notes, contact info, or anything else you want to remember..."
                 rows={4}
                 className="resize-none"
               />
             </div>
+            {errors.notes && (
+              <p className="text-red-600 text-sm">{errors.notes.message}</p>
+            )}
           </div>
 
           {/* Action Buttons */}
@@ -526,19 +723,43 @@ export function AddJobSheet({
             >
               Cancel
             </Button>
-            <Button type="submit" className="flex-1 gap-2">
-              {job ? (
-                "Save Changes"
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  Add Application
-                </>
-              )}
-            </Button>
+            {job ? (
+              <Button
+                type="submit"
+                className="flex-1 gap-2"
+                disabled={editSubmitting}
+              >
+                {editSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving Changes...
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                className="flex-1 gap-2"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding Application...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Add Application
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </form>
       </SheetContent>
     </Sheet>
-  )
+  );
 }

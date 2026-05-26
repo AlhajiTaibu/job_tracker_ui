@@ -1,6 +1,10 @@
-export type JobStatus = "applied" | "interview" | "offer" | "rejected" | "saved"
+export type JobStatus = "applied" | "screening" | "assessment" | "interviewing" | "offer" | "rejected" | "saved" | "accepted" | "withdrawn" | "stale"
+
+export type JobSource = "LinkedIn" | "Referral" | "Company Career Page" | "Job Board" | "Other"
 
 export type DocumentType = "cv" | "cover_letter" | "portfolio" | "other"
+
+export type ContactType = "recruiter" | "hiring manager" | "referral" | "employee" | "other"
 
 export interface JobDocument {
   id: string
@@ -11,17 +15,61 @@ export interface JobDocument {
   url: string
 }
 
+export interface NoteLog {
+  id: string
+  notes: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Contact {
+  id: string
+  name: string
+  role?: string
+  company?: string
+  email?: string
+  phone?: string
+  linkedIn_url?: string
+  relationship_type: ContactType
+  notes?: NoteLog[]
+  created_at?: string
+  updated_at?: string
+  job_applications?: JobApplication[]
+}
+export interface ContactPayload {
+  data?: Contact[]
+}
+
+export interface ContactResponse {
+  success?: boolean
+  payload: ContactPayload
+  error?: string
+}
+
 export interface JobApplication {
   id: string
-  company: string
-  position: string
-  location: string
-  salary?: string
+  company_name: string
+  job_title: string
+  description?: string
   status: JobStatus
-  appliedDate: string
+  source: JobSource
+  date_applied?: string
   notes?: string
-  url?: string
+  job_url?: string
+  updated_at?: string
   documents?: JobDocument[]
+  contacts?: Contact[]
+}
+
+export interface Payload {
+  data?: JobApplication[]
+  next_cursor?: string | null
+}
+
+export interface JobApplicationResponse {
+  success?: boolean
+  payload: Payload
+  error?: string
 }
 
 export const statusConfig: Record<
@@ -38,7 +86,17 @@ export const statusConfig: Record<
     color: "text-blue-700",
     bgColor: "bg-blue-50",
   },
-  interview: {
+  screening: {
+    label: "Screening",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+  },
+  assessment: {
+    label: "Assessment",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+  },
+  interviewing: {
     label: "Interview",
     color: "text-amber-700",
     bgColor: "bg-amber-50",
@@ -48,13 +106,76 @@ export const statusConfig: Record<
     color: "text-emerald-700",
     bgColor: "bg-emerald-50",
   },
+  accepted: {
+    label: "Accepted",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
+  },
   rejected: {
     label: "Rejected",
     color: "text-rose-700",
     bgColor: "bg-rose-50",
   },
+  withdrawn: {
+    label: "Withdrawn",
+    color: "text-red-700",
+    bgColor: "bg-red-50",
+  },
+  stale: {
+    label: "Stale",
+    color: "text-brown-700",
+    bgColor: "bg-brown-50",
+  },
 }
 
+export interface Profile {
+  id: string
+  first_name?: string
+  last_name?: string
+  email: string
+  title?: string
+  notification_type?: string
+  avatar_url?: string
+}
+
+
+export interface ProfilePayload {
+  data?: Profile
+}
+
+export interface ProfileResponse {
+  success?: boolean
+  payload: ProfilePayload
+  error?: string
+}
+
+export type DocumentStatus = "uploaded" | "processing" | "ready" | "failed";
+
+export const documentsConfig: Record<
+  DocumentStatus,
+  { label: string; color: string; bgColor: string }
+> = {
+  uploaded: {
+    label: "Uploaded",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
+  },
+  processing: {
+    label: "Processing",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+  },
+  ready: {
+    label: "Ready",
+    color: "text-emerald-700",
+    bgColor: "bg-emerald-50",
+  },
+  failed: {
+    label: "Failed",
+    color: "text-rose-700",
+    bgColor: "bg-rose-50",
+  },
+}
 
 export type User = {
   id?: string

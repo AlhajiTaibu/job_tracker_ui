@@ -6,7 +6,6 @@ export async function serverApiFetch<T>(
 ): Promise<T> {
     const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
     const contentType = endpoint == "auth/login" ? "application/x-www-form-urlencoded" : "application/json"
-
     const res = await fetch(`${baseUrl}/api/v1/${endpoint}`, {
         ...options,
         headers: {
@@ -15,6 +14,7 @@ export async function serverApiFetch<T>(
         },
         cache: "no-store",
     })
+
     const data = await res.json().catch(() => { })
 
     if (!res.ok) {
