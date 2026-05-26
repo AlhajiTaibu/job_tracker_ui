@@ -1,160 +1,86 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Plus, Search, Filter, Grid3X3, List } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { AppSidebar } from "@/components/app-sidebar"
-import { AddJobSheet } from "@/components/add-job-sheet"
-import { KanbanCard } from "@/components/kanban-card"
+import { useState, useMemo, useEffect } from "react";
+import { Plus, Search, Filter, Grid3X3, List } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { AppSidebar } from "@/components/app-sidebar";
+import { AddJobSheet } from "@/components/add-job-sheet";
+import { ViewJobSheet } from "@/components/view-job-sheet";
+import { KanbanCard } from "@/components/kanban-card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import type { JobApplication, JobStatus } from "@/lib/types"
-import { statusConfig } from "@/lib/types"
-
-const initialJobs: JobApplication[] = [
-  {
-    id: "1",
-    company: "Google",
-    position: "Senior Software Engineer",
-    location: "Mountain View, CA",
-    salary: "$180k - $250k",
-    status: "interview",
-    appliedDate: "2024-01-15",
-    notes: "Had a great initial call with the recruiter. Technical interview scheduled.",
-    url: "https://careers.google.com",
-  },
-  {
-    id: "2",
-    company: "Stripe",
-    position: "Full Stack Developer",
-    location: "San Francisco, CA",
-    salary: "$160k - $220k",
-    status: "applied",
-    appliedDate: "2024-01-18",
-    url: "https://stripe.com/jobs",
-  },
-  {
-    id: "3",
-    company: "Vercel",
-    position: "Frontend Engineer",
-    location: "Remote",
-    salary: "$150k - $200k",
-    status: "offer",
-    appliedDate: "2024-01-10",
-    notes: "Received offer! Negotiating compensation package.",
-  },
-  {
-    id: "4",
-    company: "Netflix",
-    position: "UI Engineer",
-    location: "Los Gatos, CA",
-    salary: "$200k - $300k",
-    status: "rejected",
-    appliedDate: "2024-01-05",
-    notes: "Position filled internally.",
-  },
-  {
-    id: "5",
-    company: "Airbnb",
-    position: "Software Engineer II",
-    location: "San Francisco, CA",
-    salary: "$170k - $230k",
-    status: "saved",
-    appliedDate: "2024-01-20",
-    url: "https://careers.airbnb.com",
-  },
-  {
-    id: "6",
-    company: "Spotify",
-    position: "Backend Engineer",
-    location: "New York, NY",
-    salary: "$155k - $210k",
-    status: "applied",
-    appliedDate: "2024-01-17",
-  },
-  {
-    id: "7",
-    company: "Meta",
-    position: "Production Engineer",
-    location: "Menlo Park, CA",
-    salary: "$190k - $280k",
-    status: "interview",
-    appliedDate: "2024-01-12",
-    notes: "Phone screen completed. On-site scheduled for next week.",
-  },
-  {
-    id: "8",
-    company: "Apple",
-    position: "iOS Developer",
-    location: "Cupertino, CA",
-    salary: "$175k - $260k",
-    status: "saved",
-    appliedDate: "2024-01-22",
-  },
-]
+} from "@/components/ui/select";
+import type { JobApplication, JobStatus } from "@/lib/types";
+import { statusConfig } from "@/lib/types";
+import { useJobs } from "@/hooks/use-jobs";
+import { useJobStore } from "@/hooks/use-job-store";
+import { Hamburger } from "@/components/ui/hamburger";
 
 export default function ApplicationsPage() {
-  const [jobs, setJobs] = useState<JobApplication[]>(initialJobs)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all")
-  const [sheetOpen, setSheetOpen] = useState(false)
-  const [editingJob, setEditingJob] = useState<JobApplication | null>(null)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
+  const {
+    data: jobsData,
+    isPending,
+    isFetching,
+  } = useJobs({
+    search: debouncedSearch,
+    filters: statusFilter !== "all" ? { status: statusFilter } : {},
+    limit: 20,
+  });
 
-  const filteredJobs = jobs.filter((job) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.position.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.location.toLowerCase().includes(searchQuery.toLowerCase())
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
 
-    const matchesStatus = statusFilter === "all" || job.status === statusFilter
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-    return matchesSearch && matchesStatus
-  })
+  const isViewOpen = useJobStore((state) => state.isViewOpen);
+  const selectedJob = useJobStore((state) => state.selectedJob);
+  const setIsViewOpen = useJobStore((state) => state.setIsViewOpen);
 
-  const handleEditJob = (job: JobApplication) => {
-    setEditingJob(job)
-    setSheetOpen(true)
-  }
+  const sheetOpen = useJobStore((state) => state.sheetOpen);
+  const setSheetOpen = useJobStore((state) => state.setSheetOpen);
+  const editingJob = useJobStore((state) => state.editingJob);
+  const defaultStatus = useJobStore((state) => state.defaultStatus);
+  const handleAddClick = useJobStore((state) => state.handleAddClick);
 
-  const handleSaveJob = (jobData: Omit<JobApplication, "id"> & { id?: string }) => {
-    if (jobData.id) {
-      setJobs((prev) =>
-        prev.map((job) =>
-          job.id === jobData.id ? ({ ...job, ...jobData } as JobApplication) : job
-        )
-      )
-    } else {
-      const newJob: JobApplication = {
-        ...jobData,
-        id: Date.now().toString(),
-      }
-      setJobs((prev) => [newJob, ...prev])
-    }
-  }
+  const jobs =
+    jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
 
-  const handleDeleteJob = (id: string) => {
-    setJobs((prev) => prev.filter((job) => job.id !== id))
-  }
+  const filteredJobs = jobs;
+  // const filteredJobs = useMemo(() => {
+  //   const query = searchQuery.trim().toLowerCase();
+  //   if (!query) return jobs;
 
-  const handleMoveJob = (id: string, newStatus: JobStatus) => {
-    setJobs((prev) =>
-      prev.map((job) => (job.id === id ? { ...job, status: newStatus } : job))
-    )
-  }
+  //   return jobs.filter(
+  //     (job) =>
+  //       job.company_name?.toLowerCase().includes(query) ||
+  //       job.job_title?.toLowerCase().includes(query),
+  //   );
+  // }, [jobs, searchQuery]);
+
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <AppSidebar totalJobs={jobs.length} />
+      <AppSidebar
+        totalJobs={jobs.length}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-lg font-semibold text-foreground sm:text-xl">
@@ -167,10 +93,7 @@ export default function ApplicationsPage() {
             <Button
               size="sm"
               className="sm:hidden"
-              onClick={() => {
-                setEditingJob(null)
-                setSheetOpen(true)
-              }}
+              onClick={() => handleAddClick("saved")}
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -203,10 +126,7 @@ export default function ApplicationsPage() {
               </SelectContent>
             </Select>
             <Button
-              onClick={() => {
-                setEditingJob(null)
-                setSheetOpen(true)
-              }}
+              onClick={() => handleAddClick("saved")}
               className="hidden sm:flex"
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -221,19 +141,15 @@ export default function ApplicationsPage() {
               <div className="mb-4 rounded-full bg-muted p-4">
                 <Search className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-medium text-foreground">No applications found</h3>
+              <h3 className="text-lg font-medium text-foreground">
+                No applications found
+              </h3>
               <p className="mt-1 text-sm text-muted-foreground">
                 {searchQuery || statusFilter !== "all"
                   ? "Try adjusting your filters"
                   : "Start by adding your first job application"}
               </p>
-              <Button
-                className="mt-4"
-                onClick={() => {
-                  setEditingJob(null)
-                  setSheetOpen(true)
-                }}
-              >
+              <Button className="mt-4" onClick={() => handleAddClick("saved")}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Application
               </Button>
@@ -241,13 +157,7 @@ export default function ApplicationsPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredJobs.map((job) => (
-                <KanbanCard
-                  key={job.id}
-                  job={job}
-                  onEdit={handleEditJob}
-                  onDelete={handleDeleteJob}
-                  onMove={handleMoveJob}
-                />
+                <KanbanCard key={job.id} job={job} />
               ))}
             </div>
           )}
@@ -257,10 +167,14 @@ export default function ApplicationsPage() {
       <AddJobSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
-        onSave={handleSaveJob}
         job={editingJob}
-        defaultStatus="saved"
+        defaultStatus={defaultStatus}
+      />
+      <ViewJobSheet
+        open={isViewOpen}
+        onOpenChange={setIsViewOpen}
+        job={selectedJob}
       />
     </div>
-  )
+  );
 }

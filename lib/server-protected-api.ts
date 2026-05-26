@@ -10,13 +10,20 @@ export async function serverProtectedApiFetch<T>(
     const { access_token, refresh_token, reset_token } = await getAuthCookies()
 
     const doFetch = async (token?: string) => {
+        const headers = new Headers(options.headers)
+        if (token) {
+            headers.set("Authorization", `Bearer ${token}`)
+        }
+
+        if (!(options.body instanceof FormData)) {
+            headers.set("Content-Type", "application/json")
+        } else {
+            headers.delete("Content-Type")
+        }
+
         const res = await fetch(`${API_BASE_URL}/api/v1/${endpoint}`, {
             ...options,
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                ...(options.headers || {}),
-            },
+            headers,
             cache: "no-store",
         })
 
@@ -54,6 +61,5 @@ export async function serverProtectedApiFetch<T>(
     if (!res.ok) {
         throw new Error(data?.message || data?.detail || "Protected request failed")
     }
-
     return data as T
 }
