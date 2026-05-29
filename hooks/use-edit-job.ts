@@ -9,7 +9,6 @@ type JobApplicationUpdateInput = {
     company_name: string
     job_title: string
     description?: string
-    // status: JobStatus
     source: JobSource
     date_applied?: string
     notes?: string
@@ -150,10 +149,7 @@ const useHandleJobEdit = () => {
         async (data: JobApplicationUpdateInput, id: string) => {
             setIsSubmitting(true)
             try {
-                const result = await mutateAsync({ data, id })
-                if (result?.success === false || result?.message.includes("Error")) {
-                    throw new Error(result.error || "Job Application update failed")
-                }
+                await mutateAsync({ data, id })
                 toast({
                     title: "Job Application Update",
                     description: "Job Application updated"
@@ -181,11 +177,7 @@ const useHandleJobDelete = () => {
 
     const handleJobDelete = useCallback(async (id: string) => {
         try {
-            const result = await mutateAsync({ id })
-
-            if (result?.success === false || result?.message.includes("Error")) {
-                throw new Error(result.error || "Job Application deletion failed")
-            }
+            await mutateAsync({ id })
             toast({
                 title: "Job Application Deleted",
                 description: "Job Application deleted successfully"

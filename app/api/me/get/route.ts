@@ -8,7 +8,7 @@ export async function GET() {
     } catch (error) {
         return NextResponse.json(
             { message: error instanceof Error ? error.message : "An unknown error occurred" },
-            { status: 500 }
+            { status: 400 }
         )
     }
 }

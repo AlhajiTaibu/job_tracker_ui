@@ -34,13 +34,11 @@ import {
   useHandleUploadAvatar,
   useProfileStore,
 } from "@/hooks/use-profile";
-import { useJobs } from "@/hooks/use-jobs";
 import { Hamburger } from "@/components/ui/hamburger";
 
 export default function SettingsClient() {
   const router = useRouter();
   const { data: profileData } = useProfile();
-  const { data: jobsData, isPending, isFetching } = useJobs();
 
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(false);
@@ -63,8 +61,6 @@ export default function SettingsClient() {
   const { handleUpdateProfile } = useHandleUpdateProfile();
   const { handleUploadAvatar } = useHandleUploadAvatar();
   const [preview, setPreview] = useState<string | null>(null);
-
-  const jobs = jobsData?.payload?.data ?? [];
 
   const initials =
     `${profile?.first_name} ${profile?.last_name}`
@@ -152,7 +148,6 @@ export default function SettingsClient() {
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
-        totalJobs={jobs.length}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />

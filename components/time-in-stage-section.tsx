@@ -1,9 +1,9 @@
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 
 type Stage = {
@@ -16,11 +16,15 @@ type Props = {
 };
 
 export function TimeInStageSection({ data = [] }: Props) {
-  const max = Math.max(...data.map((d) => d.days), 1);
+  const sortedData = [...data].sort((a, b) => b.days - a.days);
+  const max = Math.max(...sortedData.map((d) => d.days), 1);
+  const hasMeaningfulData = sortedData.some((d) => d.days > 0);
+
+  const formatDays = (days: number) => `${Math.round(days)}d avg`;
 
   const getBarColor = (days: number) => {
-    if (days >= max) return "bg-red-500";
-    if (days >= max * 0.6) return "bg-amber-500";
+    if (days > 14) return "bg-red-500";
+    if (days > 7) return "bg-amber-500";
     return "bg-emerald-500";
   };
 
@@ -28,28 +32,53 @@ export function TimeInStageSection({ data = [] }: Props) {
     <Card>
       <CardHeader>
         <CardTitle>Time in Stage</CardTitle>
-        <CardDescription>Identify process bottlenecks</CardDescription>
+        <CardDescription>
+          Average time between application stages
+        </CardDescription>
       </CardHeader>
+
       <CardContent className="space-y-4">
-        {data.length === 0 ? (
+        {!hasMeaningfulData ? (
           <div className="text-sm text-muted-foreground">
-            No time-in-stage data available.
+            No meaningful time-in-stage data available.
           </div>
         ) : (
-          data.map((stage) => (
-            <div key={stage.name} className="space-y-1">
-              <div className="flex items-center justify-between text-sm">
-                <span>{stage.name}</span>
-                <span className="text-muted-foreground">{stage.days}d</span>
+          sortedData.map((stage) => {
+            const width = max > 0 ? (stage.days / max) * 100 : 0;
+            const isBottleneck = stage.days === max;
+
+            return (
+              <div key={stage.name} className="space-y-1.5">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span>{stage.name}</span>
+                    {isBottleneck && (
+                      <span className="text-xs font-medium text-red-600">
+                        Bottleneck
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-muted-foreground">
+                    {formatDays(stage.days)}
+                  </span>
+                </div>
+
+                <div className="h-2.5 rounded-full bg-muted">
+                  <div
+                    role="progressbar"
+                    aria-valuenow={stage.days}
+                    aria-valuemin={0}
+                    aria-valuemax={max}
+                    aria-label={`${stage.name}: ${formatDays(stage.days)}`}
+                    className={`h-2.5 rounded-full transition-all ${getBarColor(
+                      stage.days,
+                    )}`}
+                    style={{ width: `${width}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-2.5 rounded-full bg-muted">
-                <div
-                  className={`h-2.5 rounded-full ${getBarColor(stage.days)}`}
-                  style={{ width: `${(stage.days / max) * 100}%` }}
-                />
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </CardContent>
     </Card>

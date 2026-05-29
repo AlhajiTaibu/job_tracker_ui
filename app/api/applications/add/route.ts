@@ -15,6 +15,6 @@ export async function POST(req: Request) {
         })
         return NextResponse.json(data)
     } catch (error) {
-        return NextResponse.json({ message: error instanceof Error ? error.message : "Job Application creation failed" })
+        return NextResponse.json({ message: error instanceof Error ? error.message : "Job Application creation failed" }, { status: 400 })
     }
 }

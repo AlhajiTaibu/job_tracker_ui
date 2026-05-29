@@ -14,9 +14,18 @@ type ContactInput = {
     notes?: string;
 }
 
+type ContactParams = {
+    search?: string
+    limit?: number
+}
+
 // API functions
-const fetchContacts = async (): Promise<ContactResponse> => {
-    const res = await fetch("/api/contacts/list", {
+const fetchContacts = async ({ search = "", limit = 20 }: ContactParams): Promise<ContactResponse> => {
+    const params = new URLSearchParams()
+
+    if (search) params.set("q", search)
+    if (limit) params.set("limit", limit.toString());
+    const res = await fetch(`/api/contacts/list?${params.toString()}`, {
         next: { revalidate: 60 },
     });
 
@@ -106,11 +115,12 @@ const useEditContactStore = create<EditContactStore>((set) => ({
 
 
 // Query and mutation hooks
-const useContacts = () => {
+const useContacts = ({ search = "", limit = 20 }: ContactParams) => {
     return useQuery({
-        queryKey: ["contacts"],
-        queryFn: fetchContacts,
+        queryKey: ["contacts", { search, limit }],
+        queryFn: () => fetchContacts({ search, limit }),
         staleTime: 60 * 1000,
+        enabled: search.trim().length === 0 || search.trim().length >= 3,
     });
 };
 
@@ -257,10 +267,7 @@ const useHandleAddContact = () => {
     const handleAddContact = useCallback(async (newContact: ContactInput) => {
         try {
             setIsSubmitting(true);
-            const res = await addContactAsync(newContact);
-            if (res?.error || res?.message.includes("error")) {
-                throw new Error(res.error || "Unknown error");
-            }
+            await addContactAsync(newContact);
             toast({
                 title: "Success",
                 description: "Contact added successfully",
@@ -287,10 +294,7 @@ const useHandleUpdateContact = () => {
     const handleUpdateContact = useCallback(async ({ contact_id, updatedData }: { contact_id: string; updatedData: Partial<ContactInput> }) => {
         try {
             setIsEditing(true);
-            const res = await updateContactAsync({ contact_id, updatedData });
-            if (res?.error || res?.message.includes("error")) {
-                throw new Error(res.error || "Unknown error");
-            }
+            await updateContactAsync({ contact_id, updatedData });
             toast({
                 title: "Success",
                 description: "Contact updated successfully",
@@ -315,10 +319,7 @@ const useHandleLinkContactToApplication = () => {
 
     const handleLinkContactToApplication = useCallback(async ({ contact_id, application_id }: { contact_id: string; application_id: string }) => {
         try {
-            const res = await linkContactAsync({ contact_id, application_id });
-            if (res?.error || res?.message.includes("error")) {
-                throw new Error(res.error || "Unknown error");
-            }
+            await linkContactAsync({ contact_id, application_id });
             toast({
                 title: "Success",
                 description: "Contact linked to application successfully",
@@ -341,10 +342,7 @@ const useHandleDeleteContact = () => {
 
     const handleDeleteContact = useCallback(async (contact_id: string) => {
         try {
-            const res = await deleteContactAsync(contact_id);
-            if (res?.error || res?.message.includes("error")) {
-                throw new Error(res.error || "Unknown error");
-            }
+            await deleteContactAsync(contact_id);
             toast({
                 title: "Success",
                 description: "Contact deleted successfully",

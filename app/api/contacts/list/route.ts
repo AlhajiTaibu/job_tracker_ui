@@ -5,8 +5,13 @@ import { ContactResponse } from "@/lib/types"
 
 export async function GET(req: Request, options: RequestInit = {}) {
     try {
+        const { searchParams } = new URL(req.url)
+        const queryString = searchParams.toString()
+        const endpoint = queryString
+            ? `contacts/list?${queryString}`
+            : "contacts/list"
         const data = await serverProtectedApiFetch<ContactResponse>(
-            "contacts/list", {
+            endpoint, {
             method: "GET",
             ...(options || {})
         }
