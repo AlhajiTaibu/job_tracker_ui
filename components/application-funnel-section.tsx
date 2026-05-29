@@ -15,7 +15,7 @@ export function mapApplicationFunnelToStages(
     {
       name: "Applied",
       count: applied,
-      percentage: 100,
+      percentage: applied > 0 ? (applied / applied) * 100 : 0,
       subtitle: `${applied} applications sent`,
     },
     {

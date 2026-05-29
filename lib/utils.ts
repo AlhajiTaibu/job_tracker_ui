@@ -28,6 +28,8 @@ function getStatusClasses(status?: string | null) {
       return "border-red-200 bg-red-50 text-red-700";
     case "saved":
       return "border-slate-200 bg-slate-100 text-slate-700";
+    case "assessment":
+      return "border-slate-200 bg-orange-100 text-slate-700";
     default:
       return "border-border bg-muted text-muted-foreground";
   }
