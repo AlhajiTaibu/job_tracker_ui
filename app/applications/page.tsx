@@ -63,7 +63,6 @@ export default function ApplicationsPage() {
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
-        totalJobs={jobs.length}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />
@@ -147,7 +146,7 @@ export default function ApplicationsPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredJobs.map((job) => (
-                <KanbanCard key={job.id} job={job} />
+                <KanbanCard key={job.id} job={job} addStatus={true} />
               ))}
             </div>
           )}

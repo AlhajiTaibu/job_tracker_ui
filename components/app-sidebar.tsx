@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
+import { useJobs } from "@/hooks/use-jobs";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
@@ -29,18 +30,25 @@ const navItems = [
 ];
 
 type AppSidebarProps = {
-  totalJobs: number;
   mobileOpen: boolean;
   onMobileClose: () => void;
 };
 
-export function AppSidebar({
-  totalJobs,
-  mobileOpen,
-  onMobileClose,
-}: AppSidebarProps) {
+export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const {
+    data: jobsData,
+    isPending,
+    isFetching,
+  } = useJobs({
+    search: "",
+    filters: {},
+    limit: 20,
+  });
+
+  const jobs =
+    jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
 
   useEffect(() => {
     const savedCollapsed = localStorage.getItem("app-sidebar-collapsed");
@@ -175,7 +183,7 @@ export function AppSidebar({
 
                     {item.label === "Applications" && (
                       <span className="ml-auto rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                        {totalJobs}
+                        {jobs.length}
                       </span>
                     )}
                   </>

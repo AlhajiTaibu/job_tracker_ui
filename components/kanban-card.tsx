@@ -12,7 +12,9 @@ import {
   StickyNote,
   Paperclip,
   Globe,
+  Tag,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -32,9 +34,11 @@ import { cn } from "@/lib/utils";
 import { useJobStore } from "@/hooks/use-job-store";
 import { useHandleMove, useMoveStore } from "@/hooks/use-move-job";
 import { useHandleJobDelete } from "@/hooks/use-edit-job";
+import { getStatusClasses } from "@/lib/utils";
 
 interface KanbanCardProps {
   job: JobApplication;
+  addStatus?: boolean;
 }
 
 const allStatuses: {
@@ -89,7 +93,7 @@ const allStatuses: {
 const truncateText = (text: string, maxLength: number) =>
   text.length > maxLength ? `${text.slice(0, maxLength).trim()}...` : text;
 
-export function KanbanCard({ job }: KanbanCardProps) {
+export function KanbanCard({ job, addStatus = false }: KanbanCardProps) {
   const viewJob = useJobStore((state) => state.viewJob);
   const editJob = useJobStore((state) => state.editJob);
   const { handleJobDelete } = useHandleJobDelete();
@@ -208,6 +212,18 @@ export function KanbanCard({ job }: KanbanCardProps) {
           </DropdownMenu>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-1 rounded-md  px-1.5 py-0.5">
+            {job.status && addStatus && (
+              <>
+                <Badge
+                  variant="outline"
+                  className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${getStatusClasses(job.status)}`}
+                >
+                  {job.status || "Unknown"}
+                </Badge>
+              </>
+            )}
+          </div>
           <div className="flex items-center gap-1 rounded-md bg-secondary/50 px-1.5 py-0.5">
             {job.source && (
               <>

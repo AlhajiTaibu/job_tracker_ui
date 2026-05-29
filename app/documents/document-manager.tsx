@@ -246,16 +246,6 @@ export function DocumentManager() {
     );
   }
 
-  const {
-    data: jobsData,
-    isPending,
-    isFetching,
-  } = useJobs({
-    search: "",
-    filters: {},
-    limit: 20,
-  });
-
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -306,13 +296,9 @@ export function DocumentManager() {
     }));
   };
 
-  const jobs =
-    jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
-
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
-        totalJobs={jobs.length}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />

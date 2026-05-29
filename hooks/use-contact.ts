@@ -120,6 +120,7 @@ const useContacts = ({ search = "", limit = 20 }: ContactParams) => {
         queryKey: ["contacts", { search, limit }],
         queryFn: () => fetchContacts({ search, limit }),
         staleTime: 60 * 1000,
+        enabled: search.trim().length === 0 || search.trim().length >= 3,
     });
 };
 

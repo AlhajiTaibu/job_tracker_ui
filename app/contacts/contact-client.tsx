@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Plus,
   Search,
@@ -11,6 +11,8 @@ import {
   MoreHorizontal,
   Calendar,
   StickyNote,
+  Globe,
+  Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -77,18 +79,14 @@ const formatDate = (contact?: Contact) => {
 };
 
 export default function ContactsClient() {
-  const { data: initialContacts } = useContacts();
-  const contacts = initialContacts?.payload?.data || [];
   const [searchQuery, setSearchQuery] = useState("");
-  const {
-    data: jobsData,
-    isPending,
-    isFetching,
-  } = useJobs({
-    search: "",
-    filters: {},
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { data: initialContacts } = useContacts({
+    search: debouncedSearch,
     limit: 20,
   });
+  const contacts = initialContacts?.payload?.data || [];
 
   const sheetOpen = useContactStore((state) => state.sheetOpen);
   const setSheetOpen = useContactStore((state) => state.setSheetOpen);
@@ -104,27 +102,19 @@ export default function ContactsClient() {
   const handleAddClick = useContactStore((state) => state.handleAddClick);
   const { handleDeleteContact } = useHandleDeleteContact();
 
-  const filteredContacts = useMemo(() => {
-    return contacts.filter((contact) => {
-      if (searchQuery === "") return true;
-      const query = searchQuery.toLowerCase();
-      return (
-        contact.name?.toLowerCase().includes(query) ||
-        contact.company?.toLowerCase().includes(query) ||
-        contact.role?.toLowerCase().includes(query)
-      );
-    });
-  }, [contacts, searchQuery]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
 
-  const [mobileOpen, setMobileOpen] = useState(false);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-  const jobs =
-    jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
+  const filteredContacts = contacts;
 
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
-        totalJobs={jobs.length}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />
@@ -251,17 +241,22 @@ export default function ContactsClient() {
                         </DropdownMenu>
                       </div>
 
-                      <div className="mt-3 flex items-center gap-2">
-                        <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">
-                          {contact.company}
-                        </span>
-                        <Badge
-                          variant="secondary"
-                          className={relationship.className}
-                        >
-                          {relationship.label}
-                        </Badge>
+                      <div className="mt-3 flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-1">
+                          <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">
+                            {contact.company}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Tag className="h-3.5 w-3.5 text-muted-foreground" />
+                          <Badge
+                            variant="secondary"
+                            className={relationship.className}
+                          >
+                            {relationship.label}
+                          </Badge>
+                        </div>
                       </div>
 
                       <div className="mt-4 flex flex-wrap items-center gap-2">

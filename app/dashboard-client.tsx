@@ -194,7 +194,6 @@ export default function DashboardClient() {
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
-        totalJobs={totalApplications}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />
