@@ -38,6 +38,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useJobs } from "@/hooks/use-jobs";
 
 type DocumentItem = {
   id: string;
@@ -245,8 +246,6 @@ export function DocumentManager() {
     );
   }
 
-  const totalApplications = 10;
-
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -300,7 +299,6 @@ export function DocumentManager() {
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
-        totalJobs={totalApplications}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />

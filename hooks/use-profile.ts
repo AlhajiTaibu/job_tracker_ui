@@ -136,12 +136,7 @@ const useHandleUpdateProfile = () => {
 
     const handleUpdateProfile = useCallback(async (data: ProfileInput) => {
         try {
-            const result = await mutateAsync({ data })
-            console.log(result)
-            if (result?.error || result?.message.includes("error")) {
-                throw new Error("Profile update failed")
-            }
-
+            await mutateAsync({ data })
             toast({
                 title: "Profile Update",
                 description: "Profile updated successfully"
@@ -169,10 +164,7 @@ const useHandleUploadAvatar = () => {
     const handleUploadAvatar = useCallback(
         async (file: File) => {
             try {
-                const res = await mutateAsync({ file })
-                if (res?.error || res?.message.includes("Error")) {
-                    throw new Error("Avatar upload failed")
-                }
+                await mutateAsync({ file })
                 toast({
                     title: "Avatar Upload",
                     description: "Avatar uploaded successfully"

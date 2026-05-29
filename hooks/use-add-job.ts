@@ -99,10 +99,7 @@ const useHandleJobAdd = () => {
         async (data: JobApplicationInput) => {
             setIsSubmitting(true)
             try {
-                const result = await mutateAsync(data)
-                if (result?.success === false || result?.message.includes("Error")) {
-                    throw new Error(result.error || "Job Application update failed")
-                }
+                await mutateAsync(data)
                 toast({
                     title: "Job Application Creation",
                     description: "New Job Application added"

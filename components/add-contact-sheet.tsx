@@ -152,7 +152,7 @@ export function AddContactSheet({
         company: contact.company ?? "",
         name: contact.name ?? "",
         relationship_type:
-          contact.relationship_type.toLowerCase() ?? defaultRelationshipType,
+          contact.relationship_type?.toLowerCase() ?? defaultRelationshipType,
         email: contact.email ?? "",
         linkedIn_url: contact.linkedIn_url ?? "",
         role: contact.role ?? "",

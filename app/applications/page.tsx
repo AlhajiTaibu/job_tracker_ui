@@ -57,23 +57,12 @@ export default function ApplicationsPage() {
     jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
 
   const filteredJobs = jobs;
-  // const filteredJobs = useMemo(() => {
-  //   const query = searchQuery.trim().toLowerCase();
-  //   if (!query) return jobs;
-
-  //   return jobs.filter(
-  //     (job) =>
-  //       job.company_name?.toLowerCase().includes(query) ||
-  //       job.job_title?.toLowerCase().includes(query),
-  //   );
-  // }, [jobs, searchQuery]);
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
-        totalJobs={jobs.length}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />
@@ -157,7 +146,7 @@ export default function ApplicationsPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {filteredJobs.map((job) => (
-                <KanbanCard key={job.id} job={job} />
+                <KanbanCard key={job.id} job={job} addStatus={true} />
               ))}
             </div>
           )}

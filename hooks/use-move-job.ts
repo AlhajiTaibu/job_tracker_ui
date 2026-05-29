@@ -5,7 +5,7 @@ import { useCallback } from 'react'
 import { useToast } from "./use-toast";
 
 
-const moveJob = async (id: string, status: JobStatus): Promise<JobApplicationResponse> => {
+const moveJob = async (id: string, status: JobStatus) => {
     const baseUrl = typeof window !== 'undefined'
         ? ''
         : process.env.NEXT_PUBLIC_SITE_URL

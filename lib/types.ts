@@ -177,70 +177,88 @@ export const documentsConfig: Record<
   },
 }
 
-export type User = {
-  id?: string
-  email: string
+export interface ApplicationFunnelResponse {
+  count_applications_sent: number
+  count_offers_received: number
+  count_responses: number
+  response_rate: number
+  interview_to_offer_rate: number
+  count_completed_interviews: number
+  applied_to_screening?: AppliedToScreeningResponse
+  screening_to_interview?: ScreeningToInterviewResponse
+  interview_to_offer?: InterviewToOfferResponse,
+  offer_to_accepted?: OfferToAcceptedResponse
 }
 
-export type AuthTokens = {
-  access_token: string
-  refresh_token?: string
+export interface AppliedToScreeningResponse {
+  applied_count: number
+  screened_count: number
+  rate: string
 }
 
-export type LoginPayload = {
-  username: string
-  password: string
+export interface ScreeningToInterviewResponse {
+  interviewed_count: number
+  rate: string
 }
 
-export type RegisterPayload = {
-  email: string
-  password: string
+export interface InterviewToOfferResponse {
+  offers_count: number
+  rate: string
 }
 
-export type ConfirmEmailPayload = {
-  email: string
-  token: string
+export interface OfferToAcceptedResponse {
+  accepted_count: number
+  rate: string
 }
 
-export type ResendOtpPayload = {
-  email: string
+
+export interface HealthViewAnalyticsResponse {
+  normal_progress_job_applications: Array<{ id: string }>
+  staled_job_applications: Array<{ id: string, status: JobStatus, stale_period: number }>
+  upcoming_tasks: number,
+  overdue_tasks: number
 }
 
-export type ForgotPasswordPayload = {
-  email: string
+export interface TimeInStageResponse {
+  average_time_applied_to_screening: number,
+  average_time_screening_to_interview: number,
+  average_time_interview_to_offer: number
 }
 
-export type RefreshTokenPayload = {
-  refresh_token: string
+export interface WeeklyActivityResponse {
+  week_number: number
+  week_period: string
+  application_count: number
 }
 
-export type AuthResponse = {
-  success: boolean
-  message?: string
-  access_token?: string
-  refresh_token?: string
-  token_type: string
-  user_id?: string
+
+export interface SourceDetails {
+  applied_count: number,
+  screened_count: number,
+  interviewed_count: number,
+  offers_count: number,
+  response_count: number,
+  accepted_count: number,
+  applied_to_screening_rate: number,
+  screening_to_interview_rate: number,
+  interviewed_to_offer_rate: number,
+  offer_to_accepted_rate: number,
+  response_rate: number
 }
 
-export type RegisterResponse = {
-  success: boolean
-  message: string
-  expires_in?: string
+export type SourceAnalyticsResponse = Record<string, SourceDetails>
+
+export type RoleAnalyticsResponse = Record<string, SourceDetails>
+
+export interface FollowUpAnalyticsResponse {
+  followed_up_job_response_rate: number
+  unfollowed_up_job_response_rate: number
 }
 
-export type ForgotPasswordResponse = {
-  success: boolean
-  message: string
+export interface InterviewDetails {
+  total_interviews: number
+  passed: number
+  passed_percentage: number
 }
 
-export type VerifyResetTokenResponse = {
-  success: boolean
-  reset_token: string
-}
-
-export type RefreshTokenResponse = {
-  message?: string
-  access_token: string
-  token_type: string
-}
+export type InterviewAnalyticsResponse = Record<string, InterviewDetails>

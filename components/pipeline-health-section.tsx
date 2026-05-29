@@ -11,14 +11,16 @@ type Props = {
   score?: number;
   staleApplications?: number;
   activePipelinePercent?: number;
-  overdueFollowUps?: number;
+  overdueTasks?: number;
+  upcomingTasks?: number;
 };
 
 export function PipelineHealthSection({
   score = 0,
   staleApplications = 0,
   activePipelinePercent = 0,
-  overdueFollowUps = 0,
+  overdueTasks = 0,
+  upcomingTasks = 0,
 }: Props) {
   const scoreColor =
     score >= 75
@@ -44,7 +46,7 @@ export function PipelineHealthSection({
           <div>
             <CardTitle>Pipeline Health</CardTitle>
             <CardDescription>
-              Monitor stale applications and action items
+              Monitor stale applications, overdure Tasks and upcoming tasks
             </CardDescription>
           </div>
           <div
@@ -72,7 +74,7 @@ export function PipelineHealthSection({
           </div>
         </div>
 
-        <div className="grid gap-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900 dark:bg-amber-950/20">
             <div className="text-xs text-amber-700 dark:text-amber-400">
               Stale Applications
@@ -89,9 +91,15 @@ export function PipelineHealthSection({
           </div>
           <div className="rounded-lg border border-red-200 bg-red-50/60 p-3 dark:border-red-900 dark:bg-red-950/20">
             <div className="text-xs text-red-700 dark:text-red-400">
-              Overdue Follow-ups
+              Overdue Tasks
             </div>
-            <div className="text-lg font-semibold">{overdueFollowUps}</div>
+            <div className="text-lg font-semibold">{overdueTasks}</div>
+          </div>
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 dark:border-emerald-900 dark:bg-emerald-950/20">
+            <div className="text-xs text-emerald-700 dark:text-emerald-400">
+              Upcoming Tasks
+            </div>
+            <div className="text-lg font-semibold">{upcomingTasks}</div>
           </div>
         </div>
       </CardContent>

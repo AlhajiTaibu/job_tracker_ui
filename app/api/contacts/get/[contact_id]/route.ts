@@ -17,6 +17,6 @@ export async function GET(req: Request, context: RouteContext) {
         })
         return NextResponse.json(data)
     } catch (error) {
-        return NextResponse.json({ message: error instanceof Error ? error.message : "Contact retrieval failed" })
+        return NextResponse.json({ message: error instanceof Error ? error.message : "Contact retrieval failed" }, { status: 400 })
     }
 }
