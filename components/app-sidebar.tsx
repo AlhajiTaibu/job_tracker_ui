@@ -14,6 +14,7 @@ import {
   X,
   Users,
   ActivityIcon,
+  Presentation,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,7 @@ import { useJobs } from "@/hooks/use-jobs";
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/" },
   { icon: Briefcase, label: "Applications", href: "/applications" },
+  { icon: Presentation, label: "Interviews", href: "/interviews" },
   { icon: Users, label: "Contacts", href: "/contacts" },
   { icon: ActivityIcon, label: "Tasks", href: "/tasks" },
   { icon: FileText, label: "Documents", href: "/documents" },

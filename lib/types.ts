@@ -262,3 +262,25 @@ export interface InterviewDetails {
 }
 
 export type InterviewAnalyticsResponse = Record<string, InterviewDetails>
+
+
+export type InterviewFormat = "phone" | "video" | "onsite" | "technical" | "system design" | "behavioural" | "case study" | "pair programming" | "panel"
+
+export type InterviewOutcome = "scheduled" | "pending" | "passed" | "rejected" | "waiting" | "withdrawn" | "no feedback"
+
+export interface Interview {
+  id: string,
+  company_name: string
+  job_title: string
+  format: InterviewFormat
+  round: number
+  outcome: InterviewOutcome
+  date?: string
+  time?: string
+  created_at: string
+  interviewer_name?: string
+  notes?: string
+  timezone?: string
+  estimated_duration?: string
+  actual_duration?: string
+}
