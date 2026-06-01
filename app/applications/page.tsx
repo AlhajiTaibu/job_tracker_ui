@@ -101,7 +101,7 @@ export default function ApplicationsPage() {
               value={statusFilter}
               onValueChange={(v) => setStatusFilter(v as JobStatus | "all")}
             >
-              <SelectTrigger className="w-[130px]">
+              <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
                 <Filter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Filter" />
               </SelectTrigger>

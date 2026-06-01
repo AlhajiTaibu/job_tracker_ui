@@ -7,14 +7,13 @@ export async function POST(req: Request) {
         const { access_token, refresh_token } = await getAuthCookies()
 
         if (refresh_token) {
-            const body = await req.json()
             await serverApiFetch<{
                 success: boolean,
                 message: string
             }>("auth/logout", {
                 method: "POST",
                 headers: access_token ? { "Authorization": `Bearer ${access_token}` } : {},
-                body: JSON.stringify(body),
+                body: JSON.stringify({ refresh_token: refresh_token }),
             })
 
         }
