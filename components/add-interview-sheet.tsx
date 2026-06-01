@@ -43,6 +43,13 @@ import {
   Calendar,
   TimerIcon,
   LucideTimer,
+  Scale,
+  CheckCheckIcon,
+  Hourglass,
+  MoveDown,
+  HourglassIcon,
+  WeightIcon,
+  GrapeIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -51,10 +58,12 @@ import { AddInterviewInput, addInterviewSchema } from "@/lib/schemas/interview";
 import {
   useAddInterviewStore,
   useEditInterviewStore,
+  useHandleAddInterview,
+  useHandleUpdateInterview,
   //   useHandleAddContact,
   //   useHandleUpdateContact,
 } from "@/hooks/use-interview";
-import { InterviewFormat, Interview } from "@/lib/types";
+import { InterviewFormat, Interview, InterviewOutcome } from "@/lib/types";
 import { useJobs } from "@/hooks/use-jobs";
 
 interface AddInterviewSheetProps {
@@ -126,6 +135,56 @@ const interviewFormat: {
   },
 ];
 
+const interviewOutcome: {
+  value: InterviewOutcome;
+  label: string;
+  icon: React.ReactNode;
+  color: string;
+}[] = [
+  {
+    value: "scheduled",
+    label: "Scheduled",
+    icon: <Scale className="h-4 w-4" />,
+    color: "text-blue-500",
+  },
+  {
+    value: "passed",
+    label: "Passed",
+    icon: <CheckCheckIcon className="h-4 w-4" />,
+    color: "text-green-500",
+  },
+  {
+    value: "pending",
+    label: "Pending",
+    icon: <Hourglass className="h-4 w-4" />,
+    color: "text-indigo-500",
+  },
+  {
+    value: "rejected",
+    label: "Rejected",
+    icon: <MoveDown className="h-4 w-4" />,
+    color: "text-rose-500",
+  },
+  {
+    value: "waiting",
+    label: "Waiting",
+    icon: <HourglassIcon className="h-4 w-4" />,
+    color: "text-amber-500",
+  },
+  {
+    value: "withdrawn",
+    label: "Withdrawn",
+    icon: <WeightIcon className="h-4 w-4" />,
+    color: "text-red-500",
+  },
+  {
+    value: "no feedback",
+    label: "No Feedback",
+    icon: <GrapeIcon className="h-4 w-4" />,
+    color: "text-amber-500",
+  },
+];
+
 export function AddInterviewSheet({
   open,
   onOpenChange,
@@ -149,7 +208,7 @@ export function AddInterviewSheet({
       interviewer_name: "",
       notes: "",
       timezone: "GMT",
-      job_application: "",
+      job_application_id: "",
     },
   });
 
@@ -170,10 +229,10 @@ export function AddInterviewSheet({
     );
   }, [jobs]);
 
-  // const { handleAddContact } = useHandleAddContact();
+  const { handleAddInterview } = useHandleAddInterview();
   const submitting = useAddInterviewStore((state) => state.isSubmitting);
 
-  // const { handleUpdateContact } = useHandleUpdateContact();
+  const { handleUpdateInterview } = useHandleUpdateInterview();
   const editSubmitting = useEditInterviewStore((state) => state.isEditing);
 
   useEffect(() => {
@@ -184,9 +243,10 @@ export function AddInterviewSheet({
         format: interview.format?.toLowerCase() ?? defaultFormat,
         time: interview.time ?? "",
         interviewer_name: interview.interviewer_name ?? "",
-        job_application: interview.job_application_id ?? "",
+        job_application_id: interview.job_application_id ?? "",
         notes: interview.notes ?? "",
         timezone: interview.timezone ?? "",
+        outcome: interview.outcome ?? ("scheduled" as InterviewOutcome),
       });
     } else {
       reset({
@@ -195,7 +255,7 @@ export function AddInterviewSheet({
         format: defaultFormat,
         time: "",
         interviewer_name: "",
-        job_application: "",
+        job_application_id: "",
         notes: "",
         timezone: "",
       });
@@ -204,9 +264,10 @@ export function AddInterviewSheet({
 
   const onSubmit = (value: AddInterviewInput) => {
     console.log(value);
+
     if (interview) {
       const data = {
-        job_application: value.job_application,
+        job_application_id: value.job_application_id,
         time: value.time,
         date: value.date,
         round: value.round,
@@ -216,11 +277,12 @@ export function AddInterviewSheet({
         actual_duration: value.actual_duration,
         estimated_duration: value.estimated_duration,
         timezone: value.timezone,
+        outcome: value.outcome as InterviewOutcome,
       };
-      //   handleUpdateInterview({ interview_id: interview.id, updatedData: data });
+      handleUpdateInterview({ interview_id: interview.id, updatedData: data });
     } else {
       const data = {
-        job_application: value.job_application,
+        job_application_id: value.job_application_id,
         time: value.time,
         date: value.date,
         round: value.round,
@@ -230,8 +292,9 @@ export function AddInterviewSheet({
         actual_duration: value.actual_duration,
         estimated_duration: value.estimated_duration,
         timezone: value.timezone,
+        outcome: "scheduled" as InterviewOutcome,
       };
-      //   handleAddInterview(data);
+      handleAddInterview(data);
     }
     onOpenChange(false);
   };
@@ -240,8 +303,12 @@ export function AddInterviewSheet({
     (s) => s.value === watch("format"),
   );
 
+  const currentOutcome = interviewOutcome.find(
+    (s) => s.value === watch("outcome"),
+  );
+
   const currentJob = jobs.find(
-    (job, index) => job.id === watch("job_application"),
+    (job, index) => job.id === watch("job_application_id"),
   );
 
   return (
@@ -283,41 +350,58 @@ export function AddInterviewSheet({
                 </FieldLabel>
                 <Controller
                   control={control}
-                  name="job_application"
+                  name="job_application_id"
                   render={({ field }) => (
                     <Select
                       value={field.value ?? ""}
                       onValueChange={field.onChange}
+                      required
                     >
                       <SelectTrigger id="status" className="h-10">
-                        <SelectValue>
+                        <SelectValue
+                          placeholder={
+                            eligibleJobs.length === 0
+                              ? "No job applications available"
+                              : "Select a job application"
+                          }
+                        >
                           <div className="flex items-center gap-2">
                             <span className="text-blue-500">
                               <Globe className="h-4 w-4" />
                             </span>
-                            <span>{currentJob?.company_name}</span>
+                            <span>
+                              {currentJob?.company_name} -{" "}
+                              {currentJob?.job_title}
+                            </span>
                           </div>
                         </SelectValue>
                       </SelectTrigger>
-                      <SelectContent>
-                        {eligibleJobs.map((job, index) => (
-                          <SelectItem key={`${job.id}-${index}`} value={job.id}>
-                            <div className="flex items-center gap-2">
-                              <span className="text-blue-500">
-                                <Globe className="h-4 w-4" />
-                              </span>
-                              <span>{job.company_name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
+                      {eligibleJobs.length > 0 && (
+                        <SelectContent>
+                          {eligibleJobs.map((job, index) => (
+                            <SelectItem
+                              key={`${job.id}-${index}`}
+                              value={job.id}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="text-blue-500">
+                                  <Globe className="h-4 w-4" />
+                                </span>
+                                <span>
+                                  {job.company_name} - {job.job_title}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      )}
                     </Select>
                   )}
                 />
               </Field>
-              {errors.job_application && (
+              {errors.job_application_id && (
                 <p className="text-red-600 text-sm">
-                  {errors.job_application.message}
+                  {errors.job_application_id.message}
                 </p>
               )}
               <Field>
@@ -359,29 +443,104 @@ export function AddInterviewSheet({
                   )}
                 />
               </Field>
+              {errors.format && (
+                <p className="text-red-600 text-sm">{errors.format.message}</p>
+              )}
               <Field>
                 <FieldLabel
                   htmlFor="round"
                   className="text-xs text-muted-foreground"
                 >
                   Round
-                  {/* <span className="ml-1 text-muted-foreground/60">
-                    (optional)
-                  </span> */}
                 </FieldLabel>
-                <InputGroup>
-                  <InputGroupAddon>
-                    <Rocket className="h-4 w-4" />
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    id="round"
-                    type="number"
-                    {...register("round")}
-                  />
-                </InputGroup>
+                <Controller
+                  control={control}
+                  name="round"
+                  render={({ field }) => (
+                    <Select
+                      value={field.value != null ? String(field.value) : ""}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                      required
+                    >
+                      <SelectTrigger id="round" className="h-10">
+                        <SelectValue placeholder="Select round">
+                          <div className="flex items-center gap-2">
+                            <span className="h-4 w-4">
+                              <Rocket />
+                            </span>
+                            <span>Round 1</span>
+                          </div>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3].map((round) => (
+                          <SelectItem key={round} value={String(round)}>
+                            <div className="flex items-center gap-2">
+                              <span className="h-4 w-4">
+                                <Rocket />
+                              </span>
+                              <span>{`Round ${round}`}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </Field>
               {errors.round && (
                 <p className="text-red-600 text-sm">{errors.round.message}</p>
+              )}
+
+              {interview && (
+                <>
+                  <Field>
+                    <FieldLabel
+                      htmlFor="outcome"
+                      className="text-xs text-muted-foreground"
+                    >
+                      Outcome
+                    </FieldLabel>
+                    <Controller
+                      control={control}
+                      name="outcome"
+                      render={({ field }) => (
+                        <Select
+                          value={field.value ?? ""}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger id="outcome" className="h-10">
+                            <SelectValue>
+                              <div className="flex items-center gap-2">
+                                <span className={currentOutcome?.color}>
+                                  {currentOutcome?.icon}
+                                </span>
+                                <span>{currentOutcome?.label}</span>
+                              </div>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {interviewOutcome.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                <div className="flex items-center gap-2">
+                                  <span className={type.color}>
+                                    {type.icon}
+                                  </span>
+                                  <span>{type.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </Field>
+                  {errors.outcome && (
+                    <p className="text-red-600 text-sm">
+                      {errors.outcome.message}
+                    </p>
+                  )}
+                </>
               )}
               <Field>
                 <FieldLabel

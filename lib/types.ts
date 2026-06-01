@@ -308,3 +308,95 @@ export interface InterviewResponse {
   payload: InterviewPayload
   error?: string
 }
+
+export const interviewFormatType: Record<
+  InterviewFormat,
+  { label: string; color: string; bgColor: string }
+> = {
+  phone: {
+    label: "Phone",
+    color: "text-slate-700",
+    bgColor: "bg-slate-100",
+  },
+  video: {
+    label: "Video",
+    color: "text-blue-700",
+    bgColor: "bg-blue-50",
+  },
+  onsite: {
+    label: "Onsite",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+  },
+  technical: {
+    label: "Technical",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+  },
+  "system design": {
+    label: "System Design",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+  },
+  behavioural: {
+    label: "Behavioural",
+    color: "text-emerald-700",
+    bgColor: "bg-emerald-50",
+  },
+  "case study": {
+    label: "Case Study",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
+  },
+  panel: {
+    label: "Panel",
+    color: "text-rose-700",
+    bgColor: "bg-rose-50",
+  },
+  "pair programming": {
+    label: "Pair Programming",
+    color: "text-red-700",
+    bgColor: "bg-red-50",
+  },
+}
+
+export const interviewOutcomeType: Record<
+  InterviewOutcome,
+  { label: string; color: string; bgColor: string }
+> = {
+  scheduled: {
+    label: "Scheduled",
+    color: "text-slate-700",
+    bgColor: "bg-slate-100",
+  },
+  pending: {
+    label: "Pending",
+    color: "text-blue-700",
+    bgColor: "bg-blue-50",
+  },
+  passed: {
+    label: "Passed",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+  },
+  rejected: {
+    label: "Rejected",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+  },
+  withdrawn: {
+    label: "Withdrawn",
+    color: "text-amber-700",
+    bgColor: "bg-amber-50",
+  },
+  waiting: {
+    label: "Waiting",
+    color: "text-emerald-700",
+    bgColor: "bg-emerald-50",
+  },
+  "no feedback": {
+    label: "No Feedback",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
+  },
+}

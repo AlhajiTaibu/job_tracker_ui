@@ -11,9 +11,10 @@ import {
   Outdent,
   User,
   Timer,
+  Filter,
 } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Hamburger } from "@/components/ui/hamburger";
 import { Input } from "@/components/ui/input";
@@ -27,24 +28,33 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Interview,
   InterviewFormat,
   InterviewOutcome,
-  JobApplication,
+  interviewFormatType,
+  interviewOutcomeType,
 } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { AddInterviewSheet } from "@/components/add-interview-sheet";
 import { useInterviewStore } from "@/hooks/use-interview-store";
 import { ViewInterviewSheet } from "@/components/view-interview-sheet";
 import {
+  useHandleDeleteInterview,
   useInterviewsHistory,
   useUpcomingInterviews,
 } from "@/hooks/use-interview";
 import {
   formatInterviewDate,
-  interviewFormatConfig,
   truncateText,
   getInterviewOutcomeClasses,
+  interviewFormatConfig,
 } from "@/lib/utils";
 
 function InterviewEmptyState({
@@ -80,17 +90,19 @@ function InterviewCard({
   index,
   onView,
   onEdit,
+  onDelete,
 }: {
   interview: Interview;
   index: number;
   onView: () => void;
   onEdit: () => void;
+  onDelete: () => void;
 }) {
   const displayDate = formatInterviewDate(interview);
   const format =
     interviewFormatConfig[
       interview.format as keyof typeof interviewFormatConfig
-    ] ?? interviewFormatConfig["other"];
+    ] ?? interviewFormatConfig["phone"];
   return (
     <Card key={`${interview.id}-${index}`} className="group relative">
       <CardContent className="p-4">
@@ -128,10 +140,7 @@ function InterviewCard({
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive"
-                //   onClick={() => handleDeleteInterview(contact.id)}
-              >
+              <DropdownMenuItem className="text-destructive" onClick={onDelete}>
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -227,17 +236,34 @@ function InterviewCard({
 }
 
 export default function InterviewsClient() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [formatFilter, setFormatFilter] = useState<InterviewFormat | "all">(
+    "all",
+  );
+  const [outcomeFilter, setOutcomeFilter] = useState<InterviewOutcome | "all">(
+    "all",
+  );
   const { data: upcomingInterviewsData } = useUpcomingInterviews({});
-  const { data: interviewsHistoryData } = useInterviewsHistory({});
-
-  console.log(upcomingInterviewsData);
-  console.log(interviewsHistoryData);
+  const { data: interviewsHistoryData } = useInterviewsHistory({
+    search: debouncedSearch,
+    filters:
+      formatFilter !== "all" && outcomeFilter !== "all"
+        ? { format: formatFilter, outcome: outcomeFilter }
+        : formatFilter !== "all"
+          ? { format: formatFilter }
+          : outcomeFilter !== "all"
+            ? { outcome: outcomeFilter }
+            : {},
+  });
 
   const upcomingInterviews = upcomingInterviewsData?.payload.data ?? [];
-  const interviewsHistory = interviewsHistoryData?.payload.data ?? [];
+  const interviewsHistory =
+    interviewsHistoryData?.pages.flatMap((page) => page.payload?.data ?? []) ??
+    [];
 
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+
   const sheetOpen = useInterviewStore((state) => state.sheetOpen);
   const setSheetOpen = useInterviewStore((state) => state.setSheetOpen);
   const isViewOpen = useInterviewStore((state) => state.isViewOpen);
@@ -250,33 +276,23 @@ export default function InterviewsClient() {
   const editInterview = useInterviewStore((state) => state.editInterview);
   const defaultFormat = useInterviewStore((state) => state.defaultFormat);
   const handleAddClick = useInterviewStore((state) => state.handleAddClick);
+  const { handleDeleteInterview } = useHandleDeleteInterview();
 
-  const filterInterviews = (items: Interview[]) => {
-    const query = searchQuery.trim().toLowerCase();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
 
-    if (!query) return items;
-
-    return items.filter((interview) => {
-      return [
-        interview.company_name,
-        interview.job_title,
-        interview.format,
-        interview.outcome,
-        interview.time,
-        interview.date,
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query));
-    });
-  };
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const filteredUpcomingInterviews = useMemo(
-    () => filterInterviews(upcomingInterviews as Interview[]),
+    () => upcomingInterviews as Interview[],
     [upcomingInterviews, searchQuery],
   );
 
   const filteredInterviewHistory = useMemo(
-    () => filterInterviews(interviewsHistory as Interview[]),
+    () => interviewsHistory as Interview[],
     [interviewsHistory, searchQuery],
   );
 
@@ -316,6 +332,48 @@ export default function InterviewsClient() {
                 className="w-full pl-9 sm:w-64"
               />
             </div>
+            <Select
+              value={outcomeFilter}
+              onValueChange={(v) =>
+                setOutcomeFilter(v as InterviewOutcome | "all")
+              }
+            >
+              <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter by Outcome" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Outcome</SelectItem>
+                {(Object.keys(interviewOutcomeType) as InterviewOutcome[]).map(
+                  (outcome) => (
+                    <SelectItem key={outcome} value={outcome}>
+                      {interviewOutcomeType[outcome].label}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+            <Select
+              value={formatFilter}
+              onValueChange={(v) =>
+                setFormatFilter(v as InterviewFormat | "all")
+              }
+            >
+              <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Format</SelectItem>
+                {(Object.keys(interviewFormatType) as InterviewFormat[]).map(
+                  (format) => (
+                    <SelectItem key={format} value={format}>
+                      {interviewFormatType[format].label}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
             <Button
               className="hidden sm:flex"
               onClick={() => handleAddClick("phone")}
@@ -359,6 +417,7 @@ export default function InterviewsClient() {
                           index={index}
                           onView={() => viewInterview(interview)}
                           onEdit={() => editInterview(interview)}
+                          onDelete={() => handleDeleteInterview(interview.id)}
                         />
                       );
                     })}
@@ -369,14 +428,14 @@ export default function InterviewsClient() {
                 <div>
                   <h2 className="text-lg font-semibold">Interview History</h2>
                   <p className="text-sm text-muted-foreground">
-                    Completed or past interviews
+                    All interviews
                   </p>
                 </div>
                 {filteredInterviewHistory.length === 0 ? (
                   <InterviewEmptyState
                     search={searchQuery}
-                    title="No Completed or Past interviews found"
-                    description="Your past interviews will appear here"
+                    title="No interviews found"
+                    description="Your interviews will appear here"
                     onAdd={() => handleAddClick("phone")}
                   />
                 ) : (
@@ -388,6 +447,7 @@ export default function InterviewsClient() {
                           index={index}
                           onView={() => viewInterview(interview)}
                           onEdit={() => editInterview(interview)}
+                          onDelete={() => handleDeleteInterview(interview.id)}
                         />
                       );
                     })}

@@ -103,12 +103,7 @@ const interviewFormatConfig = {
     label: "Onsite",
     className:
       "bg-green-100 text-voilet-700 dark:bg-voilet-950 dark:text-voilet-300",
-  },
-  other: {
-    label: "Other",
-    className:
-      "bg-slate-100 text-slate-700 dark:bg-slate-900 dark:text-slate-300",
-  },
+  }
 };
 
 const truncateText = (text: string, maxLength: number) =>

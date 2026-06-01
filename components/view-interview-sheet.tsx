@@ -22,8 +22,11 @@ import {
   Rocket,
   TimerIcon,
   LucideTimer,
+  ReceiptRussianRuble,
+  Receipt,
 } from "lucide-react";
 import type { Interview, JobApplication } from "@/lib/types";
+import { useJobs } from "@/hooks/use-jobs";
 
 type ViewInterviewSheetProps = {
   open: boolean;
@@ -53,10 +56,18 @@ function getStatusClasses(status?: string | null) {
 }
 
 function JobSection({
-  job_application,
+  job_application_id,
 }: {
-  job_application?: JobApplication | null;
+  job_application_id?: string | null;
 }) {
+  const { data: jobsData } = useJobs({
+    filters: {},
+    limit: 20,
+  });
+
+  const jobs =
+    jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
+  const job_application = jobs.find((job) => job.id === job_application_id);
   const hasContacts = !!job_application;
 
   return (
@@ -328,8 +339,13 @@ export function ViewInterviewSheet({
                 icon={<Tag className="h-4 w-4" />}
               />
               <InfoRow
+                label="Outcome"
+                value={interview.outcome}
+                icon={<Receipt className="h-4 w-4" />}
+              />
+              <InfoRow
                 label="Date"
-                value={interview.date}
+                value={formatDate(interview.date)}
                 icon={<Calendar className="h-4 w-4" />}
               />
               <InfoRow
@@ -358,7 +374,7 @@ export function ViewInterviewSheet({
                 icon={<Calendar className="h-4 w-4" />}
               />
             </Section>
-            <JobSection job_application={interview.job_application} />
+            <JobSection job_application_id={interview.job_application_id} />
             <RichSection
               title="Notes"
               icon={<NotebookPen className="h-4 w-4" />}
