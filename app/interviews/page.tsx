@@ -1,4 +1,4 @@
-import InterviewsClient from "./interviews-client";
+import InterviewsClient from "./interview-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getQueryClient } from "@/lib/get-query-client";
 import { cookies } from "next/headers";
@@ -25,13 +25,13 @@ export default async function InterviewsPage() {
 
   await Promise.all([
     queryClient.prefetchQuery({
-      queryKey: ["analytics"],
-      queryFn: () => getInterviews("application-funnel"),
+      queryKey: ["upcoming-interviews"],
+      queryFn: () => getInterviews("upcoming-interviews"),
       staleTime: 60 * 1000,
     }),
     queryClient.prefetchQuery({
-      queryKey: ["pipeline-health"],
-      queryFn: () => getInterviews("pipeline-health"),
+      queryKey: ["interviews-history"],
+      queryFn: () => getInterviews("interviews-history"),
       staleTime: 60 * 1000,
     }),
   ]);

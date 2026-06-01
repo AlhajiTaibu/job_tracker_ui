@@ -283,4 +283,28 @@ export interface Interview {
   timezone?: string
   estimated_duration?: string
   actual_duration?: string
+  job_application_id: string
+}
+
+export interface InterviewTruncated {
+  id: string
+  user_id: string
+  company_name: string
+  job_title: string
+  format: InterviewFormat
+  round: number
+  outcome: InterviewOutcome
+  date: string
+  time: string
+}
+
+export interface InterviewPayload {
+  data?: Interview[]
+  next_cursor?: string | null
+}
+
+export interface InterviewResponse {
+  success?: boolean
+  payload: InterviewPayload
+  error?: string
 }
