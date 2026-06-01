@@ -23,9 +23,13 @@ import {
   Mail,
   Phone,
   Linkedin,
+  Presentation,
+  Rocket,
+  ChartBar,
 } from "lucide-react";
-import type { JobApplication } from "@/lib/types";
+import type { Interview, JobApplication } from "@/lib/types";
 import { getStatusClasses } from "@/lib/utils";
+import { useJobInterviews } from "@/hooks/use-interview";
 
 type ViewJobSheetProps = {
   open: boolean;
@@ -292,6 +296,91 @@ function ContactsSection({
   );
 }
 
+function InterviewSection({ job_id }: { job_id: string }) {
+  const { data: interviewsData, isLoading } = useJobInterviews({ job_id });
+
+  const interviews = (interviewsData?.payload?.data ?? []) as Interview[];
+  const hasInterviews = interviews.length > 0;
+
+  if (isLoading) {
+    return (
+      <section className="rounded-2xl border bg-card p-5 shadow-sm">
+        <div className="mb-3 flex items-center gap-2">
+          <span className="text-muted-foreground">
+            <Presentation className="h-4 w-4" />
+          </span>
+          <h3 className="text-sm font-semibold text-foreground">Interviews</h3>
+        </div>
+
+        <div className="rounded-xl bg-muted px-4 py-4 text-sm text-muted-foreground">
+          Loading interviews...
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="rounded-2xl border bg-card p-5 shadow-sm">
+      <div className="mb-3 flex items-center gap-2">
+        <span className="text-muted-foreground">
+          <Presentation className="h-4 w-4" />
+        </span>
+        <h3 className="text-sm font-semibold text-foreground">Interviews</h3>
+      </div>
+
+      {hasInterviews ? (
+        <div className="space-y-3">
+          {interviews.map((interview, index) => {
+            const title = interview.id?.trim() || `Interview ${index + 1}`;
+            const format = interview.format?.trim() || "No format provided";
+            const outcome = interview.outcome?.trim();
+            const round = interview.round || "No round info";
+
+            return (
+              <div
+                key={interview.id || index}
+                className="rounded-xl border bg-muted p-4"
+              >
+                <div className="flex items-start gap-2 text-sm">
+                  <Tag className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  {format ? (
+                    <span className="text-foreground"> Format: {format}</span>
+                  ) : (
+                    <span className="text-muted-foreground">
+                      No format provided
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-start gap-2 text-sm">
+                  <ChartBar className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  {outcome ? (
+                    <span className="text-foreground"> Outcome: {outcome}</span>
+                  ) : (
+                    <span className="text-muted-foreground">No outcome</span>
+                  )}
+                </div>
+                <div className="flex items-start gap-2 text-sm">
+                  <Rocket className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  {round ? (
+                    <span className="text-foreground"> Round: {round}</span>
+                  ) : (
+                    <span className="text-muted-foreground">No round info</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="rounded-xl bg-muted px-4 py-4 text-sm text-muted-foreground">
+          No interviews added
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function ViewJobSheet({ open, onOpenChange, job }: ViewJobSheetProps) {
   const formattedDate = job?.date_applied
     ? new Date(job.date_applied).toLocaleDateString("en-US", {
@@ -394,6 +483,8 @@ export function ViewJobSheet({ open, onOpenChange, job }: ViewJobSheetProps) {
             <DocumentsSection documents={job.documents} />
 
             <ContactsSection contacts={job.contacts} />
+
+            <InterviewSection job_id={job.id} />
 
             <RichSection
               title="Notes"

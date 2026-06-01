@@ -87,6 +87,12 @@ const useEditJob = () => {
 
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['jobs'] })
+            queryClient.invalidateQueries({ queryKey: ["pipeline-health"] })
+            queryClient.invalidateQueries({ queryKey: ["application-funnel"] })
+            queryClient.invalidateQueries({ queryKey: ["weekly-activity"] })
+            queryClient.invalidateQueries({ queryKey: ["time-in-stage"] })
+            queryClient.invalidateQueries({ queryKey: ["source-analytics"] })
+            queryClient.invalidateQueries({ queryKey: ["role-analytics"] })
         }
     })
 }
@@ -124,6 +130,12 @@ const useDeleteJob = () => {
 
         onSettled: () => {
             queryClient.cancelQueries({ queryKey: ['jobs'] })
+            queryClient.invalidateQueries({ queryKey: ["pipeline-health"] })
+            queryClient.invalidateQueries({ queryKey: ["application-funnel"] })
+            queryClient.invalidateQueries({ queryKey: ["weekly-activity"] })
+            queryClient.invalidateQueries({ queryKey: ["time-in-stage"] })
+            queryClient.invalidateQueries({ queryKey: ["source-analytics"] })
+            queryClient.invalidateQueries({ queryKey: ["role-analytics"] })
         }
     })
 }

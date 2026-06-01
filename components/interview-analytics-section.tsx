@@ -102,7 +102,7 @@ export function InterviewAnalyticsSection({
                     <div className="text-xs leading-5 text-muted-foreground">
                       Pass Rate
                     </div>
-                    <div className="mt-auto text-lg font-semibold leading-none">
+                    <div className="mt-auto text-sm font-semibold leading-none">
                       {round.rate}%
                     </div>
                   </div>
