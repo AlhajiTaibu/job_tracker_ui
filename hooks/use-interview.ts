@@ -265,7 +265,8 @@ const useUpcomingInterviews = ({ search = "", limit = 20 }: InterviewParams) => 
     return useQuery({
         queryKey: ["upcoming-interviews", { search, limit }],
         queryFn: () => fetchUpcomingInterviews({ search, limit }),
-        staleTime: 60 * 1000,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
         enabled: search.trim().length === 0 || search.trim().length >= 3,
     });
 };
@@ -278,7 +279,8 @@ const useInterviewsHistory = ({ filters = {}, search = "", limit = 20 }: Omit<In
         placeholderData: keepPreviousData,
         initialPageParam: null as string | null,
         enabled: search.trim().length === 0 || search.trim().length >= 3,
-        staleTime: 60_000,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
         refetchOnMount: true
     })
 };

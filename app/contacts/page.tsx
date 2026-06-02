@@ -27,18 +27,32 @@ const getContacts = async (): Promise<ContactResponse> => {
   return res.json();
 };
 
-export default async function ContactsPage() {
+export default async function ContactsPage({
+  search = "",
+  filters = {},
+  limit = 20,
+}: {
+  search?: string;
+  filters?: Record<string, string | number | boolean | undefined>;
+  limit?: number;
+}) {
   const queryClient = getQueryClient();
 
-  await queryClient.fetchQuery({
-    queryKey: ["contacts"],
-    queryFn: getContacts,
-    staleTime: 60 * 1000,
+  await queryClient.prefetchInfiniteQuery({
+    queryKey: ["contacts", { search, filters, limit }],
+    queryFn: ({ pageParam = null }) => getContacts(),
+    initialPageParam: null,
+    getNextPageParam: (lastPage: any) =>
+      lastPage?.payload?.next_cursor ?? undefined,
+    staleTime: Infinity,
+    gcTime: 10 * 60 * 1000,
   });
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <ContactsClient />
-    </HydrationBoundary>
+    <Suspense fallback={<DashboardSkeleton />}>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <ContactsClient />
+      </HydrationBoundary>
+    </Suspense>
   );
 }

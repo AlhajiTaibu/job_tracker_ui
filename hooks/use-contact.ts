@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 import { ContactResponse, ContactType, NoteLog } from "@/lib/types";
 import { useCallback } from "react";
 import { useToast } from "./use-toast";
@@ -17,14 +17,16 @@ type ContactInput = {
 type ContactParams = {
     search?: string
     limit?: number
+    cursor?: string | null
 }
 
 // API functions
-const fetchContacts = async ({ search = "", limit = 20 }: ContactParams): Promise<ContactResponse> => {
+const fetchContacts = async ({ search = "", limit = 20, cursor = null }: ContactParams): Promise<ContactResponse> => {
     const params = new URLSearchParams()
 
     if (search) params.set("q", search)
     if (limit) params.set("limit", limit.toString());
+    if (cursor) params.set("cursor", cursor);
     const res = await fetch(`/api/contacts/list?${params.toString()}`, {
         next: { revalidate: 60 },
     });
@@ -115,13 +117,17 @@ const useEditContactStore = create<EditContactStore>((set) => ({
 
 
 // Query and mutation hooks
-const useContacts = ({ search = "", limit = 20 }: ContactParams) => {
-    return useQuery({
+const useContacts = ({ search = "", limit = 20 }: Omit<ContactParams, "cursor"> = {}) => {
+    return useInfiniteQuery({
         queryKey: ["contacts", { search, limit }],
-        queryFn: () => fetchContacts({ search, limit }),
-        staleTime: 60 * 1000,
+        queryFn: ({ pageParam = null }) => fetchContacts({ search, limit, cursor: pageParam }),
+        getNextPageParam: (lastPage) => lastPage?.payload?.next_cursor ?? undefined,
+        placeholderData: keepPreviousData,
+        initialPageParam: null as string | null,
         enabled: search.trim().length === 0 || search.trim().length >= 3,
-    });
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
+    })
 };
 
 const useAddContact = () => {

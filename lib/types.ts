@@ -38,6 +38,7 @@ export interface Contact {
 }
 export interface ContactPayload {
   data?: Contact[]
+  next_cursor?: string | null
 }
 
 export interface ContactResponse {

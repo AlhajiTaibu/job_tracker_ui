@@ -82,7 +82,7 @@ export default function DashboardClient() {
   const [activeJob, setActiveJob] = useState<JobApplication | null>(null);
 
   const jobs =
-    jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
+    jobsData?.pages?.flatMap((page) => page.payload?.data ?? []) ?? [];
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -258,6 +258,7 @@ export default function DashboardClient() {
         <main className="flex-1 overflow-auto p-4 sm:p-6">
           <div className="flex h-full min-h-[500px] flex-col gap-4 md:flex-row">
             <DndContext
+              id="kanban-dnd"
               sensors={sensors}
               onDragEnd={handleDragEnd}
               onDragStart={handleDragStart}

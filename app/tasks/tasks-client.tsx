@@ -144,7 +144,6 @@ export default function TasksClient({
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
-        totalJobs={tasks.length}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />

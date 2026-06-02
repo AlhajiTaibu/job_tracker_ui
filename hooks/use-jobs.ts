@@ -35,12 +35,12 @@ const useJobs = ({ search = "", filters = {}, limit = 20 }: Omit<JobsParams, "cu
     return useInfiniteQuery({
         queryKey: ["jobs", { search, filters, limit }],
         queryFn: ({ pageParam = null }) => fetchJobs({ search, filters, cursor: pageParam, limit }),
-        getNextPageParam: (lastPage) => lastPage.payload?.next_cursor ?? undefined,
+        getNextPageParam: (lastPage) => lastPage?.payload?.next_cursor ?? undefined,
         placeholderData: keepPreviousData,
         initialPageParam: null as string | null,
         enabled: search.trim().length === 0 || search.trim().length >= 3,
-        staleTime: 60_000,
-        refetchOnMount: true
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
     })
 }
 
