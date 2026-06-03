@@ -2,6 +2,8 @@ import AnalyticsClient from "./analytics-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getQueryClient } from "@/lib/get-query-client";
 import { cookies } from "next/headers";
+import { DashboardSkeleton } from "@/components/dashboard-skeleton";
+import { Suspense } from "react";
 
 const getAnalytics = async (endpoint: string) => {
   const cookieStore = await cookies();
@@ -27,48 +29,58 @@ export default async function AnalyticsPage() {
     queryClient.prefetchQuery({
       queryKey: ["analytics"],
       queryFn: () => getAnalytics("application-funnel"),
-      staleTime: 60 * 1000,
+      staleTime: Infinity,
+      gcTime: 10 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
       queryKey: ["pipeline-health"],
       queryFn: () => getAnalytics("pipeline-health"),
-      staleTime: 60 * 1000,
+      staleTime: Infinity,
+      gcTime: 10 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
       queryKey: ["weekly-activity"],
       queryFn: () => getAnalytics("weekly-activity"),
-      staleTime: 60 * 1000,
+      staleTime: Infinity,
+      gcTime: 10 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
       queryKey: ["time-in-stage"],
       queryFn: () => getAnalytics("time-in-stage"),
-      staleTime: 60 * 1000,
+      staleTime: Infinity,
+      gcTime: 10 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
       queryKey: ["source-analytics"],
       queryFn: () => getAnalytics("source-analytics"),
-      staleTime: 60 * 1000,
+      staleTime: Infinity,
+      gcTime: 10 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
       queryKey: ["role-analytics"],
       queryFn: () => getAnalytics("role-analytics"),
-      staleTime: 60 * 1000,
+      staleTime: Infinity,
+      gcTime: 10 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
       queryKey: ["interview-analytics"],
       queryFn: () => getAnalytics("interview-analytics"),
-      staleTime: 60 * 1000,
+      staleTime: Infinity,
+      gcTime: 10 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
       queryKey: ["follow-up-analytics"],
       queryFn: () => getAnalytics("follow-up-analytics"),
-      staleTime: 60 * 1000,
+      staleTime: Infinity,
+      gcTime: 10 * 60 * 1000,
     }),
   ]);
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <AnalyticsClient />
-    </HydrationBoundary>
+    <Suspense fallback={<DashboardSkeleton />}>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <AnalyticsClient />
+      </HydrationBoundary>
+    </Suspense>
   );
 }

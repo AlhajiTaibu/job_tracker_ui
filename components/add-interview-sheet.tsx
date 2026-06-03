@@ -60,8 +60,6 @@ import {
   useEditInterviewStore,
   useHandleAddInterview,
   useHandleUpdateInterview,
-  //   useHandleAddContact,
-  //   useHandleUpdateContact,
 } from "@/hooks/use-interview";
 import { InterviewFormat, Interview, InterviewOutcome } from "@/lib/types";
 import { useJobs } from "@/hooks/use-jobs";
@@ -263,8 +261,6 @@ export function AddInterviewSheet({
   }, [interview, reset, defaultFormat]);
 
   const onSubmit = (value: AddInterviewInput) => {
-    console.log(value);
-
     if (interview) {
       const data = {
         job_application_id: value.job_application_id,

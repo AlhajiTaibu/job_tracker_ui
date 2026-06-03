@@ -1,4 +1,4 @@
-import { useInfiniteQuery, keepPreviousData } from "@tanstack/react-query"
+import { useInfiniteQuery, keepPreviousData, useQuery } from "@tanstack/react-query"
 import { JobApplicationResponse } from "@/lib/types"
 
 type JobsParams = {
@@ -30,19 +30,40 @@ const fetchJobs = async ({ search = "", filters = {}, cursor = null, limit = 20 
     return res.json()
 }
 
+const fetchJob = async (id: string) => {
+    const res = await fetch(`/api/applications/get/${id}`, {
+        method: "GET"
+    })
+
+    if (!res.ok) {
+        throw new Error("Failed to fetch Job Application")
+    }
+
+    return res.json()
+}
 
 const useJobs = ({ search = "", filters = {}, limit = 20 }: Omit<JobsParams, "cursor"> = {}) => {
     return useInfiniteQuery({
         queryKey: ["jobs", { search, filters, limit }],
         queryFn: ({ pageParam = null }) => fetchJobs({ search, filters, cursor: pageParam, limit }),
-        getNextPageParam: (lastPage) => lastPage.payload?.next_cursor ?? undefined,
+        getNextPageParam: (lastPage) => lastPage?.payload?.next_cursor ?? undefined,
         placeholderData: keepPreviousData,
         initialPageParam: null as string | null,
         enabled: search.trim().length === 0 || search.trim().length >= 3,
-        staleTime: 60_000,
-        refetchOnMount: true
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
+    })
+}
+
+const useJob = (id?: string) => {
+    return useQuery({
+        queryKey: ["job", id],
+        queryFn: () => fetchJob(id!),
+        enabled: !!id,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
     })
 }
 
 
-export { fetchJobs, useJobs }
+export { fetchJobs, useJobs, useJob }

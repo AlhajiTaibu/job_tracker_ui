@@ -6,9 +6,7 @@ import { Search, Filter, Plus } from "lucide-react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import TaskFormModal, {
-  type TaskFormValues,
-} from "@/components/ui/task-form-modal";
+import TaskFormModal from "@/components/ui/task-form-modal";
 import {
   Select,
   SelectContent,
@@ -18,133 +16,159 @@ import {
 } from "@/components/ui/select";
 import { TaskCard } from "@/components/ui/task-card";
 import { Hamburger } from "@/components/ui/hamburger";
-
-type Task = {
-  id: string;
-  title: string;
-  description?: string;
-  status: "todo" | "in_progress" | "done";
-  dueDate?: string;
-  relatedTo?: string;
-  category?: string;
-};
-
-const emptyTaskValues: TaskFormValues = {
-  title: "",
-  description: "",
-  status: "todo",
-  dueDate: "",
-  relatedTo: "",
-  category: "",
-};
+import { Task, TaskType, TaskStatus, TaskResponse } from "@/lib/types";
+import {
+  useDailyTasks,
+  useHandleDeleteTask,
+  useHandleSnoozeTask,
+  useHandleCancelTask,
+  useOverdueTasks,
+  useUpcomingTasks,
+  useHandleCompleteTask,
+} from "@/hooks/use-task";
+import { useTaskStore } from "@/hooks/use-task-store";
+import ViewTaskModal from "@/components/ui/view-task-modal";
 
 const statusLabelMap = {
-  todo: "To Do",
-  in_progress: "In Progress",
-  done: "Done",
+  pending: "Pending",
+  completed: "Completed",
+  cancelled: "Cancelled",
+  snoozed: "Snoozed",
 } as const;
 
-export default function TasksClient({
-  initialTasks = [],
-}: {
-  initialTasks?: Task[];
-}) {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [search, setSearch] = useState("");
+const taskStatusType: Record<
+  TaskStatus,
+  { label: string; color: string; bgColor: string }
+> = {
+  pending: {
+    label: "Pending",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-100",
+  },
+  completed: {
+    label: "Completed",
+    color: "text-green-700",
+    bgColor: "bg-green-100",
+  },
+  cancelled: {
+    label: "Cancelled",
+    color: "text-red-700",
+    bgColor: "bg-red-100",
+  },
+  snoozed: {
+    label: "Snoozed",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
+  },
+};
+
+const taskTypeConfig: Record<
+  TaskType,
+  { label: string; color: string; bgColor: string }
+> = {
+  follow_up: {
+    label: "Follow Up",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-100",
+  },
+  thank_you: {
+    label: "Thank You",
+    color: "text-green-700",
+    bgColor: "bg-green-100",
+  },
+  confirm: {
+    label: "Confirmation",
+    color: "text-red-700",
+    bgColor: "bg-red-100",
+  },
+  reminder: {
+    label: "Reminder",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
+  },
+  review: {
+    label: "Review",
+    color: "text-purple-700",
+    bgColor: "bg-purple-100",
+  },
+  other: {
+    label: "Other",
+    color: "text-gray-700",
+    bgColor: "bg-gray-100",
+  },
+};
+
+export default function TasksClient() {
   const [statusFilter, setStatusFilter] = useState("all");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [typeFilter, setTypeFilter] = useState("all");
+  const { data: upcomingTasksData } = useUpcomingTasks({
+    filters:
+      statusFilter !== "all" && typeFilter !== "all"
+        ? { status: statusFilter, task_type: typeFilter }
+        : statusFilter !== "all"
+          ? { status: statusFilter }
+          : typeFilter !== "all"
+            ? { task_type: typeFilter }
+            : {},
+  });
 
-  const filteredTasks = useMemo(() => {
-    return tasks.filter((task) => {
-      const query = search.toLowerCase();
+  const { data: overdueTasksData } = useOverdueTasks({
+    filters:
+      statusFilter !== "all" && typeFilter !== "all"
+        ? { status: statusFilter, task_type: typeFilter }
+        : statusFilter !== "all"
+          ? { status: statusFilter }
+          : typeFilter !== "all"
+            ? { task_type: typeFilter }
+            : {},
+  });
+  const { data: dailyTasksData } = useDailyTasks({
+    filters:
+      statusFilter !== "all" && typeFilter !== "all"
+        ? { status: statusFilter, task_type: typeFilter }
+        : statusFilter !== "all"
+          ? { status: statusFilter }
+          : typeFilter !== "all"
+            ? { task_type: typeFilter }
+            : {},
+  });
 
-      const matchesSearch =
-        task.title.toLowerCase().includes(query) ||
-        task.description?.toLowerCase().includes(query) ||
-        task.relatedTo?.toLowerCase().includes(query) ||
-        task.category?.toLowerCase().includes(query);
+  const upcomingTasks = upcomingTasksData?.payload?.data || [];
+  const overdueTasks = overdueTasksData?.payload?.data || [];
+  const dailyTasks = dailyTasksData?.payload?.data || [];
 
-      const matchesStatus =
-        statusFilter === "all" || task.status === statusFilter;
+  const tasks = useMemo(() => {
+    const upcoming = upcomingTasksData?.payload?.data || [];
+    const overdue = overdueTasksData?.payload?.data || [];
+    const daily = dailyTasksData?.payload?.data || [];
+    return [...upcoming, ...overdue, ...daily];
+  }, [upcomingTasksData, overdueTasksData, dailyTasksData]);
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [tasks, search, statusFilter]);
+  const [search, setSearch] = useState("");
 
-  const openCreate = () => {
-    setEditingTask(null);
-    setIsModalOpen(true);
-  };
+  const selectedTask = useTaskStore((state) => state.selectedTask);
+  const isViewOpen = useTaskStore((state) => state.isViewOpen);
+  const setIsViewOpen = useTaskStore((state) => state.setIsViewOpen);
+  const viewTask = useTaskStore((state) => state.viewTask);
+  const editingTask = useTaskStore((state) => state.editingTask);
+  const sheetOpen = useTaskStore((state) => state.sheetOpen);
+  const setSheetOpen = useTaskStore((state) => state.setSheetOpen);
+  const editTask = useTaskStore((state) => state.editTask);
+  const defaultStatus = useTaskStore((state) => state.defaultStatus);
+  const handleAddClick = useTaskStore((state) => state.handleAddClick);
 
-  const openEdit = (task: Task) => {
-    setEditingTask(task);
-    setIsModalOpen(true);
-  };
+  const { handleDeleteTask } = useHandleDeleteTask();
+  const { handleCancelTask } = useHandleCancelTask();
+  const { handleCompleteTask } = useHandleCompleteTask();
+  const { handleSnoozeTask } = useHandleSnoozeTask();
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setEditingTask(null);
-  };
-
-  const handleSubmit = async (values: TaskFormValues) => {
-    try {
-      setSubmitting(true);
-
-      if (editingTask) {
-        setTasks((prev) =>
-          prev.map((task) =>
-            task.id === editingTask.id
-              ? {
-                  ...task,
-                  title: values.title,
-                  description: values.description,
-                  status: values.status,
-                  dueDate: values.dueDate,
-                  relatedTo: values.relatedTo,
-                  category: values.category,
-                }
-              : task,
-          ),
-        );
-      } else {
-        const newTask: Task = {
-          id: crypto.randomUUID(),
-          title: values.title,
-          description: values.description,
-          status: values.status,
-          dueDate: values.dueDate,
-          relatedTo: values.relatedTo,
-          category: values.category,
-        };
-
-        setTasks((prev) => [newTask, ...prev]);
-      }
-
-      closeModal();
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const initialValues: TaskFormValues = editingTask
-    ? {
-        title: editingTask.title,
-        description: editingTask.description ?? "",
-        status: editingTask.status,
-        dueDate: editingTask.dueDate ?? "",
-        relatedTo: editingTask.relatedTo ?? "",
-        category: editingTask.category ?? "",
-      }
-    : emptyTaskValues;
+  const filteredTasks = tasks;
 
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
-        totalJobs={tasks.length}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
       />
@@ -161,13 +185,17 @@ export default function TasksClient({
                 {filteredTasks.length} of {tasks.length} tasks
               </p>
             </div>
-            <Button onClick={openCreate} size="sm" className="sm:hidden">
+            <Button
+              onClick={() => handleAddClick(defaultStatus)}
+              size="sm"
+              className="sm:hidden"
+            >
               <Plus className=" h-4 w-4" />
             </Button>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="relative flex-1 sm:flex-none">
+            {/* <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
@@ -175,43 +203,161 @@ export default function TasksClient({
                 placeholder="Search..."
                 className="w-full pl-9 sm:w-64"
               />
-            </div>
+            </div> */}
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-10 w-[150px]">
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => setTypeFilter((v as TaskType) || "all")}
+            >
+              <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder="All Types" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {(Object.keys(taskTypeConfig) as TaskType[]).map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {taskTypeConfig[type].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as TaskStatus | "all")}
+            >
+              <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <SelectValue placeholder="All Statuses" />
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="todo">To Do</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="done">Done</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
+                {(Object.keys(taskStatusType) as TaskStatus[]).map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {taskStatusType[status].label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
-            <Button onClick={openCreate} className="hidden sm:flex">
+            <Button
+              onClick={() => handleAddClick(defaultStatus)}
+              className="hidden sm:flex"
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add Task
             </Button>
           </div>
         </header>
-
         <main className="flex-1 overflow-auto bg-muted/20 p-6">
           {filteredTasks.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {filteredTasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={{
-                    ...task,
-                    statusLabel: statusLabelMap[task.status],
-                  }}
-                  onOpen={() => openEdit(task)}
-                />
-              ))}
+            <div className="space-y-8">
+              {upcomingTasks.length > 0 && (
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-base font-semibold text-foreground">
+                        Upcoming Tasks
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        {upcomingTasks.length} task
+                        {upcomingTasks.length === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {upcomingTasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={{
+                          ...task,
+                          statusLabel: statusLabelMap[task.status],
+                        }}
+                        onOpen={() => viewTask(task)}
+                        onEdit={() => editTask(task)}
+                        onSnooze={() => handleSnoozeTask(task.id, "2")}
+                        onComplete={() => handleCompleteTask(task.id)}
+                        onDelete={() => handleDeleteTask(task.id)}
+                        onCancel={() => handleCancelTask(task.id)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {dailyTasks.length > 0 && (
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-base font-semibold text-foreground">
+                        Daily Tasks
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        {dailyTasks.length} task
+                        {dailyTasks.length === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {dailyTasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={{
+                          ...task,
+                          statusLabel: statusLabelMap[task.status],
+                        }}
+                        onOpen={() => viewTask(task)}
+                        onEdit={() => editTask(task)}
+                        onSnooze={() => handleSnoozeTask(task.id, "2")}
+                        onComplete={() => handleCompleteTask(task.id)}
+                        onDelete={() => handleDeleteTask(task.id)}
+                        onCancel={() => handleCancelTask(task.id)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {overdueTasks.length > 0 && (
+                <section className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-base font-semibold text-foreground">
+                        Overdue Tasks
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        {overdueTasks.length} task
+                        {overdueTasks.length === 1 ? "" : "s"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                    {overdueTasks.map((task) => (
+                      <TaskCard
+                        key={task.id}
+                        task={{
+                          ...task,
+                          statusLabel: statusLabelMap[task.status],
+                        }}
+                        onOpen={() => viewTask(task)}
+                        onEdit={() => editTask(task)}
+                        onSnooze={() => handleSnoozeTask(task.id, "2")}
+                        onComplete={() => handleCompleteTask(task.id)}
+                        onDelete={() => handleDeleteTask(task.id)}
+                        onCancel={() => handleCancelTask(task.id)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
             </div>
           ) : (
             <div className="flex h-[320px] items-center justify-center rounded-2xl border border-dashed border-border bg-card">
@@ -227,14 +373,15 @@ export default function TasksClient({
           )}
         </main>
       </div>
-
       <TaskFormModal
-        open={isModalOpen}
-        onClose={closeModal}
-        onSubmit={handleSubmit}
-        initialValues={initialValues}
-        loading={submitting}
-        mode={editingTask ? "edit" : "create"}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        task={editingTask}
+      />
+      <ViewTaskModal
+        open={isViewOpen}
+        onOpenChange={setIsViewOpen}
+        task={selectedTask}
       />
     </div>
   );

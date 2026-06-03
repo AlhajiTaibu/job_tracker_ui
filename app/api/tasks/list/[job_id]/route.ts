@@ -12,11 +12,11 @@ export async function GET(req: Request, context: RouteContext) {
             success?: boolean,
             error?: string
         }>(
-            `job_application/get/${job_id}`, {
+            `task/list/${job_id}`, {
             method: "GET"
         })
         return NextResponse.json(data)
     } catch (error) {
-        return NextResponse.json({ message: error instanceof Error ? error.message : "Job Application retrieval failed" }, { status: 400 })
+        return NextResponse.json({ message: error instanceof Error ? error.message : "Task retrieval failed" }, { status: 400 })
     }
 }
