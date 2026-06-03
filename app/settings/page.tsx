@@ -3,6 +3,8 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getQueryClient } from "@/lib/get-query-client";
 import { cookies } from "next/headers";
 import { ProfileResponse } from "@/lib/types";
+import { Suspense } from "react";
+import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 
 const getProfile = async (): Promise<ProfileResponse> => {
   const cookieStore = await cookies();
@@ -24,15 +26,18 @@ const getProfile = async (): Promise<ProfileResponse> => {
 export default async function SettingsPage() {
   const queryClient = getQueryClient();
 
-  await queryClient.fetchQuery({
+  await queryClient.prefetchQuery({
     queryKey: ["profile"],
     queryFn: getProfile,
-    staleTime: 60 * 1000,
+    staleTime: Infinity,
+    gcTime: 10 * 60 * 1000,
   });
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <SettingsClient />
-    </HydrationBoundary>
+    <Suspense fallback={<DashboardSkeleton />}>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <SettingsClient />
+      </HydrationBoundary>
+    </Suspense>
   );
 }

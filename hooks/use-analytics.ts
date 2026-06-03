@@ -104,7 +104,8 @@ const useAnalytics = () => {
     return useQuery({
         queryKey: ["analytics"],
         queryFn: fetchApplicationFunnel,
-        staleTime: 60 * 1000,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
     })
 }
 
@@ -112,7 +113,8 @@ const usePipelineHealthAnalytics = () => {
     return useQuery({
         queryKey: ["pipeline-health"],
         queryFn: fetchHealthViewAnalytics,
-        staleTime: 60 * 1000,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
     })
 }
 
@@ -120,7 +122,8 @@ const useWeeklyActivityAnalytics = () => {
     return useQuery({
         queryKey: ["weekly-activity"],
         queryFn: fetchWeeklyActivityAnalytics,
-        staleTime: 60 * 1000,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
     })
 }
 
@@ -128,7 +131,8 @@ const useTimeInStageAnalytics = () => {
     return useQuery({
         queryKey: ["time-in-stage"],
         queryFn: fetchTimeInStageAnalytics,
-        staleTime: 60 * 1000,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
     })
 }
 
@@ -136,7 +140,8 @@ const useSourceAnalytics = () => {
     return useQuery({
         queryKey: ["source-analytics"],
         queryFn: fetchSourceAnalytics,
-        staleTime: 60 * 1000,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
     })
 }
 
@@ -144,7 +149,8 @@ const useRoleAnalytics = () => {
     return useQuery({
         queryKey: ["role-analytics"],
         queryFn: fetchRoleAnalytics,
-        staleTime: 60 * 1000,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
     })
 }
 
@@ -153,7 +159,8 @@ const useInterviewAnalytics = () => {
     return useQuery({
         queryKey: ["interview-analytics"],
         queryFn: fetchInterviewAnalytics,
-        staleTime: 60 * 1000,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
     })
 }
 
@@ -161,7 +168,8 @@ const useFollowUpAnalytics = () => {
     return useQuery({
         queryKey: ["follow-up-analytics"],
         queryFn: fetchFollowUpAnalytics,
-        staleTime: 60 * 1000,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
     })
 }
 

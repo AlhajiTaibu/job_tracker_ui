@@ -2,6 +2,8 @@ import InterviewsClient from "./interview-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getQueryClient } from "@/lib/get-query-client";
 import { cookies } from "next/headers";
+import { Suspense } from "react";
+import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 
 const getInterviews = async (endpoint: string) => {
   const cookieStore = await cookies();
@@ -20,25 +22,35 @@ const getInterviews = async (endpoint: string) => {
   return res.json();
 };
 
-export default async function InterviewsPage() {
+export default async function InterviewsPage({
+  search = "",
+  limit = 20,
+}: {
+  search?: string;
+  limit?: number;
+}) {
   const queryClient = getQueryClient();
 
   await Promise.all([
     queryClient.prefetchQuery({
-      queryKey: ["upcoming-interviews"],
+      queryKey: ["upcoming-interviews", { search, limit }],
       queryFn: () => getInterviews("upcoming-interviews"),
-      staleTime: 60 * 1000,
+      staleTime: Infinity,
+      gcTime: 10 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
-      queryKey: ["interviews-history"],
+      queryKey: ["interviews-history", { search, limit }],
       queryFn: () => getInterviews("interviews-history"),
-      staleTime: 60 * 1000,
+      staleTime: Infinity,
+      gcTime: 10 * 60 * 1000,
     }),
   ]);
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <InterviewsClient />
-    </HydrationBoundary>
+    <Suspense fallback={<DashboardSkeleton />}>
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <InterviewsClient />
+      </HydrationBoundary>
+    </Suspense>
   );
 }

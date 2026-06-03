@@ -86,7 +86,9 @@ export default function ContactsClient() {
     search: debouncedSearch,
     limit: 20,
   });
-  const contacts = initialContacts?.payload?.data || [];
+
+  const contacts =
+    initialContacts?.pages?.flatMap((page) => page.payload?.data ?? []) ?? [];
 
   const sheetOpen = useContactStore((state) => state.sheetOpen);
   const setSheetOpen = useContactStore((state) => state.setSheetOpen);

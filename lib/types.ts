@@ -38,6 +38,7 @@ export interface Contact {
 }
 export interface ContactPayload {
   data?: Contact[]
+  next_cursor?: string | null
 }
 
 export interface ContactResponse {
@@ -399,4 +400,31 @@ export const interviewOutcomeType: Record<
     color: "text-green-700",
     bgColor: "bg-green-50",
   },
+}
+
+export type TaskStatus = "pending" | "completed" | "snoozed" | "cancelled"
+
+export type TaskType = "follow_up" | "confirm" | "reminder" | "thank_you" | "review" | "other"
+
+export interface Task {
+  id: string
+  job_application_id?: string
+  name: string
+  status: TaskStatus
+  task_type: TaskType
+  due_date?: string
+  is_overdue?: boolean
+  created_at: string
+  updated_at?: string
+}
+
+export interface TaskPayload {
+  data?: Task[]
+  next_cursor?: string | null
+}
+
+export interface TaskResponse {
+  success?: boolean
+  payload: TaskPayload
+  error?: string
 }
