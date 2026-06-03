@@ -7,15 +7,13 @@ type RouteContext = {
 
 export async function POST(req: Request, context: RouteContext) {
     try {
-        const body = await req.json()
         const { task_id } = await context.params;
         const data = await serverProtectedApiFetch<{
             success?: boolean,
             error?: string
         }>(
             `task/complete/${task_id}`, {
-            method: "POST",
-            body: JSON.stringify(body)
+            method: "POST"
         })
         return NextResponse.json(data)
     } catch (error) {

@@ -1,205 +1,223 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Task, TaskStatus, TaskType } from "@/lib/types";
-import { AddTaskInput, addTaskSchema } from "@/lib/schemas/task";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, Controller } from "react-hook-form";
-import { useTaskStore } from "@/hooks/use-task-store";
-import { Bell, Check, GlassWater, Globe, Mail, Phone, Tag } from "lucide-react";
-import { useJobs } from "@/hooks/use-jobs";
+  CalendarDays,
+  Clock3,
+  FileText,
+  AlertCircle,
+  Briefcase,
+} from "lucide-react";
+import { useJob, useJobs } from "@/hooks/use-jobs";
+import { useMemo } from "react";
 
-const taskTypes: {
-  value: TaskType;
-  label: string;
-  icon: React.ReactNode;
-  color: string;
-}[] = [
-  {
-    value: "follow_up",
-    label: "Follow Up",
-    icon: <Phone className="h-4 w-4" />,
-    color: "text-blue-500",
-  },
-  {
-    value: "thank_you",
-    label: "Thank You",
-    icon: <Mail className="h-4 w-4" />,
-    color: "text-green-500",
-  },
-  {
-    value: "reminder",
-    label: "Reminder",
-    icon: <Bell className="h-4 w-4" />,
-    color: "text-yellow-500",
-  },
-  {
-    value: "review",
-    label: "Review",
-    icon: <GlassWater className="h-4 w-4" />,
-    color: "text-voilet-500",
-  },
-  {
-    value: "confirm",
-    label: "Confirm",
-    icon: <Check className="h-4 w-4" />,
-    color: "text-voilet-500",
-  },
-  {
-    value: "other",
-    label: "Other",
-    icon: <Tag className="h-4 w-4" />,
-    color: "text-slate-500",
-  },
-];
+type TaskStatus = string;
+type TaskType = string;
 
-function formatDate(value?: string) {
-  if (!value) return "No due date";
-  return new Date(value).toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
-}
+type Task = {
+  id: string;
+  job_application_id?: string;
+  name: string;
+  status: TaskStatus;
+  task_type: TaskType;
+  due_date?: string;
+  is_overdue?: boolean;
+  created_at: string;
+  updated_at?: string;
+};
 
-type ViewTaskModalProps = {
+interface ViewTaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  task: Task | null;
+  task?: Task | null;
+  jobApplicationTitle?: string;
+}
+
+const formatDate = (date?: string) => {
+  if (!date) return "No date";
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
 };
+
+const getStatusStyles = (status?: string) => {
+  switch (status?.toLowerCase()) {
+    case "completed":
+      return "bg-green-50 text-green-700 border-green-200";
+    case "pending":
+      return "bg-yellow-50 text-yellow-700 border-yellow-200";
+    case "cancelled":
+      return "bg-red-50 text-red-700 border-red-200";
+    case "snoozed":
+      return "bg-blue-50 text-blue-700 border-blue-200";
+    default:
+      return "bg-muted text-muted-foreground border-border";
+  }
+};
+
+const getTypeStyles = (type?: string) => {
+  switch (type?.toLowerCase()) {
+    case "reminder":
+      return "bg-violet-50 text-violet-700 border-violet-200";
+    case "review":
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    case "follow_up":
+      return "bg-sky-50 text-sky-700 border-sky-200";
+    case "confirm":
+      return "bg-indigo-50 text-indigo-700 border-indigo-200";
+    case "thank_you":
+      return "bg-green-50 text-green-700 border-green-200";
+    default:
+      return "bg-secondary text-secondary-foreground border-border";
+  }
+};
+
+function InfoCard({
+  icon,
+  label,
+  value,
+  valueClassName = "",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+  valueClassName?: string;
+}) {
+  return (
+    <div className="rounded-xl border border-border/60 bg-muted/30 p-4 shadow-sm">
+      <div className="mb-2 flex items-center gap-2 text-muted-foreground">
+        <span className="size-4">{icon}</span>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.12em]">
+          {label}
+        </p>
+      </div>
+      <div className={`text-sm font-medium text-foreground ${valueClassName}`}>
+        {value}
+      </div>
+    </div>
+  );
+}
 
 export default function ViewTaskModal({
   open,
   onOpenChange,
   task,
 }: ViewTaskModalProps) {
-  //   const { data: jobsData } = useJobs({
-  //     filters: {},
-  //     limit: 20,
-  //   });
+  const { data: jobsData } = useJobs({});
 
-  //   const jobs =
-  //     jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
-
-  //   const currentJob = useMemo(
-  //     () => jobs.find((job) => job.id === task?.job_application_id),
-  //     [jobs, task],
-  //   );
-
-  //   const currentTaskType = useMemo(
-  //     () => taskTypes.find((type) => type.value === watch("task_type")),
-  //     [watch("task_type")],
-  //   );
-
-  //   const onSubmit = async (data: AddTaskInput) => {
-  //     console.log("Form submitted with data:", data);
-  //   };
+  const { jobTitle, company } = useMemo(() => {
+    const jobs =
+      jobsData?.pages?.flatMap((page) => page.payload?.data ?? []) ?? [];
+    const job = jobs.find((j) => j.id === task?.job_application_id);
+    return {
+      jobTitle: job?.job_title || "General task",
+      company: job?.company_name || "General task",
+    };
+  }, [jobsData, task?.job_application_id]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px] rounded-2xl border border-border bg-background p-0 shadow-xl">
-        <DialogHeader className="border-b border-border px-6 py-5">
-          <DialogTitle className="text-xl font-semibold text-foreground">
-            {task?.name || "Task Details"}
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
-            View task information and current progress.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 px-6 py-5">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Status
-              </p>
-              <p className="mt-1 text-sm text-foreground">
-                {task?.status || "-"}
-              </p>
-            </div>
+      <DialogContent className="overflow-hidden border border-border/60 bg-background p-0 shadow-2xl sm:max-w-[680px] rounded-3xl">
+        <DialogHeader className="border-b border-border/60 bg-gradient-to-br from-background via-muted/40 to-emerald-50/40 px-6 py-6">
+          <div className="pr-8">
+            <DialogTitle className="text-2xl font-semibold leading-tight text-foreground">
+              {task?.name || "Task Details"}
+            </DialogTitle>
 
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Task Type
-              </p>
-              <p className="mt-1 text-sm text-foreground">
-                {task?.task_type || "-"}
-              </p>
-            </div>
+            <DialogDescription className="mt-2 text-sm text-muted-foreground">
+              View task information, deadlines, and progress at a glance.
+            </DialogDescription>
 
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Due Date
-              </p>
-              <p className="mt-1 text-sm text-foreground">
-                {formatDate(task?.due_date)}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Overdue
-              </p>
-              <p
-                className={`mt-1 text-sm ${
-                  task?.is_overdue ? "text-destructive" : "text-foreground"
-                }`}
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Badge
+                variant="outline"
+                className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusStyles(task?.status)}`}
               >
-                {task?.is_overdue ? "Yes" : "No"}
-              </p>
-            </div>
+                {task?.status || "Unknown status"}
+              </Badge>
 
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Created At
-              </p>
-              <p className="mt-1 text-sm text-foreground">
-                {formatDate(task?.created_at)}
-              </p>
-            </div>
+              <Badge
+                variant="outline"
+                className={`rounded-full px-3 py-1 text-xs font-medium ${getTypeStyles(task?.task_type)}`}
+              >
+                {task?.task_type || "Unknown type"}
+              </Badge>
 
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Updated At
-              </p>
-              <p className="mt-1 text-sm text-foreground">
-                {formatDate(task?.updated_at)}
-              </p>
+              {task?.is_overdue && (
+                <Badge
+                  variant="outline"
+                  className="rounded-full border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-700"
+                >
+                  Overdue
+                </Badge>
+              )}
             </div>
+          </div>
+        </DialogHeader>
+
+        <div className="space-y-6 px-6 py-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <InfoCard
+              icon={<CalendarDays className="h-4 w-4" />}
+              label="Due Date"
+              value={formatDate(task?.due_date)}
+            />
+
+            <InfoCard
+              icon={<AlertCircle className="h-4 w-4" />}
+              label="Overdue"
+              value={task?.is_overdue ? "Yes" : "No"}
+              valueClassName={
+                task?.is_overdue ? "text-red-600" : "text-foreground"
+              }
+            />
+
+            <InfoCard
+              icon={<Clock3 className="h-4 w-4" />}
+              label="Created At"
+              value={formatDate(task?.created_at)}
+            />
+
+            <InfoCard
+              icon={<Clock3 className="h-4 w-4" />}
+              label="Updated At"
+              value={formatDate(task?.updated_at)}
+            />
           </div>
 
           {task?.job_application_id && (
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Job Application ID
-              </p>
-              <p className="mt-1 break-all text-sm text-foreground">
-                {task.job_application_id}
+            <div className="rounded-2xl border border-border/60 bg-background p-5 shadow-sm">
+              <div className="mb-3 flex items-center gap-2 text-muted-foreground">
+                <Briefcase className="h-4 w-4" />
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em]">
+                  Job Application
+                </p>
+              </div>
+
+              <p className="text-sm font-medium text-foreground">
+                {jobTitle} at {company}
               </p>
             </div>
           )}
 
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Task ID
-            </p>
-            <p className="mt-1 break-all text-sm text-foreground">
+          <div className="rounded-2xl border border-border/60 bg-background p-5 shadow-sm">
+            <div className="mb-3 flex items-center gap-2 text-muted-foreground">
+              <FileText className="h-4 w-4" />
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em]">
+                Task ID
+              </p>
+            </div>
+
+            <p className="break-all font-mono text-sm text-foreground">
               {task?.id || "-"}
             </p>
           </div>
@@ -208,106 +226,3 @@ export default function ViewTaskModal({
     </Dialog>
   );
 }
-
-// export default function ViewTaskModal({
-//   open,
-//   onOpenChange,
-//   task,
-// }: ViewTaskModalProps) {
-//   return (
-//     <Dialog open={open} onOpenChange={onOpenChange}>
-//       <DialogContent className="sm:max-w-[560px] rounded-2xl border border-border bg-background p-0 shadow-xl">
-//         <DialogHeader className="border-b border-border px-6 py-5">
-//           <DialogTitle className="text-xl font-semibold text-foreground">
-//             {task?.name || "Task Details"}
-//           </DialogTitle>
-//           <DialogDescription className="text-sm text-muted-foreground">
-//             View task information and current progress.
-//           </DialogDescription>
-//         </DialogHeader>
-
-//         <div className="space-y-4 px-6 py-5">
-//           <div className="grid grid-cols-2 gap-4">
-//             <div>
-//               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-//                 Status
-//               </p>
-//               <p className="mt-1 text-sm text-foreground">
-//                 {task?.status || "-"}
-//               </p>
-//             </div>
-
-//             <div>
-//               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-//                 Task Type
-//               </p>
-//               <p className="mt-1 text-sm text-foreground">
-//                 {task?.task_type || "-"}
-//               </p>
-//             </div>
-
-//             <div>
-//               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-//                 Due Date
-//               </p>
-//               <p className="mt-1 text-sm text-foreground">
-//                 {formatDate(task?.due_date)}
-//               </p>
-//             </div>
-
-//             <div>
-//               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-//                 Overdue
-//               </p>
-//               <p
-//                 className={`mt-1 text-sm ${
-//                   task?.is_overdue ? "text-destructive" : "text-foreground"
-//                 }`}
-//               >
-//                 {task?.is_overdue ? "Yes" : "No"}
-//               </p>
-//             </div>
-
-//             <div>
-//               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-//                 Created At
-//               </p>
-//               <p className="mt-1 text-sm text-foreground">
-//                 {formatDate(task?.created_at)}
-//               </p>
-//             </div>
-
-//             <div>
-//               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-//                 Updated At
-//               </p>
-//               <p className="mt-1 text-sm text-foreground">
-//                 {formatDate(task?.updated_at)}
-//               </p>
-//             </div>
-//           </div>
-
-//           {task?.job_application_id && (
-//             <div>
-//               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-//                 Job Application ID
-//               </p>
-//               <p className="mt-1 break-all text-sm text-foreground">
-//                 {task.job_application_id}
-//               </p>
-//             </div>
-//           )}
-
-//           <div>
-//             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-//               Task ID
-//             </p>
-//             <p className="mt-1 break-all text-sm text-foreground">
-//               {task?.id || "-"}
-//             </p>
-//           </div>
-//         </div>
-//       </DialogContent>
-//     </Dialog>
-//   );
-// }

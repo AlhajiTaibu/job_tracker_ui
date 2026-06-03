@@ -1,5 +1,26 @@
-// lib/get-query-client.ts
-import { QueryClient } from '@tanstack/react-query';
-import { cache } from 'react';
+import { QueryClient } from "@tanstack/react-query";
 
-export const getQueryClient = cache(() => new QueryClient());
+function makeQueryClient() {
+    return new QueryClient({
+        defaultOptions: {
+            queries: {
+                staleTime: Infinity,
+                gcTime: 10 * 60 * 1000,
+            },
+        },
+    });
+}
+
+let browserQueryClient: QueryClient | undefined;
+
+export function getQueryClient() {
+    if (typeof window === "undefined") {
+        return makeQueryClient();
+    }
+
+    if (!browserQueryClient) {
+        browserQueryClient = makeQueryClient();
+    }
+
+    return browserQueryClient;
+}

@@ -19,8 +19,12 @@ import { Hamburger } from "@/components/ui/hamburger";
 import { Task, TaskType, TaskStatus, TaskResponse } from "@/lib/types";
 import {
   useDailyTasks,
+  useHandleDeleteTask,
+  useHandleSnoozeTask,
+  useHandleCancelTask,
   useOverdueTasks,
   useUpcomingTasks,
+  useHandleCompleteTask,
 } from "@/hooks/use-task";
 import { useTaskStore } from "@/hooks/use-task-store";
 import ViewTaskModal from "@/components/ui/view-task-modal";
@@ -32,10 +36,102 @@ const statusLabelMap = {
   snoozed: "Snoozed",
 } as const;
 
+const taskStatusType: Record<
+  TaskStatus,
+  { label: string; color: string; bgColor: string }
+> = {
+  pending: {
+    label: "Pending",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-100",
+  },
+  completed: {
+    label: "Completed",
+    color: "text-green-700",
+    bgColor: "bg-green-100",
+  },
+  cancelled: {
+    label: "Cancelled",
+    color: "text-red-700",
+    bgColor: "bg-red-100",
+  },
+  snoozed: {
+    label: "Snoozed",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
+  },
+};
+
+const taskTypeConfig: Record<
+  TaskType,
+  { label: string; color: string; bgColor: string }
+> = {
+  follow_up: {
+    label: "Follow Up",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-100",
+  },
+  thank_you: {
+    label: "Thank You",
+    color: "text-green-700",
+    bgColor: "bg-green-100",
+  },
+  confirm: {
+    label: "Confirmation",
+    color: "text-red-700",
+    bgColor: "bg-red-100",
+  },
+  reminder: {
+    label: "Reminder",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
+  },
+  review: {
+    label: "Review",
+    color: "text-purple-700",
+    bgColor: "bg-purple-100",
+  },
+  other: {
+    label: "Other",
+    color: "text-gray-700",
+    bgColor: "bg-gray-100",
+  },
+};
+
 export default function TasksClient() {
-  const { data: upcomingTasksData } = useUpcomingTasks();
-  const { data: overdueTasksData } = useOverdueTasks();
-  const { data: dailyTasksData } = useDailyTasks();
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const { data: upcomingTasksData } = useUpcomingTasks({
+    filters:
+      statusFilter !== "all" && typeFilter !== "all"
+        ? { status: statusFilter, task_type: typeFilter }
+        : statusFilter !== "all"
+          ? { status: statusFilter }
+          : typeFilter !== "all"
+            ? { task_type: typeFilter }
+            : {},
+  });
+
+  const { data: overdueTasksData } = useOverdueTasks({
+    filters:
+      statusFilter !== "all" && typeFilter !== "all"
+        ? { status: statusFilter, task_type: typeFilter }
+        : statusFilter !== "all"
+          ? { status: statusFilter }
+          : typeFilter !== "all"
+            ? { task_type: typeFilter }
+            : {},
+  });
+  const { data: dailyTasksData } = useDailyTasks({
+    filters:
+      statusFilter !== "all" && typeFilter !== "all"
+        ? { status: statusFilter, task_type: typeFilter }
+        : statusFilter !== "all"
+          ? { status: statusFilter }
+          : typeFilter !== "all"
+            ? { task_type: typeFilter }
+            : {},
+  });
 
   const upcomingTasks = upcomingTasksData?.payload?.data || [];
   const overdueTasks = overdueTasksData?.payload?.data || [];
@@ -49,7 +145,7 @@ export default function TasksClient() {
   }, [upcomingTasksData, overdueTasksData, dailyTasksData]);
 
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+
   const selectedTask = useTaskStore((state) => state.selectedTask);
   const isViewOpen = useTaskStore((state) => state.isViewOpen);
   const setIsViewOpen = useTaskStore((state) => state.setIsViewOpen);
@@ -61,7 +157,10 @@ export default function TasksClient() {
   const defaultStatus = useTaskStore((state) => state.defaultStatus);
   const handleAddClick = useTaskStore((state) => state.handleAddClick);
 
-  const [submitting, setSubmitting] = useState(false);
+  const { handleDeleteTask } = useHandleDeleteTask();
+  const { handleCancelTask } = useHandleCancelTask();
+  const { handleCompleteTask } = useHandleCompleteTask();
+  const { handleSnoozeTask } = useHandleSnoozeTask();
 
   const filteredTasks = tasks;
 
@@ -87,7 +186,7 @@ export default function TasksClient() {
               </p>
             </div>
             <Button
-              onClick={() => handleAddClick("pending")}
+              onClick={() => handleAddClick(defaultStatus)}
               size="sm"
               className="sm:hidden"
             >
@@ -96,7 +195,7 @@ export default function TasksClient() {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="relative flex-1 sm:flex-none">
+            {/* <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
@@ -104,25 +203,50 @@ export default function TasksClient() {
                 placeholder="Search..."
                 className="w-full pl-9 sm:w-64"
               />
-            </div>
+            </div> */}
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="h-10 w-[150px]">
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => setTypeFilter((v as TaskType) || "all")}
+            >
+              <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder="All Types" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {(Object.keys(taskTypeConfig) as TaskType[]).map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {taskTypeConfig[type].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as TaskStatus | "all")}
+            >
+              <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
                 <div className="flex items-center gap-2">
                   <Filter className="h-4 w-4 text-muted-foreground" />
                   <SelectValue placeholder="All Statuses" />
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="todo">To Do</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="done">Done</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
+                {(Object.keys(taskStatusType) as TaskStatus[]).map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {taskStatusType[status].label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
             <Button
-              onClick={() => handleAddClick("pending")}
+              onClick={() => handleAddClick(defaultStatus)}
               className="hidden sm:flex"
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -157,10 +281,10 @@ export default function TasksClient() {
                         }}
                         onOpen={() => viewTask(task)}
                         onEdit={() => editTask(task)}
-                        onSnooze={() => console.log("snooze", task.id)}
-                        onComplete={() => console.log("complete", task.id)}
-                        onDelete={() => console.log("delete", task.id)}
-                        onCancel={() => console.log("cancel", task.id)}
+                        onSnooze={() => handleSnoozeTask(task.id, "2")}
+                        onComplete={() => handleCompleteTask(task.id)}
+                        onDelete={() => handleDeleteTask(task.id)}
+                        onCancel={() => handleCancelTask(task.id)}
                       />
                     ))}
                   </div>
@@ -191,10 +315,10 @@ export default function TasksClient() {
                         }}
                         onOpen={() => viewTask(task)}
                         onEdit={() => editTask(task)}
-                        onSnooze={() => console.log("snooze", task.id)}
-                        onComplete={() => console.log("complete", task.id)}
-                        onDelete={() => console.log("delete", task.id)}
-                        onCancel={() => console.log("cancel", task.id)}
+                        onSnooze={() => handleSnoozeTask(task.id, "2")}
+                        onComplete={() => handleCompleteTask(task.id)}
+                        onDelete={() => handleDeleteTask(task.id)}
+                        onCancel={() => handleCancelTask(task.id)}
                       />
                     ))}
                   </div>
@@ -225,10 +349,10 @@ export default function TasksClient() {
                         }}
                         onOpen={() => viewTask(task)}
                         onEdit={() => editTask(task)}
-                        onSnooze={() => console.log("snooze", task.id)}
-                        onComplete={() => console.log("complete", task.id)}
-                        onDelete={() => console.log("delete", task.id)}
-                        onCancel={() => console.log("cancel", task.id)}
+                        onSnooze={() => handleSnoozeTask(task.id, "2")}
+                        onComplete={() => handleCompleteTask(task.id)}
+                        onDelete={() => handleDeleteTask(task.id)}
+                        onCancel={() => handleCancelTask(task.id)}
                       />
                     ))}
                   </div>

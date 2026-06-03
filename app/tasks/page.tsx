@@ -10,11 +10,10 @@ const getTasks = async (endpoint: string): Promise<TaskResponse> => {
   const cookieStore = await cookies();
   const baseUrl =
     typeof window !== "undefined" ? "" : process.env.NEXT_PUBLIC_SITE_URL;
-  const res = await fetch(`${baseUrl}/api/task/${endpoint}`, {
+  const res = await fetch(`${baseUrl}/api/tasks/${endpoint}`, {
     headers: {
       cookie: cookieStore.toString(),
     },
-    next: { revalidate: 60 },
   });
 
   if (!res.ok) {
@@ -23,35 +22,49 @@ const getTasks = async (endpoint: string): Promise<TaskResponse> => {
   return res.json();
 };
 
-export default async function TasksPage() {
+export default async function TasksPage({
+  filters = {},
+}: {
+  filters?: Record<string, string | number | boolean | undefined>;
+}) {
   const queryClient = getQueryClient();
-
   await Promise.all([
     queryClient.prefetchQuery({
-      queryKey: ["upcoming-tasks"],
+      queryKey: ["upcoming-tasks", { filters }],
       queryFn: () => getTasks("upcoming-tasks"),
-      staleTime: Infinity,
-      gcTime: 10 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
-      queryKey: ["overdue-tasks"],
+      queryKey: ["overdue-tasks", { filters }],
       queryFn: () => getTasks("overdue-tasks"),
-      staleTime: Infinity,
-      gcTime: 10 * 60 * 1000,
     }),
     queryClient.prefetchQuery({
-      queryKey: ["daily-tasks"],
+      queryKey: ["daily-tasks", { filters }],
       queryFn: () => getTasks("daily-tasks"),
-      staleTime: Infinity,
-      gcTime: 10 * 60 * 1000,
     }),
   ]);
+  //   queryClient.prefetchQuery({
+  //     queryKey: ["upcoming-tasks", { filters }],
+  //     queryFn: () => getTasks("upcoming-tasks"),
+  //     staleTime: Infinity,
+  //     gcTime: 10 * 60 * 1000,
+  //   }),
+  //   queryClient.prefetchQuery({
+  //     queryKey: ["overdue-tasks", { filters }],
+  //     queryFn: () => getTasks("overdue-tasks"),
+  //     staleTime: Infinity,
+  //     gcTime: 10 * 60 * 1000,
+  //   }),
+  //   queryClient.prefetchQuery({
+  //     queryKey: ["daily-tasks", { filters }],
+  //     queryFn: () => getTasks("daily-tasks"),
+  //     staleTime: Infinity,
+  //     gcTime: 10 * 60 * 1000,
+  //   }),
+  // ]);
 
   return (
-    <Suspense fallback={<DashboardSkeleton />}>
-      <HydrationBoundary state={dehydrate(queryClient)}>
-        <TasksClient />
-      </HydrationBoundary>
-    </Suspense>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <TasksClient />
+    </HydrationBoundary>
   );
 }

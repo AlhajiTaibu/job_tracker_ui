@@ -23,9 +23,9 @@ import { Task, TaskStatus, TaskType } from "@/lib/types";
 import { AddTaskInput, addTaskSchema } from "@/lib/schemas/task";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
-import { useTaskStore } from "@/hooks/use-task-store";
 import { Bell, Check, GlassWater, Globe, Mail, Phone, Tag } from "lucide-react";
 import { useJobs } from "@/hooks/use-jobs";
+import { useHandleAddTask, useHandleEditTask } from "@/hooks/use-task";
 
 export type TaskFormValues = {
   name: string;
@@ -112,6 +112,8 @@ export default function TaskFormModal({
     limit: 20,
   });
 
+  const { handleAddTask } = useHandleAddTask();
+  const { handleEditTask } = useHandleEditTask();
   const jobs =
     jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
 
@@ -130,7 +132,9 @@ export default function TaskFormModal({
       reset({
         name: task.name ?? "",
         task_type: task.task_type ?? "follow_up",
-        due_date: task.due_date ?? "",
+        due_date: task.due_date
+          ? new Date(task.due_date).toISOString().slice(0, 16)
+          : "",
         job_application_id: task.job_application_id ?? "",
       });
     } else {
@@ -143,8 +147,29 @@ export default function TaskFormModal({
     }
   }, [task, reset]);
 
-  const onSubmit = async (data: AddTaskInput) => {
-    console.log("Form submitted with data:", data);
+  const onSubmit = (value: AddTaskInput) => {
+    if (task) {
+      const data = {
+        name: value.name,
+        task_type: value.task_type as TaskType,
+        due_date: value.due_date,
+        job_application_id: value.job_application_id,
+      };
+
+      handleEditTask({
+        taskId: task.id,
+        updatedFields: data,
+      });
+    } else {
+      const data = {
+        task_type: value.task_type as TaskType,
+        name: value.name,
+        due_date: value.due_date,
+        job_application_id: value.job_application_id,
+      };
+      handleAddTask(data);
+    }
+    onOpenChange(false);
   };
 
   return (
@@ -214,7 +239,11 @@ export default function TaskFormModal({
 
             <div className="space-y-2">
               <Label htmlFor="due_date">Due date</Label>
-              <Input id="due_date" type="date" {...register("due_date")} />
+              <Input
+                id="due_date"
+                type="datetime-local"
+                {...register("due_date")}
+              />
               {errors.due_date && (
                 <p className="text-sm text-red-500">
                   {errors.due_date.message}

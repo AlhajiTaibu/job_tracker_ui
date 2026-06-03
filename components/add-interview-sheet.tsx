@@ -261,8 +261,6 @@ export function AddInterviewSheet({
   }, [interview, reset, defaultFormat]);
 
   const onSubmit = (value: AddInterviewInput) => {
-    console.log(value);
-
     if (interview) {
       const data = {
         job_application_id: value.job_application_id,

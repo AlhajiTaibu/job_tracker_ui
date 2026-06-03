@@ -19,8 +19,11 @@ import {
   Check,
   Trash2,
   X,
+  Building2,
 } from "lucide-react";
 import { truncateText } from "@/lib/utils";
+import { useJobs } from "@/hooks/use-jobs";
+import { useMemo } from "react";
 
 type TaskCardProps = {
   task: {
@@ -41,7 +44,7 @@ type TaskCardProps = {
 };
 
 function formatDate(value?: string) {
-  if (!value) return "No due date";
+  if (!value) return "No date";
   return new Date(value).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
@@ -104,6 +107,18 @@ export function TaskCard({
   onDelete,
   onCancel,
 }: TaskCardProps) {
+  const { data: jobsData } = useJobs({});
+
+  const { jobTitle, company } = useMemo(() => {
+    const jobs =
+      jobsData?.pages?.flatMap((page) => page.payload?.data ?? []) ?? [];
+    const job = jobs.find((j) => j.id === task.job_application_id);
+    return {
+      jobTitle: job?.job_title || "General task",
+      company: job?.company_name || "General task",
+    };
+  }, [jobsData, task.job_application_id]);
+
   return (
     <Card className="group rounded-2xl border border-border/60 bg-card shadow-sm transition-shadow hover:shadow-md">
       <CardContent className="p-5">
@@ -117,12 +132,14 @@ export function TaskCard({
               <h3 className="truncate text-base font-semibold text-foreground">
                 {truncateText(task.name, 30)}
               </h3>
+              <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+                <Building2 className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{company}</span>
+              </div>
 
               <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
                 <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">
-                  {task.job_application_id || "General task"}
-                </span>
+                <span className="truncate">{jobTitle}</span>
               </div>
             </div>
           </div>
@@ -187,11 +204,11 @@ export function TaskCard({
 
           {task.task_type ? (
             <Badge
-              variant="secondary"
-              className={
+              variant="outline"
+              className={`rounded-full px-3 py-1 font-medium ${
                 taskTypeConfig[task.task_type as keyof typeof taskTypeConfig]
                   ?.className
-              }
+              }`}
             >
               {taskTypeConfig[task.task_type as keyof typeof taskTypeConfig]
                 ?.label || task.task_type}
