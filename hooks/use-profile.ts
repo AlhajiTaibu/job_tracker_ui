@@ -3,6 +3,7 @@ import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query"
 import { ProfileResponse } from "@/lib/types"
 import { useCallback } from "react"
 import { useToast } from "./use-toast"
+import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies"
 
 type ProfileInput = {
     first_name?: string
@@ -15,8 +16,20 @@ type UploadAvatarResponse = {
     avatar_url: string
 }
 
-const getProfile = async () => {
-    const res = await fetch("/api/me/get")
+const getProfile = async (cookieStore: ReadonlyRequestCookies = {} as ReadonlyRequestCookies): Promise<ProfileResponse> => {
+    let res: Response
+    if (typeof window === 'undefined') {
+        const baseUrl =
+            typeof window !== "undefined" ? "" : process.env.NEXT_PUBLIC_SITE_URL;
+        res = await fetch(`${baseUrl}/api/me/get`, {
+            headers: {
+                cookie: cookieStore.toString(),
+            },
+            next: { revalidate: 60 },
+        });
+    } else {
+        res = await fetch("/api/me/get")
+    }
 
     if (!res.ok) {
         const errorText = await res.statusText
@@ -73,12 +86,15 @@ const useUploadAvatar = () => {
     })
 }
 
+export const getProfileQueryOptions = (cookieStore: ReadonlyRequestCookies = {} as ReadonlyRequestCookies) => ({
+    queryKey: ['profile'] as const,
+    queryFn: () => getProfile(cookieStore),
+    staleTime: Infinity,
+    gcTime: 10 * 60 * 1000,
+})
+
 const useProfile = () => {
-    return useQuery({
-        queryKey: ['profile'],
-        queryFn: getProfile,
-        staleTime: 60_000,
-    })
+    return useQuery(getProfileQueryOptions())
 }
 
 
@@ -98,7 +114,7 @@ const useUpdateProfile = () => {
                     ...old,
                     payload: {
                         ...old?.payload,
-                        data: { ...old?.payload?.data, data }
+                        data: { ...old?.payload, data }
                     }
                 }
             })

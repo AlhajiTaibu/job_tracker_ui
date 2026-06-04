@@ -3,6 +3,7 @@ import { InterviewFormat, InterviewOutcome, InterviewResponse } from "@/lib/type
 import { useCallback } from "react";
 import { useToast } from "./use-toast";
 import { create } from "zustand";
+import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 type InterviewInput = {
     format: InterviewFormat;
@@ -23,17 +24,29 @@ type InterviewParams = {
     filters?: Record<string, string | number | boolean | undefined>
     cursor?: string | null
     limit?: number
+    cookieStore?: ReadonlyRequestCookies
 }
 
 // API functions
-const fetchUpcomingInterviews = async ({ search = "", limit = 20 }: InterviewParams): Promise<InterviewResponse> => {
-    const params = new URLSearchParams()
-
-    if (search) params.set("q", search)
-    if (limit) params.set("limit", limit.toString());
-    const res = await fetch(`/api/interviews/upcoming-interviews?${params.toString()}`, {
-        next: { revalidate: 60 },
-    });
+const fetchUpcomingInterviews = async ({ search = "", limit = 20, cookieStore = {} as ReadonlyRequestCookies }: InterviewParams): Promise<InterviewResponse> => {
+    let res: Response
+    if (typeof window === 'undefined') {
+        const baseUrl =
+            typeof window !== "undefined" ? "" : process.env.NEXT_PUBLIC_SITE_URL;
+        res = await fetch(`${baseUrl}/api/interviews/upcoming-interviews`, {
+            headers: {
+                cookie: cookieStore.toString(),
+            },
+            next: { revalidate: 60 },
+        });
+    } else {
+        const params = new URLSearchParams()
+        if (search) params.set("q", search)
+        if (limit) params.set("limit", limit.toString());
+        res = await fetch(`/api/interviews/upcoming-interviews?${params.toString()}`, {
+            next: { revalidate: 60 },
+        });
+    }
 
     if (!res.ok) {
         throw new Error("Upcoming interviews fetch failed");
@@ -41,20 +54,31 @@ const fetchUpcomingInterviews = async ({ search = "", limit = 20 }: InterviewPar
     return res.json();
 };
 
-const fetchInterviewHistory = async ({ filters = {}, search = "", cursor = null, limit = 20 }: InterviewParams): Promise<InterviewResponse> => {
-    const params = new URLSearchParams()
-
-    if (search) params.set("q", search)
-    if (limit) params.set("limit", limit.toString());
-    if (cursor) params.set("cursor", cursor)
-    Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
-            params.set(key, String(value))
-        }
-    })
-    const res = await fetch(`/api/interviews/interviews-history?${params.toString()}`, {
-        next: { revalidate: 60 },
-    });
+const fetchInterviewHistory = async ({ filters = {}, search = "", cursor = null, limit = 20, cookieStore = {} as ReadonlyRequestCookies }: InterviewParams): Promise<InterviewResponse> => {
+    let res: Response
+    if (typeof window === 'undefined') {
+        const baseUrl =
+            typeof window !== "undefined" ? "" : process.env.NEXT_PUBLIC_SITE_URL;
+        res = await fetch(`${baseUrl}/api/interviews/interviews-history`, {
+            headers: {
+                cookie: cookieStore.toString(),
+            },
+            next: { revalidate: 60 },
+        });
+    } else {
+        const params = new URLSearchParams()
+        if (search) params.set("q", search)
+        if (limit) params.set("limit", limit.toString());
+        if (cursor) params.set("cursor", cursor)
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== "") {
+                params.set(key, String(value))
+            }
+        })
+        res = await fetch(`/api/interviews/interviews-history?${params.toString()}`, {
+            next: { revalidate: 60 },
+        });
+    }
 
     if (!res.ok) {
         throw new Error("Historic interviews fetch failed");
@@ -261,28 +285,57 @@ const useDeleteInterview = () => {
     });
 }
 
-const useUpcomingInterviews = ({ search = "", limit = 20 }: InterviewParams) => {
-    return useQuery({
+export const getUpcomingInterviewsQueryOptions = ({
+    search = "",
+    limit = 20,
+    cookieStore = {} as ReadonlyRequestCookies }: InterviewParams) => ({
         queryKey: ["upcoming-interviews", { search, limit }],
-        queryFn: () => fetchUpcomingInterviews({ search, limit }),
+        queryFn: () => fetchUpcomingInterviews({ search, limit, cookieStore }),
         staleTime: Infinity,
         gcTime: 10 * 60 * 1000,
         enabled: search.trim().length === 0 || search.trim().length >= 3,
-    });
+    })
+
+const useUpcomingInterviews = ({ search = "", limit = 20 }: InterviewParams) => {
+    return useQuery(getUpcomingInterviewsQueryOptions({ search, limit }));
+    // return useQuery({
+    //     queryKey: ["upcoming-interviews", { search, limit }],
+    //     queryFn: () => fetchUpcomingInterviews({ search, limit }),
+    //     staleTime: Infinity,
+    //     gcTime: 10 * 60 * 1000,
+    //     enabled: search.trim().length === 0 || search.trim().length >= 3,
+    // });
 };
 
+export const getInterviewsHistoryQueryOptions = ({
+    filters = {},
+    search = "",
+    limit = 20,
+    cookieStore = {} as ReadonlyRequestCookies
+}: InterviewParams) => ({
+    queryKey: ["interviews-history", { search, filters, limit }],
+    queryFn: ({ pageParam = null }: { pageParam: string | null }) => fetchInterviewHistory({ search, filters, cursor: pageParam, limit, cookieStore }),
+    getNextPageParam: (lastPage: InterviewResponse) => lastPage.payload?.next_cursor ?? undefined,
+    placeholderData: keepPreviousData,
+    initialPageParam: null as string | null,
+    enabled: search.trim().length === 0 || search.trim().length >= 3,
+    staleTime: Infinity,
+    gcTime: 10 * 60 * 1000,
+})
+
 const useInterviewsHistory = ({ filters = {}, search = "", limit = 20 }: Omit<InterviewParams, "cursor"> = {}) => {
-    return useInfiniteQuery({
-        queryKey: ["interviews-history", { search, filters, limit }],
-        queryFn: ({ pageParam = null }) => fetchInterviewHistory({ search, filters, cursor: pageParam, limit }),
-        getNextPageParam: (lastPage) => lastPage.payload?.next_cursor ?? undefined,
-        placeholderData: keepPreviousData,
-        initialPageParam: null as string | null,
-        enabled: search.trim().length === 0 || search.trim().length >= 3,
-        staleTime: Infinity,
-        gcTime: 10 * 60 * 1000,
-        refetchOnMount: true
-    })
+    return useInfiniteQuery(getInterviewsHistoryQueryOptions({ filters, search, limit }));
+    // return useInfiniteQuery({
+    //     queryKey: ["interviews-history", { search, filters, limit }],
+    //     queryFn: ({ pageParam = null }) => fetchInterviewHistory({ search, filters, cursor: pageParam, limit }),
+    //     getNextPageParam: (lastPage) => lastPage.payload?.next_cursor ?? undefined,
+    //     placeholderData: keepPreviousData,
+    //     initialPageParam: null as string | null,
+    //     enabled: search.trim().length === 0 || search.trim().length >= 3,
+    //     staleTime: Infinity,
+    //     gcTime: 10 * 60 * 1000,
+    //     refetchOnMount: true
+    // })
 };
 
 const useJobInterviews = ({ job_id, limit = 20 }: { job_id: string; limit?: number }) => {

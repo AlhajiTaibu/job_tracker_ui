@@ -140,13 +140,9 @@ export interface Profile {
 }
 
 
-export interface ProfilePayload {
-  data?: Profile
-}
-
 export interface ProfileResponse {
   success?: boolean
-  payload: ProfilePayload
+  payload: Profile
   error?: string
 }
 

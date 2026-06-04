@@ -145,16 +145,17 @@ export default function DashboardClient() {
     setActiveJob(null);
   };
 
-  const filteredJobs = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return jobs;
+  // const filteredJobs = useMemo(() => {
+  //   const query = searchQuery.trim().toLowerCase();
+  //   if (!query) return jobs;
 
-    return jobs.filter(
-      (job) =>
-        job.company_name?.toLowerCase().includes(query) ||
-        job.job_title?.toLowerCase().includes(query),
-    );
-  }, [jobs, searchQuery]);
+  //   return jobs.filter(
+  //     (job) =>
+  //       job.company_name?.toLowerCase().includes(query) ||
+  //       job.job_title?.toLowerCase().includes(query),
+  //   );
+  // }, [jobs, searchQuery]);
+  const filteredJobs = jobs;
 
   const jobsByStatus: Record<JobStatus, JobApplication[]> = useMemo(() => {
     return {

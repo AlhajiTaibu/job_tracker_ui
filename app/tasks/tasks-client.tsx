@@ -25,9 +25,13 @@ import {
   useOverdueTasks,
   useUpcomingTasks,
   useHandleCompleteTask,
+  getUpcomingTasksQueryOptions,
+  getOverdueTasksQueryOptions,
+  getDailyTasksQueryOptions,
 } from "@/hooks/use-task";
 import { useTaskStore } from "@/hooks/use-task-store";
 import ViewTaskModal from "@/components/ui/view-task-modal";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const statusLabelMap = {
   pending: "Pending",
@@ -99,39 +103,28 @@ const taskTypeConfig: Record<
 };
 
 export default function TasksClient() {
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const { data: upcomingTasksData } = useUpcomingTasks({
-    filters:
-      statusFilter !== "all" && typeFilter !== "all"
-        ? { status: statusFilter, task_type: typeFilter }
-        : statusFilter !== "all"
-          ? { status: statusFilter }
-          : typeFilter !== "all"
-            ? { task_type: typeFilter }
-            : {},
-  });
+  const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
+  const [typeFilter, setTypeFilter] = useState<TaskType | "all">("all");
 
-  const { data: overdueTasksData } = useOverdueTasks({
-    filters:
-      statusFilter !== "all" && typeFilter !== "all"
-        ? { status: statusFilter, task_type: typeFilter }
-        : statusFilter !== "all"
-          ? { status: statusFilter }
-          : typeFilter !== "all"
-            ? { task_type: typeFilter }
-            : {},
-  });
-  const { data: dailyTasksData } = useDailyTasks({
-    filters:
-      statusFilter !== "all" && typeFilter !== "all"
-        ? { status: statusFilter, task_type: typeFilter }
-        : statusFilter !== "all"
-          ? { status: statusFilter }
-          : typeFilter !== "all"
-            ? { task_type: typeFilter }
-            : {},
-  });
+  const filters = useMemo(() => {
+    const f: Record<string, string> = {};
+    if (statusFilter !== "all") f.status = statusFilter;
+    if (typeFilter !== "all") f.task_type = typeFilter;
+    return f;
+  }, [statusFilter, typeFilter]);
+
+  // const { data: upcomingTasksData } = useQuery(
+  //   getUpcomingTasksQueryOptions(filters),
+  // );
+  const { data: upcomingTasksData } = useUpcomingTasks({ filters });
+  const { data: overdueTasksData } = useOverdueTasks({ filters });
+  const { data: dailyTasksData } = useDailyTasks({ filters });
+
+  // const { data: overdueTasksData } = useQuery(
+  //   getOverdueTasksQueryOptions(filters),
+  // );
+
+  // const { data: dailyTasksData } = useQuery(getDailyTasksQueryOptions(filters));
 
   const upcomingTasks = upcomingTasksData?.payload?.data || [];
   const overdueTasks = overdueTasksData?.payload?.data || [];
@@ -143,8 +136,6 @@ export default function TasksClient() {
     const daily = dailyTasksData?.payload?.data || [];
     return [...upcoming, ...overdue, ...daily];
   }, [upcomingTasksData, overdueTasksData, dailyTasksData]);
-
-  const [search, setSearch] = useState("");
 
   const selectedTask = useTaskStore((state) => state.selectedTask);
   const isViewOpen = useTaskStore((state) => state.isViewOpen);
