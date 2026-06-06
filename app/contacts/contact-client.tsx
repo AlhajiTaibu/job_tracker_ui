@@ -33,7 +33,7 @@ import { AddContactSheet } from "@/components/add-contact-sheet";
 import { ViewContactSheet } from "@/components/view-contact-sheet";
 import { useContactStore } from "@/hooks/use-contact-store";
 import { useContacts, useHandleDeleteContact } from "@/hooks/use-contact";
-import { useJobs } from "@/hooks/use-jobs";
+import LinkContactToApplicationSheet from "@/components/link-contact-to-application-sheet";
 
 const typeConfig = {
   recruiter: {
@@ -94,10 +94,21 @@ export default function ContactsClient() {
   const setSheetOpen = useContactStore((state) => state.setSheetOpen);
   const isViewOpen = useContactStore((state) => state.isViewOpen);
   const setIsViewOpen = useContactStore((state) => state.setIsViewOpen);
-  const selectedContact = useContactStore((state) => state.selectedContact);
+  const selectedContactId = useContactStore((state) => state.selectedContactId);
+  const selectedContact =
+    contacts.find((contact) => contact.id === selectedContactId) ?? null;
+
   const viewContact = useContactStore((state) => state.viewContact);
   const editingContact = useContactStore((state) => state.editingContact);
   const editContact = useContactStore((state) => state.editContact);
+  const linkingContact = useContactStore((state) => state.linkingContact);
+  const linkContact = useContactStore((state) => state.linkContact);
+  const isLinkingSheetOpen = useContactStore(
+    (state) => state.isLinkingSheetOpen,
+  );
+  const setIsLinkingSheetOpen = useContactStore(
+    (state) => state.setIsLinkingSheetOpen,
+  );
   const defaultRelationshipType = useContactStore(
     (state) => state.defaultRelationshipType,
   );
@@ -234,6 +245,12 @@ export default function ContactsClient() {
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
+                              onClick={() => linkContact(contact)}
+                            >
+                              Link to Application
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
                               className="text-destructive"
                               onClick={() => handleDeleteContact(contact.id)}
                             >
@@ -326,7 +343,7 @@ export default function ContactsClient() {
                       </div>
                       <button
                         type="button"
-                        onClick={() => viewContact(contact)}
+                        onClick={() => viewContact(contact.id)}
                         className="text-xs text-primary/70 transition-colors hover:text-primary"
                       >
                         View contact
@@ -349,6 +366,11 @@ export default function ContactsClient() {
         open={isViewOpen}
         onOpenChange={setIsViewOpen}
         contact={selectedContact}
+      />
+      <LinkContactToApplicationSheet
+        open={isLinkingSheetOpen}
+        onOpenChange={setIsLinkingSheetOpen}
+        contact={linkingContact}
       />
     </div>
   );

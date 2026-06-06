@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { JobApplication, JobStatus } from "@/lib/types";
+import type { JobStatus } from "@/lib/types";
 import { statusConfig } from "@/lib/types";
 import { useJobs } from "@/hooks/use-jobs";
 import { useJobStore } from "@/hooks/use-job-store";
@@ -44,7 +44,7 @@ export default function ApplicationsClient() {
   }, [searchQuery]);
 
   const isViewOpen = useJobStore((state) => state.isViewOpen);
-  const selectedJob = useJobStore((state) => state.selectedJob);
+  const selectedJobId = useJobStore((state) => state.selectedJobId);
   const setIsViewOpen = useJobStore((state) => state.setIsViewOpen);
 
   const sheetOpen = useJobStore((state) => state.sheetOpen);
@@ -55,6 +55,8 @@ export default function ApplicationsClient() {
 
   const jobs =
     jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];
+
+  const selectedJob = jobs.find((job) => job.id === selectedJobId) ?? null;
 
   const filteredJobs = jobs;
 

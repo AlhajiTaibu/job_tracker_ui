@@ -104,7 +104,7 @@ const linkContactToApplication = async ({ contact_id, application_id }: { contac
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ application_id }),
+        body: JSON.stringify({ job_application_id: application_id }),
     });
 
     if (!res.ok) {
@@ -113,6 +113,20 @@ const linkContactToApplication = async ({ contact_id, application_id }: { contac
     return res.json();
 }
 
+const unlinkContactToApplication = async ({ contact_id, application_id }: { contact_id: string; application_id: string }) => {
+    const res = await fetch(`/api/contacts/unlink-contact-to-application/${contact_id}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ job_application_id: application_id }),
+    });
+
+    if (!res.ok) {
+        throw new Error("Contact unlinking failed");
+    }
+    return res.json();
+}
 
 // Zustand stores for managing submission states
 type AddContactStore = {
@@ -245,9 +259,66 @@ const useLinkContactToApplication = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: linkContactToApplication,
+        mutationFn: ({ contact_id, application_id }: { contact_id: string, application_id: string }) => linkContactToApplication({ contact_id, application_id }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["contacts"] });
+            queryClient.invalidateQueries({ queryKey: ["jobs"] })
+        },
+    });
+}
+
+const useUnLinkContactToApplication = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ contact_id, application_id }: { contact_id: string, application_id: string }) => unlinkContactToApplication({ contact_id, application_id }),
+        onMutate: async ({ contact_id, application_id }) => {
+            await queryClient.cancelQueries({ queryKey: ["contacts"] });
+            const previousData = queryClient.getQueryData<ContactResponse>(["contacts"]);
+            queryClient.setQueryData(["contacts"], (old: any) => {
+                if (!old?.payload?.data) return old;
+
+                return {
+                    ...old,
+                    payload: {
+                        ...old.payload,
+                        data: old.payload.data.map((contact: any) => {
+                            if (contact.id !== contact_id) return contact;
+
+                            return {
+                                ...contact,
+                                job_applications: contact.job_applications?.filter(
+                                    (job: any) => job.id !== application_id
+                                ) ?? [],
+                            };
+                        }),
+                    },
+                };
+            });
+
+            // queryClient.setQueryData<ContactResponse>(['contacts'], (old) => {
+            //     if (!old) return old
+
+            //     return {
+            //         ...old,
+            //         payload: {
+            //             ...old.payload,
+            //             data: old.payload.data?.map((contact) => ({
+            //                 ...contact,
+            //                 job_applications: contact.job_applications?.filter(
+            //                     (job) => job.id !== application_id
+            //                 ),
+            //             })),
+
+            //         },
+            //     }
+            // })
+            return { previousData }
+
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["contacts"] });
+            queryClient.invalidateQueries({ queryKey: ["jobs"] })
         },
     });
 }
@@ -364,6 +435,29 @@ const useHandleLinkContactToApplication = () => {
     return { handleLinkContactToApplication };
 }
 
+const useHandleUnLinkContactToApplication = () => {
+    const { mutateAsync: unlinkContactAsync } = useUnLinkContactToApplication();
+    const { toast } = useToast();
+
+    const handleUnLinkContactToApplication = useCallback(async ({ contact_id, application_id }: { contact_id: string; application_id: string }) => {
+        try {
+            await unlinkContactAsync({ contact_id, application_id });
+            toast({
+                title: "Success",
+                description: "Contact unlinked to application successfully",
+            });
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to unlink contact to application",
+                variant: "destructive",
+            });
+        }
+    }, [unlinkContactAsync, toast]);
+
+    return { handleUnLinkContactToApplication };
+}
+
 const useHandleDeleteContact = () => {
     const { mutateAsync: deleteContactAsync } = useDeleteContact();
     const { toast } = useToast();
@@ -392,6 +486,7 @@ export {
     useHandleAddContact,
     useHandleUpdateContact,
     useHandleLinkContactToApplication,
+    useHandleUnLinkContactToApplication,
     useHandleDeleteContact,
     useAddContactStore,
     useEditContactStore

@@ -23,13 +23,7 @@ import {
   InputGroupInput,
   InputGroupAddon,
 } from "@/components/ui/input-group";
-import type {
-  JobApplication,
-  JobStatus,
-  JobDocument,
-  DocumentType,
-  JobSource,
-} from "@/lib/types";
+import type { JobApplication, JobStatus, JobSource } from "@/lib/types";
 import {
   Building2,
   Briefcase,
@@ -231,10 +225,6 @@ export function AddJobSheet({
   job,
   defaultStatus = "saved",
 }: AddJobSheetProps) {
-  // const fileInputRef = useRef<HTMLInputElement>(null);
-  // const [selectedDocType, setSelectedDocType] = useState<DocumentType>("cv");
-  // const [isDragging, setIsDragging] = useState(false);
-
   const {
     register,
     control,

@@ -2,14 +2,14 @@ export type JobStatus = "applied" | "screening" | "assessment" | "interviewing" 
 
 export type JobSource = "LinkedIn" | "Referral" | "Company Career Page" | "Job Board" | "Other"
 
-export type DocumentType = "cv" | "cover_letter" | "portfolio" | "other"
+export type DocumentPurpose = "cv" | "cover letter" | "portfolio" | "offer letter" | "references" | "other"
 
 export type ContactType = "recruiter" | "hiring manager" | "referral" | "employee" | "other"
 
 export interface JobDocument {
   id: string
   name: string
-  type: DocumentType
+  type: DocumentPurpose
   size: number
   uploadedAt: string
   url: string
@@ -58,7 +58,7 @@ export interface JobApplication {
   notes?: string
   job_url?: string
   updated_at?: string
-  documents?: JobDocument[]
+  documents?: Document[]
   contacts?: Contact[]
 }
 
@@ -146,32 +146,75 @@ export interface ProfileResponse {
   error?: string
 }
 
-export type DocumentStatus = "uploaded" | "processing" | "ready" | "failed";
+export type DocumentStatus = "completed" | "pending" | "ready" | "failed";
 
 export const documentsConfig: Record<
-  DocumentStatus,
+  DocumentPurpose,
   { label: string; color: string; bgColor: string }
 > = {
-  uploaded: {
-    label: "Uploaded",
+  cv: {
+    label: "CV / Resume",
     color: "text-blue-700",
     bgColor: "bg-blue-100",
   },
-  processing: {
-    label: "Processing",
+  "cover letter": {
+    label: "Cover Letter",
     color: "text-amber-700",
     bgColor: "bg-amber-50",
   },
-  ready: {
-    label: "Ready",
+  portfolio: {
+    label: "Portfolio",
     color: "text-emerald-700",
     bgColor: "bg-emerald-50",
   },
-  failed: {
-    label: "Failed",
-    color: "text-rose-700",
-    bgColor: "bg-rose-50",
+  references: {
+    label: "References",
+    color: "text-green-700",
+    bgColor: "bg-green-50",
   },
+  "offer letter": {
+    label: "Offer Letter",
+    color: "text-voilet-700",
+    bgColor: "bg-voilet-50",
+  },
+  other: {
+    label: "Other",
+    color: "text-slate-700",
+    bgColor: "bg-slate-50",
+  },
+}
+
+export interface JobApplicationResponseTruncated {
+  id: string
+  company_name: string
+  job_title: string
+  status: string
+}
+
+
+export interface Document {
+  id: string
+  name?: string
+  file_type: string
+  purpose: DocumentPurpose
+  status: DocumentStatus
+  filename?: string
+  size: number
+  is_base: boolean
+  is_draft: boolean
+  is_submitted?: boolean
+  job_applications?: JobApplicationResponseTruncated[]
+  created_at: string
+}
+
+export interface DocumentPayload {
+  data?: Document[]
+}
+
+export interface DocumentResponse {
+  success?: boolean
+  payload: DocumentPayload
+  error?: string
 }
 
 export interface ApplicationFunnelResponse {
