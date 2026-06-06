@@ -19,8 +19,10 @@ import {
   Tag,
   Mail,
   User,
+  X,
 } from "lucide-react";
 import type { Contact, JobApplication } from "@/lib/types";
+import { useHandleUnLinkContactToApplication } from "@/hooks/use-contact";
 
 type ViewContactSheetProps = {
   open: boolean;
@@ -51,10 +53,14 @@ function getStatusClasses(status?: string | null) {
 
 function JobsSection({
   job_applications,
+  contact,
 }: {
   job_applications?: Array<JobApplication> | null;
+  contact: Contact;
 }) {
   const hasContacts = !!job_applications?.length;
+  const { handleUnLinkContactToApplication } =
+    useHandleUnLinkContactToApplication();
 
   return (
     <section className="rounded-2xl border bg-card p-5 shadow-sm">
@@ -72,8 +78,20 @@ function JobsSection({
               key={
                 job_application.id || `${job_application.job_title}-${index}`
               }
-              className="rounded-xl border bg-muted p-4"
+              className="relative rounded-xl border bg-muted p-4"
             >
+              <button
+                type="button"
+                onClick={() => {
+                  handleUnLinkContactToApplication({
+                    contact_id: contact.id,
+                    application_id: job_application.id,
+                  });
+                }}
+                className="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus:outline-none focus:ring-2 focus:ring-destructive/20"
+              >
+                <X className="h-3 w-3" />
+              </button>
               <div className="mb-3">
                 <p className="text-sm font-semibold text-foreground">
                   {job_application.job_title?.trim() || "Unnamed job"}
@@ -254,7 +272,6 @@ export function ViewContactSheet({
 }: ViewContactSheetProps) {
   const formattedDate =
     formatDate(contact?.created_at) ?? formatDate(contact?.updated_at);
-
   if (!contact) return null;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -342,7 +359,10 @@ export function ViewContactSheet({
                 icon={<Calendar className="h-4 w-4" />}
               />
             </Section>
-            <JobsSection job_applications={contact.job_applications} />
+            <JobsSection
+              job_applications={contact.job_applications}
+              contact={contact}
+            />
             <RichSection
               title="Notes"
               icon={<NotebookPen className="h-4 w-4" />}

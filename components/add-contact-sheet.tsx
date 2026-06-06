@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -23,40 +23,17 @@ import {
   InputGroupInput,
   InputGroupAddon,
 } from "@/components/ui/input-group";
-import type {
-  JobApplication,
-  JobStatus,
-  JobDocument,
-  DocumentType,
-  JobSource,
-  NoteLog,
-} from "@/lib/types";
 import {
   Building2,
   Briefcase,
-  MapPin,
-  DollarSign,
-  Calendar,
   Link2,
   FileText,
-  Bookmark,
-  Send,
-  Users,
-  Trophy,
-  XCircle,
   Sparkles,
-  X,
-  Paperclip,
-  LinkedinIcon,
   Glasses,
-  TestTube2,
-  StopCircle,
-  CheckIcon,
   Loader2,
   Mail,
   Contact2,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { AddContactInput, addContactSchema } from "@/lib/schemas/contact";

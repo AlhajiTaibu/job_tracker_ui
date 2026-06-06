@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { JobApplication, JobStatus } from "@/lib/types";
+import type { JobStatus } from "@/lib/types";
 import { statusConfig } from "@/lib/types";
 import { useJobs } from "@/hooks/use-jobs";
 import { useJobStore } from "@/hooks/use-job-store";

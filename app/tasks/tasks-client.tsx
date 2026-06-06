@@ -113,18 +113,9 @@ export default function TasksClient() {
     return f;
   }, [statusFilter, typeFilter]);
 
-  // const { data: upcomingTasksData } = useQuery(
-  //   getUpcomingTasksQueryOptions(filters),
-  // );
   const { data: upcomingTasksData } = useUpcomingTasks({ filters });
   const { data: overdueTasksData } = useOverdueTasks({ filters });
   const { data: dailyTasksData } = useDailyTasks({ filters });
-
-  // const { data: overdueTasksData } = useQuery(
-  //   getOverdueTasksQueryOptions(filters),
-  // );
-
-  // const { data: dailyTasksData } = useQuery(getDailyTasksQueryOptions(filters));
 
   const upcomingTasks = upcomingTasksData?.payload?.data || [];
   const overdueTasks = overdueTasksData?.payload?.data || [];
