@@ -30,6 +30,7 @@ import {
 import type { Interview, JobApplication } from "@/lib/types";
 import { getStatusClasses } from "@/lib/utils";
 import { useJobInterviews } from "@/hooks/use-interview";
+import { useHandleUnLinkContactToApplication } from "@/hooks/use-contact";
 
 type ViewJobSheetProps = {
   open: boolean;
@@ -202,18 +203,21 @@ function DocumentsSection({
 
 function ContactsSection({
   contacts,
+  job_application_id,
 }: {
   contacts?: Array<{
-    id?: string;
+    id: string;
     name?: string | null;
     role?: string | null;
     email?: string | null;
     phone?: string | null;
     linkedin?: string | null;
   }> | null;
+  job_application_id: string;
 }) {
   const hasContacts = !!contacts?.length;
-
+  const { handleUnLinkContactToApplication } =
+    useHandleUnLinkContactToApplication();
   return (
     <section className="rounded-2xl border bg-card p-5 shadow-sm">
       <div className="mb-3 flex items-center gap-2">
@@ -228,8 +232,20 @@ function ContactsSection({
           {contacts.map((contact, index) => (
             <div
               key={contact.id || `${contact.name}-${index}`}
-              className="rounded-xl border bg-muted p-4"
+              className="relative rounded-xl border bg-muted p-4"
             >
+              <button
+                type="button"
+                onClick={() => {
+                  handleUnLinkContactToApplication({
+                    contact_id: contact.id,
+                    application_id: job_application_id,
+                  });
+                }}
+                className="absolute right-3 top-3 inline-flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus:outline-none focus:ring-2 focus:ring-destructive/20"
+              >
+                <X className="h-3 w-3" />
+              </button>
               <div className="mb-3">
                 <p className="text-sm font-semibold text-foreground">
                   {contact.name?.trim() || "Unnamed contact"}
@@ -482,7 +498,10 @@ export function ViewJobSheet({ open, onOpenChange, job }: ViewJobSheetProps) {
             />
             <DocumentsSection documents={job.documents} />
 
-            <ContactsSection contacts={job.contacts} />
+            <ContactsSection
+              contacts={job.contacts}
+              job_application_id={job.id}
+            />
 
             <InterviewSection job_id={job.id} />
 

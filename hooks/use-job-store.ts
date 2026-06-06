@@ -2,10 +2,10 @@ import { JobApplication, JobStatus } from '@/lib/types'
 import { create } from 'zustand'
 
 interface JobStore {
-    selectedJob: JobApplication | null
+    selectedJobId: string | null
     isViewOpen: boolean
     setIsViewOpen: (open: boolean) => void
-    viewJob: (job: JobApplication) => void
+    viewJob: (job_id: string) => void
     editingJob: JobApplication | null
     sheetOpen: boolean
     setSheetOpen: (open: boolean) => void
@@ -16,13 +16,13 @@ interface JobStore {
 
 
 export const useJobStore = create<JobStore>((set) => ({
-    selectedJob: null,
+    selectedJobId: null,
     isViewOpen: false,
     setIsViewOpen: (open) => set({
         isViewOpen: open,
-        selectedJob: open ? null : null
+        selectedJobId: open ? null : null
     }),
-    viewJob: (val) => set({ selectedJob: val, isViewOpen: true }),
+    viewJob: (val) => set({ selectedJobId: val, isViewOpen: true }),
     // Editing and Adding Jobs
     editingJob: null,
     sheetOpen: false,

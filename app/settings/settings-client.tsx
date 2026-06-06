@@ -35,6 +35,7 @@ import {
   useProfileStore,
 } from "@/hooks/use-profile";
 import { Hamburger } from "@/components/ui/hamburger";
+import { Profile } from "@/lib/types";
 
 export default function SettingsClient() {
   const router = useRouter();
@@ -48,7 +49,7 @@ export default function SettingsClient() {
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const profile = profileData?.payload ?? {};
+  const profile = profileData?.payload ?? ({} as Profile);
 
   const [form, setForm] = useState({
     firstName: profile?.first_name || "",

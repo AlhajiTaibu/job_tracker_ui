@@ -3,6 +3,7 @@ import { ContactResponse, ContactType, NoteLog } from "@/lib/types";
 import { useCallback } from "react";
 import { useToast } from "./use-toast";
 import { create } from "zustand";
+import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 type ContactInput = {
     name: string;
@@ -18,18 +19,37 @@ type ContactParams = {
     search?: string
     limit?: number
     cursor?: string | null
+    cookieStore?: ReadonlyRequestCookies
 }
 
 // API functions
-const fetchContacts = async ({ search = "", limit = 20, cursor = null }: ContactParams): Promise<ContactResponse> => {
-    const params = new URLSearchParams()
+const fetchContacts = async ({
+    search = "",
+    limit = 20,
+    cursor = null,
+    cookieStore = {} as ReadonlyRequestCookies }: ContactParams): Promise<ContactResponse> => {
+    let res: Response
+    if (typeof window === 'undefined') {
+        const baseUrl =
+            typeof window !== "undefined" ? "" : process.env.NEXT_PUBLIC_SITE_URL;
+        res = await fetch(`${baseUrl}/api/contacts/list`, {
+            headers: {
+                cookie: cookieStore.toString(),
+            },
+            next: { revalidate: 60 },
+        });
+    } else {
+        const baseUrl = typeof window !== 'undefined'
+            ? ''
+            : process.env.NEXT_PUBLIC_SITE_URL
 
-    if (search) params.set("q", search)
-    if (limit) params.set("limit", limit.toString());
-    if (cursor) params.set("cursor", cursor);
-    const res = await fetch(`/api/contacts/list?${params.toString()}`, {
-        next: { revalidate: 60 },
-    });
+        const params = new URLSearchParams()
+
+        if (search) params.set("q", search)
+        if (cursor) params.set("cursor", cursor)
+        params.set("limit", String(limit))
+        res = await fetch(`${baseUrl}/api/contacts/list?${params.toString()}`)
+    }
 
     if (!res.ok) {
         throw new Error("Contact fetch failed");
@@ -84,7 +104,7 @@ const linkContactToApplication = async ({ contact_id, application_id }: { contac
         headers: {
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ application_id }),
+        body: JSON.stringify({ job_application_id: application_id }),
     });
 
     if (!res.ok) {
@@ -93,6 +113,20 @@ const linkContactToApplication = async ({ contact_id, application_id }: { contac
     return res.json();
 }
 
+const unlinkContactToApplication = async ({ contact_id, application_id }: { contact_id: string; application_id: string }) => {
+    const res = await fetch(`/api/contacts/unlink-contact-to-application/${contact_id}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ job_application_id: application_id }),
+    });
+
+    if (!res.ok) {
+        throw new Error("Contact unlinking failed");
+    }
+    return res.json();
+}
 
 // Zustand stores for managing submission states
 type AddContactStore = {
@@ -117,17 +151,19 @@ const useEditContactStore = create<EditContactStore>((set) => ({
 
 
 // Query and mutation hooks
+export const getContactsQueryOptions = ({ search = "", limit = 20, cookieStore = {} as ReadonlyRequestCookies }: Omit<ContactParams, "cursor"> = {}) => ({
+    queryKey: ["contacts", { search, limit }] as const,
+    queryFn: ({ pageParam = null }: { pageParam: string | null }) => fetchContacts({ search, limit, cursor: pageParam, cookieStore }),
+    getNextPageParam: (lastPage: ContactResponse) => lastPage?.payload?.next_cursor ?? undefined,
+    placeholderData: keepPreviousData,
+    initialPageParam: null as string | null,
+    enabled: search.trim().length === 0 || search.trim().length >= 3,
+    staleTime: Infinity,
+    gcTime: 10 * 60 * 1000,
+});
+
 const useContacts = ({ search = "", limit = 20 }: Omit<ContactParams, "cursor"> = {}) => {
-    return useInfiniteQuery({
-        queryKey: ["contacts", { search, limit }],
-        queryFn: ({ pageParam = null }) => fetchContacts({ search, limit, cursor: pageParam }),
-        getNextPageParam: (lastPage) => lastPage?.payload?.next_cursor ?? undefined,
-        placeholderData: keepPreviousData,
-        initialPageParam: null as string | null,
-        enabled: search.trim().length === 0 || search.trim().length >= 3,
-        staleTime: Infinity,
-        gcTime: 10 * 60 * 1000,
-    })
+    return useInfiniteQuery(getContactsQueryOptions({ search, limit }))
 };
 
 const useAddContact = () => {
@@ -223,9 +259,66 @@ const useLinkContactToApplication = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: linkContactToApplication,
+        mutationFn: ({ contact_id, application_id }: { contact_id: string, application_id: string }) => linkContactToApplication({ contact_id, application_id }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["contacts"] });
+            queryClient.invalidateQueries({ queryKey: ["jobs"] })
+        },
+    });
+}
+
+const useUnLinkContactToApplication = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ contact_id, application_id }: { contact_id: string, application_id: string }) => unlinkContactToApplication({ contact_id, application_id }),
+        onMutate: async ({ contact_id, application_id }) => {
+            await queryClient.cancelQueries({ queryKey: ["contacts"] });
+            const previousData = queryClient.getQueryData<ContactResponse>(["contacts"]);
+            queryClient.setQueryData(["contacts"], (old: any) => {
+                if (!old?.payload?.data) return old;
+
+                return {
+                    ...old,
+                    payload: {
+                        ...old.payload,
+                        data: old.payload.data.map((contact: any) => {
+                            if (contact.id !== contact_id) return contact;
+
+                            return {
+                                ...contact,
+                                job_applications: contact.job_applications?.filter(
+                                    (job: any) => job.id !== application_id
+                                ) ?? [],
+                            };
+                        }),
+                    },
+                };
+            });
+
+            // queryClient.setQueryData<ContactResponse>(['contacts'], (old) => {
+            //     if (!old) return old
+
+            //     return {
+            //         ...old,
+            //         payload: {
+            //             ...old.payload,
+            //             data: old.payload.data?.map((contact) => ({
+            //                 ...contact,
+            //                 job_applications: contact.job_applications?.filter(
+            //                     (job) => job.id !== application_id
+            //                 ),
+            //             })),
+
+            //         },
+            //     }
+            // })
+            return { previousData }
+
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["contacts"] });
+            queryClient.invalidateQueries({ queryKey: ["jobs"] })
         },
     });
 }
@@ -342,6 +435,29 @@ const useHandleLinkContactToApplication = () => {
     return { handleLinkContactToApplication };
 }
 
+const useHandleUnLinkContactToApplication = () => {
+    const { mutateAsync: unlinkContactAsync } = useUnLinkContactToApplication();
+    const { toast } = useToast();
+
+    const handleUnLinkContactToApplication = useCallback(async ({ contact_id, application_id }: { contact_id: string; application_id: string }) => {
+        try {
+            await unlinkContactAsync({ contact_id, application_id });
+            toast({
+                title: "Success",
+                description: "Contact unlinked to application successfully",
+            });
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Failed to unlink contact to application",
+                variant: "destructive",
+            });
+        }
+    }, [unlinkContactAsync, toast]);
+
+    return { handleUnLinkContactToApplication };
+}
+
 const useHandleDeleteContact = () => {
     const { mutateAsync: deleteContactAsync } = useDeleteContact();
     const { toast } = useToast();
@@ -370,6 +486,7 @@ export {
     useHandleAddContact,
     useHandleUpdateContact,
     useHandleLinkContactToApplication,
+    useHandleUnLinkContactToApplication,
     useHandleDeleteContact,
     useAddContactStore,
     useEditContactStore

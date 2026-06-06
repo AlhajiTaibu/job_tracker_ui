@@ -39,15 +39,7 @@ type AppSidebarProps = {
 export function AppSidebar({ mobileOpen, onMobileClose }: AppSidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
-  const {
-    data: jobsData,
-    isPending,
-    isFetching,
-  } = useJobs({
-    search: "",
-    filters: {},
-    limit: 20,
-  });
+  const { data: jobsData, isPending, isFetching } = useJobs();
 
   const jobs =
     jobsData?.pages.flatMap((page) => page.payload?.data ?? []) ?? [];

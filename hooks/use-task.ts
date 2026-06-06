@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient, } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useToast } from "./use-toast";
 import { create } from "zustand";
+import { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 
 type TaskInput = {
@@ -16,16 +17,30 @@ type TaskParams = {
     filters?: Record<string, string | number | boolean | undefined>
 }
 
-const fetchUpcomingTasks = async ({ filters = {} }: TaskParams): Promise<TaskResponse> => {
-    const params = new URLSearchParams()
-    Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
-            params.set(key, String(value))
-        }
-    })
-    const res = await fetch(`/api/tasks/upcoming-tasks?${params.toString()}`, {
-        next: { revalidate: 60 },
-    });
+const fetchUpcomingTasks = async ({
+    filters = {},
+    cookieStore: ReadOnlyRequestCookies = {} as ReadonlyRequestCookies
+}): Promise<TaskResponse> => {
+    let res: Response
+    if (typeof window === "undefined") {
+        const baseUrl =
+            typeof window !== "undefined" ? "" : process.env.NEXT_PUBLIC_SITE_URL;
+        res = await fetch(`${baseUrl}/api/tasks/upcoming-tasks`, {
+            headers: {
+                cookie: cookieStore.toString(),
+            },
+        });
+    } else {
+        const params = new URLSearchParams()
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== "") {
+                params.set(key, String(value))
+            }
+        })
+        res = await fetch(`/api/tasks/upcoming-tasks?${params.toString()}`, {
+            next: { revalidate: 60 },
+        });
+    }
 
     if (!res.ok) {
         throw new Error("Upcoming tasks fetch failed");
@@ -33,17 +48,30 @@ const fetchUpcomingTasks = async ({ filters = {} }: TaskParams): Promise<TaskRes
     return res.json();
 };
 
-const fetchOverdueTasks = async ({ filters = {} }: TaskParams): Promise<TaskResponse> => {
-
-    const params = new URLSearchParams()
-    Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
-            params.set(key, String(value))
-        }
-    })
-    const res = await fetch(`/api/tasks/overdue-tasks?${params.toString()}`, {
-        next: { revalidate: 60 },
-    });
+const fetchOverdueTasks = async ({
+    filters = {},
+    cookieStore: ReadOnlyRequestCookies = {} as ReadonlyRequestCookies
+}): Promise<TaskResponse> => {
+    let res: Response
+    if (typeof window === "undefined") {
+        const baseUrl =
+            typeof window !== "undefined" ? "" : process.env.NEXT_PUBLIC_SITE_URL;
+        res = await fetch(`${baseUrl}/api/tasks/overdue-tasks`, {
+            headers: {
+                cookie: cookieStore.toString(),
+            },
+        });
+    } else {
+        const params = new URLSearchParams()
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== "") {
+                params.set(key, String(value))
+            }
+        })
+        res = await fetch(`/api/tasks/overdue-tasks?${params.toString()}`, {
+            next: { revalidate: 60 },
+        });
+    }
 
     if (!res.ok) {
         throw new Error("Overdue tasks fetch failed");
@@ -51,17 +79,30 @@ const fetchOverdueTasks = async ({ filters = {} }: TaskParams): Promise<TaskResp
     return res.json();
 }
 
-const fetchDailyTasks = async ({ filters = {} }: TaskParams): Promise<TaskResponse> => {
-    const params = new URLSearchParams()
-    Object.entries(filters).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") {
-            params.set(key, String(value))
-        }
-    })
-
-    const res = await fetch(`/api/tasks/daily-tasks?${params.toString()}`, {
-        next: { revalidate: 60 },
-    });
+const fetchDailyTasks = async ({
+    filters = {},
+    cookieStore: ReadOnlyRequestCookies = {} as ReadonlyRequestCookies
+}): Promise<TaskResponse> => {
+    let res: Response
+    if (typeof window === "undefined") {
+        const baseUrl =
+            typeof window !== "undefined" ? "" : process.env.NEXT_PUBLIC_SITE_URL;
+        res = await fetch(`${baseUrl}/api/tasks/daily-tasks`, {
+            headers: {
+                cookie: cookieStore.toString(),
+            },
+        });
+    } else {
+        const params = new URLSearchParams()
+        Object.entries(filters).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== "") {
+                params.set(key, String(value))
+            }
+        })
+        res = await fetch(`/api/tasks/daily-tasks?${params.toString()}`, {
+            next: { revalidate: 60 },
+        });
+    }
 
     if (!res.ok) {
         throw new Error("Overdue tasks fetch failed");
@@ -382,31 +423,44 @@ const useCancelTask = () => {
     });
 }
 
-const useUpcomingTasks = ({ filters = {} }: TaskParams) => {
-    return useQuery({
-        queryKey: ["upcoming-tasks", { filters }],
-        queryFn: () => fetchUpcomingTasks({ filters }),
+export const getUpcomingTasksQueryOptions = (
+    filters: TaskParams["filters"] = {},
+    cookieStore: ReadonlyRequestCookies = {} as ReadonlyRequestCookies) => ({
+        queryKey: ["upcoming-tasks", { filters }] as const,
+        queryFn: () => fetchUpcomingTasks({ filters, cookieStore }),
         staleTime: Infinity,
         gcTime: 10 * 60 * 1000,
     });
+
+export const getOverdueTasksQueryOptions = (
+    filters: TaskParams["filters"] = {},
+    cookieStore: ReadonlyRequestCookies = {} as ReadonlyRequestCookies) => ({
+        queryKey: ["overdue-tasks", { filters }] as const,
+        queryFn: () => fetchOverdueTasks({ filters, cookieStore }),
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
+    });
+
+export const getDailyTasksQueryOptions = (
+    filters: TaskParams["filters"] = {},
+    cookieStore: ReadonlyRequestCookies = {} as ReadonlyRequestCookies) => ({
+        queryKey: ["daily-tasks", { filters }] as const,
+        queryFn: () => fetchDailyTasks({ filters, cookieStore }),
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
+    });
+
+
+const useUpcomingTasks = ({ filters = {} }) => {
+    return useQuery(getUpcomingTasksQueryOptions(filters))
 };
 
 const useOverdueTasks = ({ filters = {} }: TaskParams) => {
-    return useQuery({
-        queryKey: ["overdue-tasks", { filters }],
-        queryFn: () => fetchOverdueTasks({ filters }),
-        staleTime: Infinity,
-        gcTime: 10 * 60 * 1000,
-    });
+    return useQuery(getOverdueTasksQueryOptions(filters))
 }
 
 const useDailyTasks = ({ filters = {} }: TaskParams) => {
-    return useQuery({
-        queryKey: ["daily-tasks", { filters }],
-        queryFn: () => fetchDailyTasks({ filters }),
-        staleTime: Infinity,
-        gcTime: 10 * 60 * 1000,
-    });
+    return useQuery(getDailyTasksQueryOptions(filters))
 }
 
 // Zustand store for managing task form state

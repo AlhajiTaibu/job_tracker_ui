@@ -92,6 +92,7 @@ function InterviewCard({
   onEdit,
   onDelete,
 }: {
+  key: string;
   interview: Interview;
   index: number;
   onView: () => void;
@@ -104,7 +105,7 @@ function InterviewCard({
       interview.format as keyof typeof interviewFormatConfig
     ] ?? interviewFormatConfig["phone"];
   return (
-    <Card key={`${interview.id}-${index}`} className="group relative">
+    <Card className="group relative">
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -413,6 +414,7 @@ export default function InterviewsClient() {
                     {filteredUpcomingInterviews.map((interview, index) => {
                       return (
                         <InterviewCard
+                          key={interview.id ?? `${interview.id}-${index}`}
                           interview={interview}
                           index={index}
                           onView={() => viewInterview(interview)}
@@ -443,6 +445,7 @@ export default function InterviewsClient() {
                     {filteredInterviewHistory.map((interview, index) => {
                       return (
                         <InterviewCard
+                          key={interview.id ?? `${interview.id}-${index}`}
                           interview={interview}
                           index={index}
                           onView={() => viewInterview(interview)}

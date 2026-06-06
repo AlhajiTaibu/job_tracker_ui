@@ -21,11 +21,11 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
-import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 import { useJobStore } from "@/hooks/use-job-store";
 import { useHandleMove } from "@/hooks/use-move-job";
 import { useProfile } from "@/hooks/use-profile";
 import { Hamburger } from "@/components/ui/hamburger";
+import { Profile } from "@/lib/types";
 
 const columns: { status: JobStatus; title: string; color: string }[] = [
   { status: "saved", title: "Saved", color: "bg-slate-400" },
@@ -145,16 +145,17 @@ export default function DashboardClient() {
     setActiveJob(null);
   };
 
-  const filteredJobs = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return jobs;
+  // const filteredJobs = useMemo(() => {
+  //   const query = searchQuery.trim().toLowerCase();
+  //   if (!query) return jobs;
 
-    return jobs.filter(
-      (job) =>
-        job.company_name?.toLowerCase().includes(query) ||
-        job.job_title?.toLowerCase().includes(query),
-    );
-  }, [jobs, searchQuery]);
+  //   return jobs.filter(
+  //     (job) =>
+  //       job.company_name?.toLowerCase().includes(query) ||
+  //       job.job_title?.toLowerCase().includes(query),
+  //   );
+  // }, [jobs, searchQuery]);
+  const filteredJobs = jobs;
 
   const jobsByStatus: Record<JobStatus, JobApplication[]> = useMemo(() => {
     return {
@@ -180,7 +181,7 @@ export default function DashboardClient() {
       j.status !== "withdrawn",
   ).length;
   const { data: profileData } = useProfile();
-  const profile = profileData?.payload ?? {};
+  const profile = profileData?.payload ?? ({} as Profile);
   const initials =
     `${profile?.first_name} ${profile?.last_name}`
       ?.split(" ")

@@ -12,7 +12,7 @@ import {
   StickyNote,
   Paperclip,
   Globe,
-  Tag,
+  User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -263,10 +263,16 @@ export function KanbanCard({ job, addStatus = false }: KanbanCardProps) {
                 <span>{job.documents.length}</span>
               </div>
             )}
+            {job.contacts && job.contacts.length > 0 && (
+              <div className="flex items-center gap-1 text-primary/70">
+                <User className="h-3 w-3" />
+                <span>{job.contacts.length}</span>
+              </div>
+            )}
           </div>
           <button
             type="submit"
-            onClick={() => viewJob(job)}
+            onClick={() => viewJob(job.id)}
             className="text-xs text-primary/70 transition-colors hover:text-primary"
           >
             View job
