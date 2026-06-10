@@ -129,7 +129,7 @@ const useDeleteJob = () => {
         },
 
         onSettled: () => {
-            queryClient.cancelQueries({ queryKey: ['jobs'] })
+            queryClient.invalidateQueries({ queryKey: ['jobs'] })
             queryClient.invalidateQueries({ queryKey: ["pipeline-health"] })
             queryClient.invalidateQueries({ queryKey: ["application-funnel"] })
             queryClient.invalidateQueries({ queryKey: ["weekly-activity"] })

@@ -46,7 +46,7 @@ export default function DashboardClient() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   const isViewOpen = useJobStore((state) => state.isViewOpen);
-  const selectedJob = useJobStore((state) => state.selectedJob);
+  const selectedJobId = useJobStore((state) => state.selectedJobId);
   const setIsViewOpen = useJobStore((state) => state.setIsViewOpen);
 
   const sheetOpen = useJobStore((state) => state.sheetOpen);
@@ -83,6 +83,8 @@ export default function DashboardClient() {
 
   const jobs =
     jobsData?.pages?.flatMap((page) => page.payload?.data ?? []) ?? [];
+
+  const selectedJob = jobs.find((job) => job.id === selectedJobId) ?? null;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
