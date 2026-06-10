@@ -66,6 +66,7 @@ export const getJobsQueryOptions = ({ search = "", filters = {}, limit = 20, coo
     enabled: search.trim().length === 0 || search.trim().length >= 3,
     staleTime: Infinity,
     gcTime: 10 * 60 * 1000,
+    refetchOnMount: false,
 
 })
 

@@ -36,6 +36,7 @@ import {
 } from "@/hooks/use-profile";
 import { Hamburger } from "@/components/ui/hamburger";
 import { Profile } from "@/lib/types";
+import { useTheme } from "next-themes";
 
 export default function SettingsClient() {
   const router = useRouter();
@@ -145,6 +146,8 @@ export default function SettingsClient() {
   };
 
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -335,7 +338,12 @@ export default function SettingsClient() {
                       Use dark theme for the interface
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch
+                    checked={theme === "dark"}
+                    onCheckedChange={(checked) =>
+                      setTheme(checked ? "dark" : "light")
+                    }
+                  />
                 </div>
               </CardContent>
             </Card>
