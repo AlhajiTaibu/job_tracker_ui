@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSearchParams } from "next/navigation";
+// import { useSearchParams } from "next/navigation";
 import {
   Briefcase,
   Mail,
@@ -29,14 +29,20 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const searchParams = useSearchParams();
-  const error = searchParams.get("error");
+  // const searchParams = useSearchParams();
+  // const error = searchParams.get("error");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (error) {
       setServerError(error);
     }
   }, [error]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setError(params.get("error"));
+  }, []);
 
   const {
     control,
@@ -72,7 +78,7 @@ export default function LoginPage() {
       `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/auth/google/login`,
     );
   };
-  
+
   return (
     <div className="flex min-h-screen">
       {/* Left Side - Branding */}
