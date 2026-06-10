@@ -273,7 +273,7 @@ export function KanbanCard({ job, addStatus = false }: KanbanCardProps) {
           <button
             type="submit"
             onClick={() => viewJob(job.id)}
-            className="text-xs text-primary/70 transition-colors hover:text-primary"
+            className="text-xs text-primary/70 transition-colors hover:text-primary cursor-pointer"
           >
             View job
           </button>
