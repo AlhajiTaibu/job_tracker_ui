@@ -9,6 +9,7 @@ import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 import { getQueryClient } from "@/lib/get-query-client";
 import { cookies } from "next/headers";
 import { getJobsQueryOptions } from "@/hooks/use-jobs";
+import { GeneralSkeleton } from "@/components/general-skeleton";
 
 export default async function DashboardPage() {
   const queryClient = getQueryClient();
@@ -21,7 +22,7 @@ export default async function DashboardPage() {
   );
 
   return (
-    <Suspense fallback={<DashboardSkeleton />}>
+    <Suspense fallback={<GeneralSkeleton />}>
       <HydrationBoundary state={dehydrate(queryClient)}>
         <ApplicationsClient />
       </HydrationBoundary>

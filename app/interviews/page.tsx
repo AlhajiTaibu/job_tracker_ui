@@ -8,6 +8,7 @@ import {
   getInterviewsHistoryQueryOptions,
   getUpcomingInterviewsQueryOptions,
 } from "@/hooks/use-interview";
+import { GeneralSkeleton } from "@/components/general-skeleton";
 
 // const getInterviews = async (endpoint: string) => {
 //   const cookieStore = await cookies();
@@ -37,22 +38,10 @@ export default async function InterviewsPage() {
     queryClient.prefetchInfiniteQuery(
       getInterviewsHistoryQueryOptions({ cookieStore }),
     ),
-    // queryClient.prefetchQuery({
-    //   queryKey: ["upcoming-interviews", { search, limit }],
-    //   queryFn: () => getInterviews("upcoming-interviews"),
-    //   staleTime: Infinity,
-    //   gcTime: 10 * 60 * 1000,
-    // }),
-    // queryClient.prefetchQuery({
-    //   queryKey: ["interviews-history", { search, limit }],
-    //   queryFn: () => getInterviews("interviews-history"),
-    //   staleTime: Infinity,
-    //   gcTime: 10 * 60 * 1000,
-    // }),
   ]);
 
   return (
-    <Suspense fallback={<DashboardSkeleton />}>
+    <Suspense fallback={<GeneralSkeleton />}>
       <HydrationBoundary state={dehydrate(queryClient)}>
         <InterviewsClient />
       </HydrationBoundary>

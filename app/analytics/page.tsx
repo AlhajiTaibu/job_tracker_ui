@@ -4,6 +4,7 @@ import { getQueryClient } from "@/lib/get-query-client";
 import { cookies } from "next/headers";
 import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 import { Suspense } from "react";
+import { GeneralSkeleton } from "@/components/general-skeleton";
 
 const getAnalytics = async (endpoint: string) => {
   const cookieStore = await cookies();
@@ -77,7 +78,7 @@ export default async function AnalyticsPage() {
   ]);
 
   return (
-    <Suspense fallback={<DashboardSkeleton />}>
+    <Suspense fallback={<GeneralSkeleton />}>
       <HydrationBoundary state={dehydrate(queryClient)}>
         <AnalyticsClient />
       </HydrationBoundary>

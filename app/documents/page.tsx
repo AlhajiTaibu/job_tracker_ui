@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 import { getDocumentsQueryOptions } from "@/hooks/use-documents";
+import { GeneralSkeleton } from "@/components/general-skeleton";
 
 export default async function DocumentsPage() {
   const queryClient = getQueryClient();
@@ -19,7 +20,7 @@ export default async function DocumentsPage() {
     }),
   );
   return (
-    <Suspense fallback={<DashboardSkeleton />}>
+    <Suspense fallback={<GeneralSkeleton />}>
       <HydrationBoundary state={dehydrate(queryClient)}>
         <DocumentManager />
       </HydrationBoundary>
