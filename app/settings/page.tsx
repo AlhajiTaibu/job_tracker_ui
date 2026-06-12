@@ -3,7 +3,6 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getQueryClient } from "@/lib/get-query-client";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
-import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 import { getProfileQueryOptions } from "@/hooks/use-profile";
 import { GeneralSkeleton } from "@/components/general-skeleton";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -27,8 +27,6 @@ import type { JobApplication, JobStatus, JobSource } from "@/lib/types";
 import {
   Building2,
   Briefcase,
-  MapPin,
-  DollarSign,
   Calendar,
   Link2,
   FileText,
@@ -38,12 +36,6 @@ import {
   Trophy,
   XCircle,
   Sparkles,
-  Upload,
-  File,
-  FileCheck,
-  FolderOpen,
-  X,
-  Paperclip,
   LinkedinIcon,
   Glasses,
   TestTube2,
@@ -51,12 +43,11 @@ import {
   CheckIcon,
   Loader2,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { AddJobInput, addJobSchema } from "@/lib/schemas/job";
-import { useAddJobStore, useHandleJobAdd } from "@/hooks/use-add-job";
-import { useEditJobStore, useHandleJobEdit } from "@/hooks/use-edit-job";
+import { useAddJobStore, useHandleJobAdd } from "@/hooks/use-jobs";
+import { useEditJobStore, useHandleJobEdit } from "@/hooks/use-jobs";
 
 interface AddJobSheetProps {
   open: boolean;
@@ -183,41 +174,6 @@ const allowedStatus: Record<JobStatus, JobStatus[]> = {
   withdrawn: [],
   stale: ["withdrawn", "applied"],
 };
-
-// const documentTypes: {
-//   value: DocumentType;
-//   label: string;
-//   icon: React.ReactNode;
-// }[] = [
-//   { value: "cv", label: "CV / Resume", icon: <FileText className="h-4 w-4" /> },
-//   {
-//     value: "cover_letter",
-//     label: "Cover Letter",
-//     icon: <FileCheck className="h-4 w-4" />,
-//   },
-//   {
-//     value: "portfolio",
-//     label: "Portfolio",
-//     icon: <FolderOpen className="h-4 w-4" />,
-//   },
-//   { value: "other", label: "Other", icon: <File className="h-4 w-4" /> },
-// ];
-
-// function formatFileSize(bytes: number): string {
-//   if (bytes < 1024) return bytes + " B";
-//   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
-//   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-// }
-
-// function getDocumentTypeIcon(type: DocumentType) {
-//   const docType = documentTypes.find((d) => d.value === type);
-//   return docType?.icon || <File className="h-4 w-4" />;
-// }
-
-// function getDocumentTypeLabel(type: DocumentType) {
-//   const docType = documentTypes.find((d) => d.value === type);
-//   return docType?.label || "Document";
-// }
 
 export function AddJobSheet({
   open,
@@ -541,124 +497,6 @@ export function AddJobSheet({
               </Field>
             </FieldGroup>
           </div>
-
-          {/* Documents Section */}
-          {/* <div className="mt-8 space-y-5"> */}
-          {/* <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Paperclip className="h-4 w-4 text-muted-foreground" />
-              <span>Documents</span>
-              <span className="ml-1 text-xs text-muted-foreground/60">
-                (optional)
-              </span>
-            </div> */}
-
-          {/* <div className="pl-6 space-y-4"> */}
-          {/* Document Type Selector */}
-          {/* <div className="flex flex-wrap gap-2">
-                {documentTypes.map((docType) => (
-                  <button
-                    key={docType.value}
-                    type="button"
-                    onClick={() => setSelectedDocType(docType.value)}
-                    className={cn(
-                      "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-all",
-                      selectedDocType === docType.value
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border bg-secondary/30 text-muted-foreground hover:border-primary/50 hover:text-foreground",
-                    )}
-                  >
-                    {docType.icon}
-                    {docType.label}
-                  </button>
-                ))}
-              </div> */}
-
-          {/* Upload Area */}
-          {/* <div
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className={cn(
-                  "relative flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-6 transition-all",
-                  isDragging
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50 hover:bg-secondary/30",
-                )}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".pdf,.doc,.docx,.txt,.rtf,.png,.jpg,.jpeg"
-                  onChange={(e) => handleFileSelect(e.target.files)}
-                  className="hidden"
-                />
-                <div
-                  className={cn(
-                    "flex h-12 w-12 items-center justify-center rounded-full transition-colors",
-                    isDragging ? "bg-primary/20" : "bg-secondary",
-                  )}
-                >
-                  <Upload
-                    className={cn(
-                      "h-6 w-6 transition-colors",
-                      isDragging ? "text-primary" : "text-muted-foreground",
-                    )}
-                  />
-                </div>
-                <p className="mt-3 text-sm font-medium text-foreground">
-                  {isDragging ? "Drop files here" : "Upload documents"}
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Drag & drop or click to browse
-                </p>
-                <p className="mt-2 text-xs text-muted-foreground/60">
-                  PDF, DOC, DOCX, TXT, RTF, PNG, JPG up to 10MB
-                </p>
-              </div> */}
-
-          {/* Uploaded Documents List */}
-          {/* {formData.documents.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Attached ({formData.documents.length})
-                  </p>
-                  <div className="space-y-2">
-                    {formData.documents.map((doc) => (
-                      <div
-                        key={doc.id}
-                        className="flex items-center gap-3 rounded-lg border border-border bg-secondary/30 p-3"
-                      >
-                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                          {getDocumentTypeIcon(doc.type)}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-foreground">
-                            {doc.name}
-                          </p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>{getDocumentTypeLabel(doc.type)}</span>
-                            <span>•</span>
-                            <span>{formatFileSize(doc.size)}</span>
-                          </div>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => removeDocument(doc.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )} */}
-          {/* </div>
-          </div> */}
 
           {/* Job Description Section */}
           <div className="mt-8 space-y-5">

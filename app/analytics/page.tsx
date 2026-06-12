@@ -2,7 +2,6 @@ import AnalyticsClient from "./analytics-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getQueryClient } from "@/lib/get-query-client";
 import { cookies } from "next/headers";
-import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 import { Suspense } from "react";
 import { GeneralSkeleton } from "@/components/general-skeleton";
 

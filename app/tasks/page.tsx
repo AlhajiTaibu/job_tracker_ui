@@ -1,10 +1,7 @@
-import { Suspense } from "react";
 import TasksClient from "./tasks-client";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 import { getQueryClient } from "@/lib/get-query-client";
 import { cookies } from "next/headers";
-import { TaskResponse } from "@/lib/types";
 import {
   getUpcomingTasksQueryOptions,
   getOverdueTasksQueryOptions,
