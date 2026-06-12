@@ -87,14 +87,6 @@ export default function DashboardClient() {
 
   const selectedJob = jobs.find((job) => job.id === selectedJobId) ?? null;
 
-  // const sensors = useSensors(
-  //   useSensor(PointerSensor, {
-  //     activationConstraint: {
-  //       distance: 8,
-  //     },
-  //   }),
-  // );
-
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {

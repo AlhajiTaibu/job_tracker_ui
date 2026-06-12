@@ -37,7 +37,7 @@ const fetchUpcomingInterviews = async ({ search = "", limit = 20, cookieStore = 
             headers: {
                 cookie: cookieStore.toString(),
             },
-            next: { revalidate: 60 },
+            // next: { revalidate: 60 },
         });
     } else {
         const params = new URLSearchParams()
@@ -63,7 +63,7 @@ const fetchInterviewHistory = async ({ filters = {}, search = "", cursor = null,
             headers: {
                 cookie: cookieStore.toString(),
             },
-            next: { revalidate: 60 },
+            // next: { revalidate: 60 },
         });
     } else {
         const params = new URLSearchParams()

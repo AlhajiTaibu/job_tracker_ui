@@ -36,7 +36,7 @@ const fetchContacts = async ({
             headers: {
                 cookie: cookieStore.toString(),
             },
-            next: { revalidate: 60 },
+            // next: { revalidate: 60 },
         });
     } else {
         const baseUrl = typeof window !== 'undefined'

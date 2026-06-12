@@ -46,7 +46,6 @@ const fetchJobs = async ({ search = "", filters = {}, cursor = null, limit = 20,
             headers: {
                 cookie: cookieStore.toString(),
             },
-            next: { revalidate: 60 },
         });
     } else {
         const baseUrl = typeof window !== 'undefined'
@@ -201,8 +200,6 @@ export const getJobsQueryOptions = ({ search = "", filters = {}, limit = 20, coo
     enabled: search.trim().length === 0 || search.trim().length >= 3,
     staleTime: Infinity,
     gcTime: 10 * 60 * 1000,
-    refetchOnMount: false,
-
 })
 
 const useJobs = ({ search = "", filters = {}, limit = 20 }: Omit<JobsParams, "cursor"> = {}) => {
@@ -214,7 +211,7 @@ const useJob = (id?: string) => {
         queryKey: ["job", id],
         queryFn: () => fetchJob(id!),
         enabled: !!id,
-        staleTime: Infinity,
+        staleTime: 0,
         gcTime: 10 * 60 * 1000,
     })
 }
@@ -263,14 +260,16 @@ const useAddJob = () => {
             })
         },
 
-        onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
-            queryClient.invalidateQueries({ queryKey: ["pipeline-health"] })
-            queryClient.invalidateQueries({ queryKey: ["application-funnel"] })
-            queryClient.invalidateQueries({ queryKey: ["weekly-activity"] })
-            queryClient.invalidateQueries({ queryKey: ["time-in-stage"] })
-            queryClient.invalidateQueries({ queryKey: ["source-analytics"] })
-            queryClient.invalidateQueries({ queryKey: ["role-analytics"] })
+        onSettled: async () => {
+            await Promise.all([
+                queryClient.refetchQueries({ queryKey: ['jobs'] }),
+                queryClient.invalidateQueries({ queryKey: ["pipeline-health"] }),
+                queryClient.invalidateQueries({ queryKey: ["application-funnel"] }),
+                queryClient.invalidateQueries({ queryKey: ["weekly-activity"] }),
+                queryClient.invalidateQueries({ queryKey: ["time-in-stage"] }),
+                queryClient.invalidateQueries({ queryKey: ["source-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["role-analytics"] }),
+            ])
         }
     })
 }
@@ -318,14 +317,16 @@ const useEditJob = () => {
             })
         },
 
-        onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
-            queryClient.invalidateQueries({ queryKey: ["pipeline-health"] })
-            queryClient.invalidateQueries({ queryKey: ["application-funnel"] })
-            queryClient.invalidateQueries({ queryKey: ["weekly-activity"] })
-            queryClient.invalidateQueries({ queryKey: ["time-in-stage"] })
-            queryClient.invalidateQueries({ queryKey: ["source-analytics"] })
-            queryClient.invalidateQueries({ queryKey: ["role-analytics"] })
+        onSettled: async () => {
+            await Promise.all([
+                queryClient.refetchQueries({ queryKey: ['jobs'] }),
+                queryClient.invalidateQueries({ queryKey: ["pipeline-health"] }),
+                queryClient.invalidateQueries({ queryKey: ["application-funnel"] }),
+                queryClient.invalidateQueries({ queryKey: ["weekly-activity"] }),
+                queryClient.invalidateQueries({ queryKey: ["time-in-stage"] }),
+                queryClient.invalidateQueries({ queryKey: ["source-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["role-analytics"] }),
+            ])
         }
     })
 }
@@ -368,14 +369,16 @@ const useDeleteJob = () => {
             })
         },
 
-        onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
-            queryClient.invalidateQueries({ queryKey: ["pipeline-health"] })
-            queryClient.invalidateQueries({ queryKey: ["application-funnel"] })
-            queryClient.invalidateQueries({ queryKey: ["weekly-activity"] })
-            queryClient.invalidateQueries({ queryKey: ["time-in-stage"] })
-            queryClient.invalidateQueries({ queryKey: ["source-analytics"] })
-            queryClient.invalidateQueries({ queryKey: ["role-analytics"] })
+        onSettled: async () => {
+            await Promise.all([
+                queryClient.refetchQueries({ queryKey: ['jobs'] }),
+                queryClient.invalidateQueries({ queryKey: ["pipeline-health"] }),
+                queryClient.invalidateQueries({ queryKey: ["application-funnel"] }),
+                queryClient.invalidateQueries({ queryKey: ["weekly-activity"] }),
+                queryClient.invalidateQueries({ queryKey: ["time-in-stage"] }),
+                queryClient.invalidateQueries({ queryKey: ["source-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["role-analytics"] }),
+            ])
         }
     })
 }
@@ -422,14 +425,16 @@ const useMoveJob = () => {
             })
         },
 
-        onSettled: () => {
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
-            queryClient.invalidateQueries({ queryKey: ["pipeline-health"] })
-            queryClient.invalidateQueries({ queryKey: ["application-funnel"] })
-            queryClient.invalidateQueries({ queryKey: ["weekly-activity"] })
-            queryClient.invalidateQueries({ queryKey: ["time-in-stage"] })
-            queryClient.invalidateQueries({ queryKey: ["source-analytics"] })
-            queryClient.invalidateQueries({ queryKey: ["role-analytics"] })
+        onSettled: async () => {
+            await Promise.all([
+                queryClient.refetchQueries({ queryKey: ['jobs'] }),
+                queryClient.invalidateQueries({ queryKey: ["pipeline-health"] }),
+                queryClient.invalidateQueries({ queryKey: ["application-funnel"] }),
+                queryClient.invalidateQueries({ queryKey: ["weekly-activity"] }),
+                queryClient.invalidateQueries({ queryKey: ["time-in-stage"] }),
+                queryClient.invalidateQueries({ queryKey: ["source-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["role-analytics"] }),
+            ])
         }
     })
 }
