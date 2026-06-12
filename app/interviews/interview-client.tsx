@@ -245,19 +245,22 @@ export default function InterviewsClient() {
   const [outcomeFilter, setOutcomeFilter] = useState<InterviewOutcome | "all">(
     "all",
   );
-  const { data: upcomingInterviewsData } = useUpcomingInterviews({});
-  const { data: interviewsHistoryData } = useInterviewsHistory({
-    search: debouncedSearch,
-    filters:
-      formatFilter !== "all" && outcomeFilter !== "all"
-        ? { format: formatFilter, outcome: outcomeFilter }
-        : formatFilter !== "all"
-          ? { format: formatFilter }
-          : outcomeFilter !== "all"
-            ? { outcome: outcomeFilter }
-            : {},
-  });
+  const { data: upcomingInterviewsData, isLoading: upcompingLoading } =
+    useUpcomingInterviews({});
+  const { data: interviewsHistoryData, isLoading: historyLoading } =
+    useInterviewsHistory({
+      search: debouncedSearch,
+      filters:
+        formatFilter !== "all" && outcomeFilter !== "all"
+          ? { format: formatFilter, outcome: outcomeFilter }
+          : formatFilter !== "all"
+            ? { format: formatFilter }
+            : outcomeFilter !== "all"
+              ? { outcome: outcomeFilter }
+              : {},
+    });
 
+  const isInitialLoading = upcompingLoading || historyLoading;
   const upcomingInterviews = upcomingInterviewsData?.payload.data ?? [];
   const interviewsHistory =
     interviewsHistoryData?.pages.flatMap((page) => page.payload?.data ?? []) ??
@@ -385,8 +388,12 @@ export default function InterviewsClient() {
           </div>
         </header>
         <main className="flex-1 overflow-auto p-4 sm:p-6">
-          {filteredUpcomingInterviews.length === 0 &&
-          filteredInterviewHistory.length === 0 ? (
+          {isInitialLoading ? (
+            <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
+              Loading interviews...
+            </div>
+          ) : filteredUpcomingInterviews.length === 0 &&
+            filteredInterviewHistory.length === 0 ? (
             <InterviewEmptyState
               search={searchQuery}
               title="No interviews found"

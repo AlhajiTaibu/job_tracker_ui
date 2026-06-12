@@ -53,7 +53,6 @@ import {
   useDocuments,
   useHandleDeleteDocument,
   useHandleDocumentStatus,
-  useHandleEditDocument,
   useHandleLinkDocumentToApplication,
   useHandleUnLinkDocumentToApplication,
   useHandleUploadDocument,
@@ -91,11 +90,6 @@ const DocumentPurposes: {
   },
   { value: "other", label: "Other", icon: <File className="h-4 w-4" /> },
 ];
-
-// const nextStatusMap: Partial<Record<DocumentStatus, DocumentStatus>> = {
-//   completed: "pending",
-//   pending: "ready",
-// };
 
 function getStatusStyles(status: DocumentStatus) {
   switch (status) {

@@ -3,8 +3,8 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { getQueryClient } from "@/lib/get-query-client";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
-import { DashboardSkeleton } from "@/components/dashboard-skeleton";
 import { getProfileQueryOptions } from "@/hooks/use-profile";
+import { GeneralSkeleton } from "@/components/general-skeleton";
 
 export default async function SettingsPage() {
   const queryClient = getQueryClient();
@@ -13,7 +13,7 @@ export default async function SettingsPage() {
   await queryClient.prefetchQuery(getProfileQueryOptions(cookieStore));
 
   return (
-    <Suspense fallback={<DashboardSkeleton />}>
+    <Suspense fallback={<GeneralSkeleton />}>
       <HydrationBoundary state={dehydrate(queryClient)}>
         <SettingsClient />
       </HydrationBoundary>

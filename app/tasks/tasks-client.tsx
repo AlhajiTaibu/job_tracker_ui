@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Filter, Plus } from "lucide-react";
+import { Filter, Plus } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import TaskFormModal from "@/components/ui/task-form-modal";
 import {
@@ -16,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { TaskCard } from "@/components/ui/task-card";
 import { Hamburger } from "@/components/ui/hamburger";
-import { Task, TaskType, TaskStatus, TaskResponse } from "@/lib/types";
+import { TaskType, TaskStatus } from "@/lib/types";
 import {
   useDailyTasks,
   useHandleDeleteTask,
@@ -25,13 +24,9 @@ import {
   useOverdueTasks,
   useUpcomingTasks,
   useHandleCompleteTask,
-  getUpcomingTasksQueryOptions,
-  getOverdueTasksQueryOptions,
-  getDailyTasksQueryOptions,
 } from "@/hooks/use-task";
 import { useTaskStore } from "@/hooks/use-task-store";
 import ViewTaskModal from "@/components/ui/view-task-modal";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 const statusLabelMap = {
   pending: "Pending",

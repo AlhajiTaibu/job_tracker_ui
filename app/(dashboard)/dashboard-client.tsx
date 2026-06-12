@@ -11,18 +11,19 @@ import { ViewJobSheet } from "@/components/view-job-sheet";
 import type { JobApplication, JobStatus } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter, useSearchParams } from "next/navigation";
-import { fetchJobs, useJobs } from "@/hooks/use-jobs";
-import { useSuspenseQuery, useQuery } from "@tanstack/react-query";
+import { useJobs } from "@/hooks/use-jobs";
 import {
   DndContext,
   DragEndEvent,
   DragStartEvent,
   PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
 import { useJobStore } from "@/hooks/use-job-store";
-import { useHandleMove } from "@/hooks/use-move-job";
+import { useHandleMove } from "@/hooks/use-jobs";
 import { useProfile } from "@/hooks/use-profile";
 import { Hamburger } from "@/components/ui/hamburger";
 import { Profile } from "@/lib/types";
@@ -87,9 +88,15 @@ export default function DashboardClient() {
   const selectedJob = jobs.find((job) => job.id === selectedJobId) ?? null;
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 8,
       },
     }),
   );
@@ -139,7 +146,7 @@ export default function DashboardClient() {
     if (!canMove(job.status, newStatus)) {
       setActiveJob(null);
     }
-    handleMove(jobId, newStatus);
+    handleMove(jobId, job.status, newStatus);
     setActiveJob(null);
   };
 
@@ -147,16 +154,6 @@ export default function DashboardClient() {
     setActiveJob(null);
   };
 
-  // const filteredJobs = useMemo(() => {
-  //   const query = searchQuery.trim().toLowerCase();
-  //   if (!query) return jobs;
-
-  //   return jobs.filter(
-  //     (job) =>
-  //       job.company_name?.toLowerCase().includes(query) ||
-  //       job.job_title?.toLowerCase().includes(query),
-  //   );
-  // }, [jobs, searchQuery]);
   const filteredJobs = jobs;
 
   const jobsByStatus: Record<JobStatus, JobApplication[]> = useMemo(() => {

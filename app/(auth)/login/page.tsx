@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-// import { useSearchParams } from "next/navigation";
 import {
   Briefcase,
   Mail,
@@ -29,8 +28,7 @@ export default function LoginPage() {
   const [serverError, setServerError] = useState("");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  // const searchParams = useSearchParams();
-  // const error = searchParams.get("error");
+  const [submittingForm, setSubmittingForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,14 +59,13 @@ export default function LoginPage() {
     setMessage("");
 
     try {
-      const response = await clientPost<{ message?: string }>(
-        "/api/auth/login",
-        values,
-      );
-      setMessage(response.message || "Login successful! Redirecting...");
-      router.push("/");
+      setSubmittingForm(true);
+      await clientPost<{ message?: string }>("/api/auth/login", values);
+      router.replace("/");
     } catch (error: any) {
       setServerError(error instanceof Error ? error.message : "Login failed");
+    } finally {
+      setSubmittingForm(false);
     }
   };
 
@@ -231,7 +228,7 @@ export default function LoginPage() {
               <Checkbox
                 id="remember"
                 checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                onCheckedChange={(checked) => setRememberMe(checked === true)}
               />
               <Label
                 htmlFor="remember"

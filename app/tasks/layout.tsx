@@ -1,4 +1,5 @@
 import { DashboardSkeleton } from "@/components/dashboard-skeleton";
+import { GeneralSkeleton } from "@/components/general-skeleton";
 import { Suspense } from "react";
 
 export default function TasksLayout({
@@ -6,5 +7,5 @@ export default function TasksLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <Suspense fallback={<DashboardSkeleton />}>{children}</Suspense>;
+  return <Suspense fallback={<GeneralSkeleton />}>{children}</Suspense>;
 }

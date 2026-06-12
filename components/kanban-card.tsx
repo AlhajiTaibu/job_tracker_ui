@@ -32,8 +32,8 @@ import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { useJobStore } from "@/hooks/use-job-store";
-import { useHandleMove, useMoveStore } from "@/hooks/use-move-job";
-import { useHandleJobDelete } from "@/hooks/use-edit-job";
+import { useHandleMove, useMoveStore } from "@/hooks/use-jobs";
+import { useHandleJobDelete } from "@/hooks/use-jobs";
 import { getStatusClasses } from "@/lib/utils";
 
 interface KanbanCardProps {
@@ -190,7 +190,7 @@ export function KanbanCard({ job, addStatus = false }: KanbanCardProps) {
                       {moveStatuses.map((status) => (
                         <DropdownMenuItem
                           key={status}
-                          onClick={() => handleMove(job.id, status)}
+                          onClick={() => handleMove(job.id, job.status, status)}
                         >
                           {status}
                         </DropdownMenuItem>

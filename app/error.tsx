@@ -18,7 +18,7 @@ export default function Error({
       <div>
         <h2 className="text-xl font-semibold">Something went wrong</h2>
         <p className="text-sm text-muted-foreground">
-          We couldn’t load the dashboard right now.
+          We couldn&apos;t load the dashboard right now.
         </p>
       </div>
 

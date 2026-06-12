@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { clientPost, clientGet } from "@/lib/client-auth";
+import { clientPost } from "@/lib/client-auth";
 import { registerSchema, RegisterInput } from "@/lib/schemas/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 
