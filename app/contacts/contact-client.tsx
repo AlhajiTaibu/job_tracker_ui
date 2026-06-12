@@ -11,7 +11,6 @@ import {
   MoreHorizontal,
   Calendar,
   StickyNote,
-  Globe,
   Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

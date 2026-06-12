@@ -25,7 +25,7 @@ const getProfile = async (cookieStore: ReadonlyRequestCookies = {} as ReadonlyRe
             headers: {
                 cookie: cookieStore.toString(),
             },
-            next: { revalidate: 60 },
+            // next: { revalidate: 60 },
         });
     } else {
         res = await fetch("/api/me/get")

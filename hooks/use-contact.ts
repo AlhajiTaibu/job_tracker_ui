@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useInfiniteQuery, keepPreviousData, InfiniteData } from "@tanstack/react-query";
 import { ContactResponse, ContactType, NoteLog } from "@/lib/types";
 import { useCallback } from "react";
 import { useToast } from "./use-toast";
@@ -36,7 +36,7 @@ const fetchContacts = async ({
             headers: {
                 cookie: cookieStore.toString(),
             },
-            next: { revalidate: 60 },
+            // next: { revalidate: 60 },
         });
     } else {
         const baseUrl = typeof window !== 'undefined'
@@ -173,9 +173,9 @@ const useAddContact = () => {
         mutationFn: addContact,
         onMutate: async (newContact) => {
             await queryClient.cancelQueries({ queryKey: ["contacts"] });
-            const previousData = queryClient.getQueryData<ContactResponse>(["contacts"]);
+            const previousData = queryClient.getQueriesData({ queryKey: ["contacts"] });
 
-            queryClient.setQueryData<ContactResponse>(['contacts'], (old) => {
+            queryClient.setQueriesData({ queryKey: ['contacts'] }, (old: InfiniteData<ContactResponse | undefined>) => {
                 if (!old) return old
 
                 const optimisticContact = {
@@ -192,18 +192,26 @@ const useAddContact = () => {
 
                 return {
                     ...old,
-                    payload: {
-                        ...old.payload,
-                        data: [...(old.payload.data ?? []), optimisticContact],
-                    },
+                    pages: old.pages.map((page, index) => {
+                        if (index !== 0) return page
+
+                        return {
+                            ...page,
+                            payload: {
+                                ...page?.payload,
+                                data: [...(page?.payload.data ?? []), optimisticContact],
+                            },
+                        }
+                    })
                 }
+
             })
             return { previousData }
         },
-        onError: (err, newContact, context) => {
-            if (context?.previousData) {
-                queryClient.setQueryData(["contacts"], context.previousData);
-            }
+        onError: (_err, _newContact, context) => {
+            context?.previousData?.forEach(([queryKey, data]) => {
+                queryClient.setQueryData(queryKey, data)
+            })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["contacts"] });
@@ -218,9 +226,9 @@ const useUpdateContact = () => {
         mutationFn: updateContact,
         onMutate: async ({ contact_id, updatedData }) => {
             await queryClient.cancelQueries({ queryKey: ["contacts"] });
-            const previousData = queryClient.getQueryData<ContactResponse>(["contacts"]);
+            const previousData = queryClient.getQueriesData({ queryKey: ["contacts"] });
 
-            queryClient.setQueryData<ContactResponse>(['contacts'], (old) => {
+            queryClient.setQueriesData({ queryKey: ['contacts'] }, (old: InfiniteData<ContactResponse | undefined>) => {
                 if (!old) return old
                 const newUpdatedData = {
                     ...updatedData,
@@ -234,23 +242,30 @@ const useUpdateContact = () => {
 
                 return {
                     ...old,
-                    payload: {
-                        ...old.payload,
-                        data: old.payload.data?.map((contact) =>
-                            contact.id === contact_id ? { ...contact, ...newUpdatedData } : contact
-                        ),
-                    },
+                    pages: old.pages.map((page, index) => {
+                        if (index !== 0) return page
+                        return {
+                            ...page,
+                            payload: {
+                                ...page?.payload,
+                                data: page?.payload.data?.map((contact) =>
+                                    contact.id === contact_id ? { ...contact, ...newUpdatedData } : contact
+                                ),
+                            },
+                        }
+                    })
                 }
             })
             return { previousData }
         },
-        onError: (err, variables, context) => {
-            if (context?.previousData) {
-                queryClient.setQueryData(["contacts"], context.previousData);
-            }
+        onError: (_err, _variables, context) => {
+            context?.previousData?.forEach(([queryKey, data]) => {
+                queryClient.setQueryData(queryKey, data)
+            })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["contacts"] });
+            queryClient.invalidateQueries({ queryKey: ['jobs'] })
         },
     });
 }
@@ -274,45 +289,51 @@ const useUnLinkContactToApplication = () => {
         mutationFn: ({ contact_id, application_id }: { contact_id: string, application_id: string }) => unlinkContactToApplication({ contact_id, application_id }),
         onMutate: async ({ contact_id, application_id }) => {
             await queryClient.cancelQueries({ queryKey: ["contacts"] });
-            const previousData = queryClient.getQueryData<ContactResponse>(["contacts"]);
-            queryClient.setQueryData(["contacts"], (old: any) => {
-                if (!old?.payload?.data) return old;
+            const previousData = queryClient.getQueriesData({ queryKey: ["contacts"] });
+            queryClient.setQueriesData({ queryKey: ["contacts"] }, (old: InfiniteData<any>) => {
+                if (!old) return old;
 
                 return {
                     ...old,
-                    payload: {
-                        ...old.payload,
-                        data: old.payload.data.map((contact: any) => {
-                            if (contact.id !== contact_id) return contact;
+                    pages: old.pages.map((page, index) => {
+                        if (index !== 0) return page
+                        return {
+                            ...page,
+                            payload: {
+                                ...page.payload,
+                                data: page.payload.data.map((contact: any) => {
+                                    if (contact.id !== contact_id) return contact;
 
-                            return {
-                                ...contact,
-                                job_applications: contact.job_applications?.filter(
-                                    (job: any) => job.id !== application_id
-                                ) ?? [],
-                            };
-                        }),
-                    },
-                };
+                                    return {
+                                        ...contact,
+                                        job_applications: contact.job_applications?.filter(
+                                            (job: any) => job.id !== application_id
+                                        ) ?? [],
+                                    };
+                                }),
+                            },
+                        }
+                    })
+                }
+
+                // return {
+                //     ...old,
+                //     payload: {
+                //         ...old.payload,
+                //         data: old.payload.data.map((contact: any) => {
+                //             if (contact.id !== contact_id) return contact;
+
+                //             return {
+                //                 ...contact,
+                //                 job_applications: contact.job_applications?.filter(
+                //                     (job: any) => job.id !== application_id
+                //                 ) ?? [],
+                //             };
+                //         }),
+                //     },
+                // };
             });
 
-            // queryClient.setQueryData<ContactResponse>(['contacts'], (old) => {
-            //     if (!old) return old
-
-            //     return {
-            //         ...old,
-            //         payload: {
-            //             ...old.payload,
-            //             data: old.payload.data?.map((contact) => ({
-            //                 ...contact,
-            //                 job_applications: contact.job_applications?.filter(
-            //                     (job) => job.id !== application_id
-            //                 ),
-            //             })),
-
-            //         },
-            //     }
-            // })
             return { previousData }
 
         },
@@ -330,28 +351,36 @@ const useDeleteContact = () => {
         mutationFn: deleteContact,
         onMutate: async (contact_id) => {
             await queryClient.cancelQueries({ queryKey: ["contacts"] });
-            const previousData = queryClient.getQueryData<ContactResponse>(["contacts"]);
+            const previousData = queryClient.getQueriesData({ queryKey: ["contacts"] });
 
-            queryClient.setQueryData<ContactResponse>(['contacts'], (old) => {
+            queryClient.setQueriesData({ queryKey: ['contacts'] }, (old: InfiniteData<ContactResponse | undefined>) => {
                 if (!old) return old
 
                 return {
                     ...old,
-                    payload: {
-                        ...old.payload,
-                        data: old.payload.data?.filter((contact) => contact.id !== contact_id),
-                    },
+                    pages: old.pages.map((page, index) => {
+                        if (index !== 0) return page
+
+                        return {
+                            ...page,
+                            payload: {
+                                ...page?.payload,
+                                data: page?.payload.data?.filter((contact) => contact.id !== contact_id),
+                            },
+                        }
+                    })
                 }
             })
             return { previousData }
         },
-        onError: (err, contact_id, context) => {
-            if (context?.previousData) {
-                queryClient.setQueryData(["contacts"], context.previousData);
-            }
+        onError: (_err, _contact_id, context) => {
+            context?.previousData?.forEach(([queryKey, data]) => {
+                queryClient.setQueryData(queryKey, data)
+            })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["contacts"] });
+            queryClient.invalidateQueries({ queryKey: ['jobs'] })
         },
     });
 }

@@ -42,7 +42,7 @@ export default function ResetPasswordPage() {
         values,
       );
       setMessage(res.message || "Password Reset Successfully");
-      router.push("/login");
+      router.replace("/login");
     } catch (error) {
       setServerError(
         error instanceof Error ? error?.message : "Password reset failed",

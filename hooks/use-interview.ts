@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery, keepPreviousData, InfiniteData } from "@tanstack/react-query";
 import { InterviewFormat, InterviewOutcome, InterviewResponse } from "@/lib/types";
 import { useCallback } from "react";
 import { useToast } from "./use-toast";
@@ -37,7 +37,7 @@ const fetchUpcomingInterviews = async ({ search = "", limit = 20, cookieStore = 
             headers: {
                 cookie: cookieStore.toString(),
             },
-            next: { revalidate: 60 },
+            // next: { revalidate: 60 },
         });
     } else {
         const params = new URLSearchParams()
@@ -63,7 +63,7 @@ const fetchInterviewHistory = async ({ filters = {}, search = "", cursor = null,
             headers: {
                 cookie: cookieStore.toString(),
             },
-            next: { revalidate: 60 },
+            // next: { revalidate: 60 },
         });
     } else {
         const params = new URLSearchParams()
@@ -173,9 +173,9 @@ const useAddInterview = () => {
         mutationFn: addInterview,
         onMutate: async (newInterview) => {
             await queryClient.cancelQueries({ queryKey: ["upcoming-interviews"] });
-            const previousData = queryClient.getQueryData<InterviewResponse>(["upcoming-interviews"]);
+            const previousData = queryClient.getQueriesData({ queryKey: ["upcoming-interviews"] });
 
-            queryClient.setQueryData<InterviewResponse>(['upcoming-interviews'], (old) => {
+            queryClient.setQueriesData({ queryKey: ['upcoming-interviews'] }, (old: InfiniteData<InterviewResponse | undefined>) => {
                 if (!old) return old
 
                 const optimisticInterview = {
@@ -192,22 +192,30 @@ const useAddInterview = () => {
 
                 return {
                     ...old,
-                    payload: {
-                        ...old.payload,
-                        data: [...(old.payload.data ?? []), optimisticInterview],
-                    },
+                    pages: old.pages.map((page, index) => {
+                        if (index !== 0) return page
+
+                        return {
+                            ...page,
+                            payload: {
+                                ...page?.payload,
+                                data: [...(page?.payload.data ?? []), optimisticInterview],
+                            },
+                        }
+                    })
                 }
             })
             return { previousData }
         },
-        onError: (err, newInterview, context) => {
-            if (context?.previousData) {
-                queryClient.setQueryData(["upcoming-interviews"], context.previousData);
-            }
+        onError: (_err, _newInterview, context) => {
+            context?.previousData?.forEach(([queryKey, data]) => {
+                queryClient.setQueryData(queryKey, data)
+            })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["upcoming-interviews"] });
             queryClient.invalidateQueries({ queryKey: ["interviews-history"] });
+            queryClient.invalidateQueries({ queryKey: ['jobs'] })
         },
     });
 }
@@ -219,9 +227,9 @@ const useUpdateInterview = () => {
         mutationFn: updateInterview,
         onMutate: async ({ interview_id, updatedData }) => {
             await queryClient.cancelQueries({ queryKey: ["upcoming-interviews"] });
-            const previousData = queryClient.getQueryData<InterviewResponse>(["upcoming-interviews"]);
+            const previousData = queryClient.getQueriesData({ queryKey: ["upcoming-interviews"] });
 
-            queryClient.setQueryData<InterviewResponse>(['upcoming-interviews'], (old) => {
+            queryClient.setQueriesData({ queryKey: ['upcoming-interviews'] }, (old: InfiniteData<InterviewResponse | undefined>) => {
                 if (!old) return old
                 const newUpdatedData = {
                     ...updatedData
@@ -229,24 +237,32 @@ const useUpdateInterview = () => {
 
                 return {
                     ...old,
-                    payload: {
-                        ...old.payload,
-                        data: old.payload.data?.map((interview) =>
-                            interview.id === interview_id ? { ...interview, ...newUpdatedData } : interview
-                        ),
-                    },
+                    pages: old.pages.map((page, index) => {
+                        if (index !== 0) return page
+
+                        return {
+                            ...page,
+                            payload: {
+                                ...page?.payload,
+                                data: page?.payload.data?.map((interview) =>
+                                    interview.id === interview_id ? { ...interview, ...newUpdatedData } : interview
+                                ),
+                            },
+                        }
+                    })
                 }
             })
             return { previousData }
         },
-        onError: (err, variables, context) => {
-            if (context?.previousData) {
-                queryClient.setQueryData(["upcoming-interviews"], context.previousData);
-            }
+        onError: (_err, _variables, context) => {
+            context?.previousData?.forEach(([queryKey, data]) => {
+                queryClient.setQueryData(queryKey, data)
+            })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["upcoming-interviews"] });
             queryClient.invalidateQueries({ queryKey: ["interviews-history"] });
+            queryClient.invalidateQueries({ queryKey: ['jobs'] })
         },
     });
 }
@@ -258,29 +274,38 @@ const useDeleteInterview = () => {
         mutationFn: deleteInterview,
         onMutate: async (interview_id) => {
             await queryClient.cancelQueries({ queryKey: ["upcoming-interviews"] });
-            const previousData = queryClient.getQueryData<InterviewResponse>(["upcoming-interviews"]);
+            const previousData = queryClient.getQueriesData({ queryKey: ["upcoming-interviews"] });
 
-            queryClient.setQueryData<InterviewResponse>(['upcoming-interviews'], (old) => {
+            queryClient.setQueriesData({ queryKey: ['upcoming-interviews'] }, (old: InfiniteData<InterviewResponse | undefined>) => {
                 if (!old) return old
 
                 return {
                     ...old,
-                    payload: {
-                        ...old.payload,
-                        data: old.payload.data?.filter((interview) => interview.id !== interview_id),
-                    },
+                    pages: old.pages.map((page, index) => {
+                        if (index !== 0) return page
+
+                        return {
+                            ...page,
+                            payload: {
+                                ...page?.payload,
+                                data: page?.payload.data?.filter((interview) => interview.id !== interview_id),
+                            },
+                        }
+                    })
                 }
+
             })
             return { previousData }
         },
-        onError: (err, interview_id, context) => {
-            if (context?.previousData) {
-                queryClient.setQueryData(["upcoming-interviews"], context.previousData);
-            }
+        onError: (_err, _interview_id, context) => {
+            context?.previousData?.forEach(([queryKey, data]) => {
+                queryClient.setQueryData(queryKey, data)
+            })
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["upcoming-interviews"] });
             queryClient.invalidateQueries({ queryKey: ["interviews-history"] });
+            queryClient.invalidateQueries({ queryKey: ['jobs'] })
         },
     });
 }
@@ -298,13 +323,6 @@ export const getUpcomingInterviewsQueryOptions = ({
 
 const useUpcomingInterviews = ({ search = "", limit = 20 }: InterviewParams) => {
     return useQuery(getUpcomingInterviewsQueryOptions({ search, limit }));
-    // return useQuery({
-    //     queryKey: ["upcoming-interviews", { search, limit }],
-    //     queryFn: () => fetchUpcomingInterviews({ search, limit }),
-    //     staleTime: Infinity,
-    //     gcTime: 10 * 60 * 1000,
-    //     enabled: search.trim().length === 0 || search.trim().length >= 3,
-    // });
 };
 
 export const getInterviewsHistoryQueryOptions = ({
@@ -325,17 +343,6 @@ export const getInterviewsHistoryQueryOptions = ({
 
 const useInterviewsHistory = ({ filters = {}, search = "", limit = 20 }: Omit<InterviewParams, "cursor"> = {}) => {
     return useInfiniteQuery(getInterviewsHistoryQueryOptions({ filters, search, limit }));
-    // return useInfiniteQuery({
-    //     queryKey: ["interviews-history", { search, filters, limit }],
-    //     queryFn: ({ pageParam = null }) => fetchInterviewHistory({ search, filters, cursor: pageParam, limit }),
-    //     getNextPageParam: (lastPage) => lastPage.payload?.next_cursor ?? undefined,
-    //     placeholderData: keepPreviousData,
-    //     initialPageParam: null as string | null,
-    //     enabled: search.trim().length === 0 || search.trim().length >= 3,
-    //     staleTime: Infinity,
-    //     gcTime: 10 * 60 * 1000,
-    //     refetchOnMount: true
-    // })
 };
 
 const useJobInterviews = ({ job_id, limit = 20 }: { job_id: string; limit?: number }) => {
