@@ -177,7 +177,7 @@ const useAddContact = () => {
 
             queryClient.setQueriesData({ queryKey: ['contacts'] }, (old: InfiniteData<ContactResponse | undefined>) => {
                 if (!old) return old
-
+                console.log(old)
                 const optimisticContact = {
                     ...newContact,
                     id: crypto.randomUUID(),

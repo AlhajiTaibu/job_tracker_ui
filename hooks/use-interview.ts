@@ -168,9 +168,8 @@ const useEditInterviewStore = create<EditInterviewStore>((set) => ({
 
 const useAddInterview = () => {
     const queryClient = useQueryClient();
-
     return useMutation({
-        mutationFn: addInterview,
+        mutationFn: (data: InterviewInput) => addInterview(data),
         onMutate: async (newInterview) => {
             await queryClient.cancelQueries({ queryKey: ["upcoming-interviews"] });
             const previousData = queryClient.getQueriesData({ queryKey: ["upcoming-interviews"] });
@@ -189,7 +188,6 @@ const useAddInterview = () => {
                     round: 1,
                     created_at: new Date().toISOString(),
                 }
-
                 return {
                     ...old,
                     pages: old.pages.map((page, index) => {
@@ -278,7 +276,6 @@ const useDeleteInterview = () => {
 
             queryClient.setQueriesData({ queryKey: ['upcoming-interviews'] }, (old: InfiniteData<InterviewResponse | undefined>) => {
                 if (!old) return old
-
                 return {
                     ...old,
                     pages: old.pages.map((page, index) => {
@@ -315,14 +312,17 @@ export const getUpcomingInterviewsQueryOptions = ({
     limit = 20,
     cookieStore = {} as ReadonlyRequestCookies }: InterviewParams) => ({
         queryKey: ["upcoming-interviews", { search, limit }],
-        queryFn: () => fetchUpcomingInterviews({ search, limit, cookieStore }),
+        queryFn: ({ pageParam = null }: { pageParam: string | null }) => fetchUpcomingInterviews({ search, cursor: pageParam, limit, cookieStore }),
+        getNextPageParam: (lastPage: InterviewResponse) => lastPage.payload?.next_cursor ?? undefined,
+        placeholderData: keepPreviousData,
+        initialPageParam: null as string | null,
+        enabled: search.trim().length === 0 || search.trim().length >= 3,
         staleTime: Infinity,
         gcTime: 10 * 60 * 1000,
-        enabled: search.trim().length === 0 || search.trim().length >= 3,
     })
 
 const useUpcomingInterviews = ({ search = "", limit = 20 }: InterviewParams) => {
-    return useQuery(getUpcomingInterviewsQueryOptions({ search, limit }));
+    return useInfiniteQuery(getUpcomingInterviewsQueryOptions({ search, limit }));
 };
 
 export const getInterviewsHistoryQueryOptions = ({
@@ -354,14 +354,14 @@ const useJobInterviews = ({ job_id, limit = 20 }: { job_id: string; limit?: numb
 };
 
 const useHandleAddInterview = () => {
-    const { mutateAsync: addInterviewAsync } = useAddInterview();
+    const { mutateAsync } = useAddInterview();
     const { toast } = useToast();
     const setIsSubmitting = useAddInterviewStore((state) => state.setSubmitting);
 
     const handleAddInterview = useCallback(async (newInterview: InterviewInput) => {
         try {
             setIsSubmitting(true);
-            await addInterviewAsync(newInterview);
+            await mutateAsync(newInterview);
             toast({
                 title: "Success",
                 description: "Interview added successfully",
@@ -375,7 +375,7 @@ const useHandleAddInterview = () => {
         } finally {
             setIsSubmitting(false);
         }
-    }, [addInterviewAsync, toast, setIsSubmitting]);
+    }, [mutateAsync, toast, setIsSubmitting]);
 
     return { handleAddInterview };
 }
