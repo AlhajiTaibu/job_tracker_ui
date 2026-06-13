@@ -14,7 +14,7 @@ export default async function InterviewsPage() {
   const cookieStore = await cookies();
 
   await Promise.all([
-    queryClient.prefetchQuery(
+    queryClient.prefetchInfiniteQuery(
       getUpcomingInterviewsQueryOptions({ cookieStore }),
     ),
     queryClient.prefetchInfiniteQuery(
