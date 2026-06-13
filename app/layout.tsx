@@ -10,9 +10,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "JobTracker - Track Your Job Applications",
+  title: "JobTrackerUI - Smart Job Application Tracker",
   description:
-    "A modern job application tracker to organize your job search journey",
+    "Track your job applications, interview schedules, and career progress in one place.",
   generator: "v0.app",
   icons: {
     icon: [
@@ -30,6 +30,9 @@ export const metadata: Metadata = {
       },
     ],
     apple: "/apple-icon.png",
+  },
+  verification: {
+    google: "googleb96167f9c2abe4a9",
   },
 };
 
