@@ -261,7 +261,9 @@ export default function InterviewsClient() {
     });
 
   const isInitialLoading = upcompingLoading || historyLoading;
-  const upcomingInterviews = upcomingInterviewsData?.payload.data ?? [];
+  const upcomingInterviews =
+    upcomingInterviewsData?.pages.flatMap((page) => page.payload?.data ?? []) ??
+    [];
   const interviewsHistory =
     interviewsHistoryData?.pages.flatMap((page) => page.payload?.data ?? []) ??
     [];

@@ -292,6 +292,7 @@ export function AddInterviewSheet({
       };
       handleAddInterview(data);
     }
+    reset();
     onOpenChange(false);
   };
 
@@ -464,7 +465,11 @@ export function AddInterviewSheet({
                             <span className="h-4 w-4">
                               <Rocket />
                             </span>
-                            <span>Round 1</span>
+                            <span>
+                              {field.value
+                                ? `Round ${field.value}`
+                                : "Select round"}
+                            </span>
                           </div>
                         </SelectValue>
                       </SelectTrigger>
