@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { Metadata } from "next";
 import {
   Briefcase,
   Mail,
@@ -20,6 +21,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { clientPost } from "@/lib/client-auth";
 import { registerSchema, RegisterInput } from "@/lib/schemas/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 export default function RegisterPage() {
   const router = useRouter();
