@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query"
+import { useQueryClient, useQuery, useMutation, queryOptions } from "@tanstack/react-query"
 import { ProfileResponse } from "@/lib/types"
 import { useCallback } from "react"
 import { useToast } from "./use-toast"
@@ -31,9 +31,11 @@ const getProfile = async (cookieStore: ReadonlyRequestCookies = {} as ReadonlyRe
         res = await fetch("/api/me/get")
     }
 
+
     if (!res.ok) {
-        const errorText = await res.statusText
-        throw new Error(errorText || "Profile retrieval failed")
+        const error: any = new Error("Failed to fetch profile")
+        error.status = res.status
+        throw error
     }
 
     return res.json()
@@ -86,9 +88,14 @@ const useUploadAvatar = () => {
     })
 }
 
-export const getProfileQueryOptions = (cookieStore: ReadonlyRequestCookies = {} as ReadonlyRequestCookies) => ({
+export const getProfileQueryOptions = (cookieStore: ReadonlyRequestCookies = {} as ReadonlyRequestCookies) => queryOptions({
     queryKey: ['profile'] as const,
     queryFn: () => getProfile(cookieStore),
+    retry: (failureCount, error: any) => {
+        const status = error?.status || error?.response?.status
+        if (status === 401 || status === 400) return false
+        return failureCount < 2
+    },
     staleTime: Infinity,
     gcTime: 10 * 60 * 1000,
 })
