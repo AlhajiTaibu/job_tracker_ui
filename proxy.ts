@@ -28,7 +28,7 @@ export function proxy(request: NextRequest) {
 
     const isAuthenticated = !!(access_token || refresh_token || accessToken || refreshToken)
 
-    const isProtected = pathname === "/" || protectedRoutes.some((route) => pathname.startsWith(route))
+    const isProtected = pathname === "/dashboard" || protectedRoutes.some((route) => pathname.startsWith(route))
     const isAuthPage = authRoutes.some((route) => pathname.startsWith(route))
     const isPasswordResetPage = passwordResetRoute.some((route) => pathname.startsWith(route))
 
@@ -37,7 +37,7 @@ export function proxy(request: NextRequest) {
     }
 
     if (isAuthPage && isAuthenticated) {
-        return NextResponse.redirect(new URL("/", request.url))
+        return NextResponse.redirect(new URL("/dashboard", request.url))
     }
 
     if (isPasswordResetPage && !reset_token) {
@@ -68,7 +68,6 @@ export function proxy(request: NextRequest) {
 
 export const config = {
     matcher: [
-        "/",
         "/dashboard/:path*",
         "/profile/:path*",
         "/applications/:path*",
