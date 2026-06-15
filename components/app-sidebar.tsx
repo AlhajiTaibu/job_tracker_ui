@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { useJobs } from "@/hooks/use-jobs";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Briefcase, label: "Applications", href: "/applications" },
   { icon: Presentation, label: "Interviews", href: "/interviews" },
   { icon: Users, label: "Contacts", href: "/contacts" },

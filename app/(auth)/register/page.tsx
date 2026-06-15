@@ -75,9 +75,12 @@ export default function RegisterPage() {
         </div>
 
         {/* Logo */}
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <Briefcase className="h-5 w-5 text-primary-foreground" />
+        <div
+          onClick={() => router.push("/")}
+          className="relative z-10 flex items-center gap-3 cursor-pointer"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
+            <Briefcase className="h-5 w-5 shrink-0 text-primary-foreground" />
           </div>
           <span className="text-xl font-semibold text-foreground">
             JobTracker
@@ -138,8 +141,11 @@ export default function RegisterPage() {
       {/* Right Side - Register Form */}
       <div className="flex w-full lg:w-1/2 flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 xl:px-24">
         {/* Mobile Logo */}
-        <div className="mb-8 flex items-center gap-3 lg:hidden">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
+        <div
+          onClick={() => router.push("/")}
+          className="mb-8 flex items-center gap-3 lg:hidden cursor-pointer"
+        >
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent">
             <Briefcase className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-xl font-semibold text-foreground">
