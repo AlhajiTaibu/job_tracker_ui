@@ -27,6 +27,7 @@ import { useHandleMove } from "@/hooks/use-jobs";
 import { useProfile } from "@/hooks/use-profile";
 import { Hamburger } from "@/components/ui/hamburger";
 import { Profile } from "@/lib/types";
+import { AppHeader } from "@/components/app-header";
 
 const columns: { status: JobStatus; title: string; color: string }[] = [
   { status: "saved", title: "Saved", color: "bg-slate-400" },
@@ -190,6 +191,7 @@ export default function DashboardClient() {
       .toUpperCase() || "JD";
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const description = `${activeApplications} active out of ${totalApplications} total`;
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -200,7 +202,7 @@ export default function DashboardClient() {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        {/* <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
           <div className="flex items-center justify-between">
             <div>
@@ -252,7 +254,16 @@ export default function DashboardClient() {
               </Avatar>
             </button>
           </div>
-        </header>
+        </header> */}
+        <AppHeader
+          headerTitle="Dashboard"
+          headerDescription={description}
+          searchQuery={searchQuery}
+          profile={profile}
+          setSearchQuery={setSearchQuery}
+          setMobileOpen={setMobileOpen}
+          onAddNew={handleAddClick}
+        />
 
         {/* Kanban Board */}
         <main className="flex-1 overflow-auto p-4 sm:p-6">
