@@ -11,8 +11,8 @@ import { InterviewAnalyticsSection } from "@/components/interview-analytics-sect
 import { FollowUpAnalyticsSection } from "@/components/follow-up-analytics-section";
 import { AnalyticsInsightsSection } from "@/components/analytics-insights-section";
 import { useState } from "react";
-import { Hamburger } from "@/components/ui/hamburger";
 import { useAnalyticsDashboard } from "@/hooks/use-analytics-dashboard";
+import { AppHeader } from "@/components/app-header";
 
 export default function AnalyticsClient() {
   const {
@@ -48,20 +48,13 @@ export default function AnalyticsClient() {
         onMobileClose={() => setMobileOpen(false)}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-foreground sm:text-xl">
-                Analytics
-              </h1>
-              <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-                Funnel, activity, sourcing, interviews, follow-ups, and pipeline
-                health
-              </p>
-            </div>
-          </div>
-        </header>
+        <AppHeader
+          headerTitle="Analytics"
+          headerDescription={
+            "Funnel, activity, sourcing, interviews, follow-ups, and pipeline health"
+          }
+          setMobileOpen={setMobileOpen}
+        />
         <main className="flex-1 overflow-auto p-4 sm:p-6 space-y-6">
           <AnalyticsOverviewCards
             totalApplications={jobs.length}

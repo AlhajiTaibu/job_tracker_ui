@@ -1,20 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Filter, Plus } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { Button } from "@/components/ui/button";
 import TaskFormModal from "@/components/ui/task-form-modal";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { TaskCard } from "@/components/ui/task-card";
-import { Hamburger } from "@/components/ui/hamburger";
 import { TaskType, TaskStatus } from "@/lib/types";
 import {
   useDailyTasks,
@@ -27,6 +17,7 @@ import {
 } from "@/hooks/use-task";
 import { useTaskStore } from "@/hooks/use-task-store";
 import ViewTaskModal from "@/components/ui/view-task-modal";
+import { AppHeader } from "@/components/app-header";
 
 const statusLabelMap = {
   pending: "Pending",
@@ -35,78 +26,18 @@ const statusLabelMap = {
   snoozed: "Snoozed",
 } as const;
 
-const taskStatusType: Record<
-  TaskStatus,
-  { label: string; color: string; bgColor: string }
-> = {
-  pending: {
-    label: "Pending",
-    color: "text-yellow-700",
-    bgColor: "bg-yellow-100",
-  },
-  completed: {
-    label: "Completed",
-    color: "text-green-700",
-    bgColor: "bg-green-100",
-  },
-  cancelled: {
-    label: "Cancelled",
-    color: "text-red-700",
-    bgColor: "bg-red-100",
-  },
-  snoozed: {
-    label: "Snoozed",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100",
-  },
-};
-
-const taskTypeConfig: Record<
-  TaskType,
-  { label: string; color: string; bgColor: string }
-> = {
-  follow_up: {
-    label: "Follow Up",
-    color: "text-yellow-700",
-    bgColor: "bg-yellow-100",
-  },
-  thank_you: {
-    label: "Thank You",
-    color: "text-green-700",
-    bgColor: "bg-green-100",
-  },
-  confirm: {
-    label: "Confirmation",
-    color: "text-red-700",
-    bgColor: "bg-red-100",
-  },
-  reminder: {
-    label: "Reminder",
-    color: "text-blue-700",
-    bgColor: "bg-blue-100",
-  },
-  review: {
-    label: "Review",
-    color: "text-purple-700",
-    bgColor: "bg-purple-100",
-  },
-  other: {
-    label: "Other",
-    color: "text-gray-700",
-    bgColor: "bg-gray-100",
-  },
-};
-
 export default function TasksClient() {
-  const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
+  const [taskStatusFilter, setTaskStatusFilter] = useState<TaskStatus | "all">(
+    "all",
+  );
   const [typeFilter, setTypeFilter] = useState<TaskType | "all">("all");
 
   const filters = useMemo(() => {
     const f: Record<string, string> = {};
-    if (statusFilter !== "all") f.status = statusFilter;
+    if (taskStatusFilter !== "all") f.status = taskStatusFilter;
     if (typeFilter !== "all") f.task_type = typeFilter;
     return f;
-  }, [statusFilter, typeFilter]);
+  }, [taskStatusFilter, typeFilter]);
 
   const { data: upcomingTasksData } = useUpcomingTasks({ filters });
   const { data: overdueTasksData } = useOverdueTasks({ filters });
@@ -142,6 +73,7 @@ export default function TasksClient() {
   const filteredTasks = tasks;
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const description = `${filteredTasks.length} of ${tasks.length} tasks`;
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -151,86 +83,19 @@ export default function TasksClient() {
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-foreground sm:text-xl">
-                Tasks
-              </h1>
-              <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-                {filteredTasks.length} of {tasks.length} tasks
-              </p>
-            </div>
-            <Button
-              onClick={() => handleAddClick(defaultStatus)}
-              size="sm"
-              className="sm:hidden"
-            >
-              <Plus className=" h-4 w-4" />
-            </Button>
-          </div>
+        <AppHeader<TaskStatus>
+          headerTitle="Tasks"
+          headerDescription={description}
+          defaultAddValue={defaultStatus}
+          typeFilter={typeFilter}
+          taskStatusFilter={taskStatusFilter}
+          setTaskStatusFilter={setTaskStatusFilter}
+          setTypeFilter={setTypeFilter}
+          addNewText="Add Task"
+          setMobileOpen={setMobileOpen}
+          onAddNew={handleAddClick}
+        />
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* <div className="relative flex-1 sm:flex-none">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search..."
-                className="w-full pl-9 sm:w-64"
-              />
-            </div> */}
-
-            <Select
-              value={typeFilter}
-              onValueChange={(v) => setTypeFilter((v as TaskType) || "all")}
-            >
-              <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder="All Types" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {(Object.keys(taskTypeConfig) as TaskType[]).map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {taskTypeConfig[type].label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={statusFilter}
-              onValueChange={(v) => setStatusFilter(v as TaskStatus | "all")}
-            >
-              <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <SelectValue placeholder="All Statuses" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                {(Object.keys(taskStatusType) as TaskStatus[]).map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {taskStatusType[status].label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Button
-              onClick={() => handleAddClick(defaultStatus)}
-              className="hidden sm:flex"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Task
-            </Button>
-          </div>
-        </header>
         <main className="flex-1 overflow-auto bg-muted/20 p-6">
           {filteredTasks.length > 0 ? (
             <div className="space-y-8">
