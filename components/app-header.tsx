@@ -19,6 +19,7 @@ import {
   taskTypeConfig,
   taskStatusType,
   TaskStatus,
+  ContactType,
 } from "@/lib/types";
 import { useNotificationBanner } from "@/hooks/use-notification";
 import { useState, useEffect } from "react";
@@ -138,8 +139,8 @@ export function AppHeader<T>({
             {headerDescription}
           </p>
         </div>
-        {defaultAddValue && onAddNew && (
-          <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-1">
+          {defaultAddValue && onAddNew && (
             <Button
               size="sm"
               onClick={() => onAddNew(defaultAddValue)}
@@ -147,15 +148,30 @@ export function AppHeader<T>({
             >
               <Plus className="h-4 w-4" />
             </Button>
-            <div className="sm:hidden">
-              <NotificationBell
-                notifications={notifications}
-                setNotifications={setNotifications}
-              />
-            </div>
+          )}
+          <div className="sm:hidden">
+            <NotificationBell
+              notifications={notifications}
+              setNotifications={setNotifications}
+            />
           </div>
-        )}
-
+          {profile && (
+            <button
+              onClick={() => router.push("/settings")}
+              className="sm:hidden inline-flex rounded-full hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              <Avatar className="h-9 w-9 ">
+                <AvatarImage
+                  src={profile?.avatar_url || ""}
+                  alt={initials || "User avatar"}
+                />
+                <AvatarFallback className="bg-primary/10 text-lg text-primary">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          )}
+        </div>
         {quickUploadInputRef && setValue && (
           <div className="sm:hidden">
             <input
@@ -180,82 +196,41 @@ export function AppHeader<T>({
           </div>
         )}
       </div>
-      <div className="flex items-center gap-2 sm:gap-3">
-        {setSearchQuery && (
-          <div className="relative flex-1 sm:flex-none">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 sm:w-64"
-            />
-          </div>
-        )}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <div className="w-full sm:flex-1">
+          {setSearchQuery && (
+            <div className="relative flex-1 sm:flex-none">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 sm:w-64"
+              />
+            </div>
+          )}
+        </div>
+
         {statusFilter && setStatusFilter && (
-          <Select
-            value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v as JobStatus | "all")}
-          >
-            <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Filter" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {(Object.keys(statusConfig) as JobStatus[]).map((status) => (
-                <SelectItem key={status} value={status}>
-                  {statusConfig[status].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-
-        {outcomeFilter && setOutcomeFilter && (
-          <Select
-            value={outcomeFilter}
-            onValueChange={(v) =>
-              setOutcomeFilter(v as InterviewOutcome | "all")
-            }
-          >
-            <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Filter by Outcome" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Outcomes</SelectItem>
-              {(Object.keys(interviewOutcomeType) as InterviewOutcome[]).map(
-                (outcome) => (
-                  <SelectItem key={outcome} value={outcome}>
-                    {interviewOutcomeType[outcome].label}
+          <div className="w-full">
+            <Select
+              value={statusFilter}
+              onValueChange={(v) => setStatusFilter(v as JobStatus | "all")}
+            >
+              <SelectTrigger className="w-full  h-9 sm:h-10 text-xs sm:text-sm px-2 sm:px-3">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {(Object.keys(statusConfig) as JobStatus[]).map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {statusConfig[status].label}
                   </SelectItem>
-                ),
-              )}
-            </SelectContent>
-          </Select>
-        )}
-
-        {formatFilter && setFormatFilter && (
-          <Select
-            value={formatFilter}
-            onValueChange={(v) => setFormatFilter(v as InterviewFormat | "all")}
-          >
-            <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue placeholder="Filter" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Formats</SelectItem>
-              {(Object.keys(interviewFormatType) as InterviewFormat[]).map(
-                (format) => (
-                  <SelectItem key={format} value={format}>
-                    {interviewFormatType[format].label}
-                  </SelectItem>
-                ),
-              )}
-            </SelectContent>
-          </Select>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
 
         {purposeFilter && setPurposeFilter && (
@@ -265,7 +240,7 @@ export function AppHeader<T>({
               setPurposeFilter(v as DocumentPurpose | "all")
             }
           >
-            <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
+            <SelectTrigger className="w-full min-w-0 sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
               <Filter className="mr-2 h-4 w-4" />
               <SelectValue placeholder="Filter" />
             </SelectTrigger>
@@ -282,49 +257,101 @@ export function AppHeader<T>({
           </Select>
         )}
 
-        {typeFilter && setTypeFilter && (
-          <Select
-            value={typeFilter}
-            onValueChange={(v) => setTypeFilter((v as TaskType) || "all")}
-          >
-            <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <SelectValue placeholder="All Types" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              {(Object.keys(taskTypeConfig) as TaskType[]).map((type) => (
-                <SelectItem key={type} value={type}>
-                  {taskTypeConfig[type].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap sm:items-center gap-2">
+          {outcomeFilter && setOutcomeFilter && (
+            <Select
+              value={outcomeFilter}
+              onValueChange={(v) =>
+                setOutcomeFilter(v as InterviewOutcome | "all")
+              }
+            >
+              <SelectTrigger className="w-full min-w-0 sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter by Outcome" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Outcomes</SelectItem>
+                {(Object.keys(interviewOutcomeType) as InterviewOutcome[]).map(
+                  (outcome) => (
+                    <SelectItem key={outcome} value={outcome}>
+                      {interviewOutcomeType[outcome].label}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+          )}
 
-        {taskStatusFilter && setTaskStatusFilter && (
-          <Select
-            value={taskStatusFilter}
-            onValueChange={(v) => setTaskStatusFilter(v as TaskStatus | "all")}
-          >
-            <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <SelectValue placeholder="All Statuses" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {(Object.keys(taskStatusType) as TaskStatus[]).map((status) => (
-                <SelectItem key={status} value={status}>
-                  {taskStatusType[status].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+          {formatFilter && setFormatFilter && (
+            <Select
+              value={formatFilter}
+              onValueChange={(v) =>
+                setFormatFilter(v as InterviewFormat | "all")
+              }
+            >
+              <SelectTrigger className="w-full min-w-0 sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder="Filter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Formats</SelectItem>
+                {(Object.keys(interviewFormatType) as InterviewFormat[]).map(
+                  (format) => (
+                    <SelectItem key={format} value={format}>
+                      {interviewFormatType[format].label}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+          )}
+
+          {typeFilter && setTypeFilter && (
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => setTypeFilter((v as TaskType) || "all")}
+            >
+              <SelectTrigger className="w-full min-w-0 sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder="All Types" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {(Object.keys(taskTypeConfig) as TaskType[]).map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {taskTypeConfig[type].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
+          {taskStatusFilter && setTaskStatusFilter && (
+            <Select
+              value={taskStatusFilter}
+              onValueChange={(v) =>
+                setTaskStatusFilter(v as TaskStatus | "all")
+              }
+            >
+              <SelectTrigger className="w-full min-w-0 sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-muted-foreground" />
+                  <SelectValue placeholder="All Statuses" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {(Object.keys(taskStatusType) as TaskStatus[]).map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {taskStatusType[status].label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
 
         {defaultAddValue && addNewText && onAddNew && (
           <Button
@@ -361,37 +388,45 @@ export function AppHeader<T>({
           </div>
         )}
 
-        {outcomeFilter && (
-          <div className="hidden sm:flex">
-            <NotificationBell
-              notifications={notifications}
-              setNotifications={setNotifications}
-            />
-          </div>
-        )}
-
-        {!outcomeFilter && (
+        <div
+          className={
+            outcomeFilter ||
+            [
+              "Contacts",
+              "Tasks",
+              "All Applications",
+              "Dashboard",
+              "Documents",
+              "Analytics",
+              "Settings",
+            ].includes(headerTitle)
+              ? "hidden sm:flex"
+              : "flex"
+          }
+        >
           <NotificationBell
             notifications={notifications}
             setNotifications={setNotifications}
           />
-        )}
+        </div>
 
         {profile && (
-          <button
-            onClick={() => router.push("/settings")}
-            className="inline-flex rounded-full hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-          >
-            <Avatar className="h-9 w-9 ">
-              <AvatarImage
-                src={profile?.avatar_url || ""}
-                alt={initials || "User avatar"}
-              />
-              <AvatarFallback className="bg-primary/10 text-lg text-primary">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-          </button>
+          <div className="hidden sm:block">
+            <button
+              onClick={() => router.push("/settings")}
+              className="inline-flex rounded-full hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            >
+              <Avatar className="h-9 w-9 ">
+                <AvatarImage
+                  src={profile?.avatar_url || ""}
+                  alt={initials || "User avatar"}
+                />
+                <AvatarFallback className="bg-primary/10 text-lg text-primary">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          </div>
         )}
       </div>
     </header>
