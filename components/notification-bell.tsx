@@ -62,9 +62,9 @@ export function NotificationBell({ notifications, setNotifications }: Props) {
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-slate-200 bg-white shadow-lg">
+        <div className="absolute right-0 z-50 mt-2 w-[calc(100vw-2rem)] max-w-80 rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-900 sm:w-80">
           {notifications.length === 0 ? (
-            <div className="px-4 py-6 text-sm text-slate-500">
+            <div className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">
               No notifications
             </div>
           ) : (
@@ -73,7 +73,9 @@ export function NotificationBell({ notifications, setNotifications }: Props) {
                 key={item.id}
                 onClick={() => markAsRead(item.id)}
                 className={`flex cursor-pointer items-start justify-between gap-3 border-b border-slate-100 px-4 py-3 last:border-b-0 transition-colors ${
-                  item.read ? "bg-white" : "bg-slate-50"
+                  item.read
+                    ? "bg-white border-slate-100 dark:bg-slate-900 dark:border-slate-800"
+                    : "bg-slate-50 border-slate-100 dark:bg-slate-800/60 dark:border-slate-800"
                 }`}
               >
                 <div className="flex gap-3">
@@ -85,15 +87,17 @@ export function NotificationBell({ notifications, setNotifications }: Props) {
                     <p
                       className={`text-sm ${
                         item.read
-                          ? "font-normal text-slate-600"
-                          : "font-semibold text-slate-900"
+                          ? "font-normal text-slate-600 dark:text-slate-300"
+                          : "font-semibold text-slate-900 dark:text-white"
                       }`}
                     >
                       {item.title}
                     </p>
                     <p
                       className={`text-sm ${
-                        item.read ? "text-slate-400" : "text-slate-500"
+                        item.read
+                          ? "text-slate-400 dark:text-slate-500"
+                          : "text-slate-500 dark:text-slate-400"
                       }`}
                     >
                       {item.body}
@@ -106,7 +110,8 @@ export function NotificationBell({ notifications, setNotifications }: Props) {
                     e.stopPropagation();
                     remove(item.id);
                   }}
-                  className="text-slate-400 hover:text-slate-700"
+                  className="text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-200"
+                  aria-label="Remove notification"
                 >
                   ×
                 </button>
