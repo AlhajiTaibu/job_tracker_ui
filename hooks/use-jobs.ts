@@ -320,9 +320,13 @@ const useEditJob = () => {
         onSettled: async () => {
             await Promise.all([
                 queryClient.refetchQueries({ queryKey: ['jobs'] }),
+                queryClient.invalidateQueries({ queryKey: ["analytics"] }),
                 queryClient.invalidateQueries({ queryKey: ["pipeline-health"] }),
                 queryClient.invalidateQueries({ queryKey: ["application-funnel"] }),
                 queryClient.invalidateQueries({ queryKey: ["weekly-activity"] }),
+                queryClient.invalidateQueries({ queryKey: ["interview-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["role-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["source-analytics"] }),
                 queryClient.invalidateQueries({ queryKey: ["time-in-stage"] }),
                 queryClient.invalidateQueries({ queryKey: ["source-analytics"] }),
                 queryClient.invalidateQueries({ queryKey: ["role-analytics"] }),
@@ -372,9 +376,13 @@ const useDeleteJob = () => {
         onSettled: async () => {
             await Promise.all([
                 queryClient.refetchQueries({ queryKey: ['jobs'] }),
+                queryClient.invalidateQueries({ queryKey: ["analytics"] }),
                 queryClient.invalidateQueries({ queryKey: ["pipeline-health"] }),
                 queryClient.invalidateQueries({ queryKey: ["application-funnel"] }),
                 queryClient.invalidateQueries({ queryKey: ["weekly-activity"] }),
+                queryClient.invalidateQueries({ queryKey: ["interview-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["role-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["source-analytics"] }),
                 queryClient.invalidateQueries({ queryKey: ["time-in-stage"] }),
                 queryClient.invalidateQueries({ queryKey: ["source-analytics"] }),
                 queryClient.invalidateQueries({ queryKey: ["role-analytics"] }),
@@ -428,9 +436,15 @@ const useMoveJob = () => {
         onSettled: async () => {
             await Promise.all([
                 queryClient.refetchQueries({ queryKey: ['jobs'] }),
+                queryClient.invalidateQueries({ queryKey: ["upcoming-interviews"] }),
+                queryClient.invalidateQueries({ queryKey: ["interviews-history"] }),
+                queryClient.invalidateQueries({ queryKey: ["analytics"] }),
                 queryClient.invalidateQueries({ queryKey: ["pipeline-health"] }),
                 queryClient.invalidateQueries({ queryKey: ["application-funnel"] }),
                 queryClient.invalidateQueries({ queryKey: ["weekly-activity"] }),
+                queryClient.invalidateQueries({ queryKey: ["interview-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["role-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["source-analytics"] }),
                 queryClient.invalidateQueries({ queryKey: ["time-in-stage"] }),
                 queryClient.invalidateQueries({ queryKey: ["source-analytics"] }),
                 queryClient.invalidateQueries({ queryKey: ["role-analytics"] }),
