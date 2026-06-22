@@ -358,7 +358,6 @@ function useNotificationBanner(timeout = 5000) {
                 message: payload.notification?.body || "",
                 created_at: new Date().toISOString()
             };
-
             setMessage(nextMessage);
 
             if (timerRef.current) clearTimeout(timerRef.current);

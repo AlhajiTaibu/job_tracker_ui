@@ -123,7 +123,6 @@ export function AppHeader<T>({
 
   useEffect(() => {
     if (!message) return;
-
     setNotifications((current) => {
       const exists = current.some((item) => item.id === message.id);
       if (exists) return current;
