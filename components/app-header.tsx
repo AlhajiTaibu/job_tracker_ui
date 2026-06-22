@@ -21,7 +21,12 @@ import {
   TaskStatus,
   ContactType,
 } from "@/lib/types";
-import { useNotificationBanner } from "@/hooks/use-notification";
+import {
+  useHandleMarkNotificationAsRead,
+  useHandleMarkAllNotificationAsRead,
+  useNotificationBanner,
+  useNotifications,
+} from "@/hooks/use-notification";
 import { useState, useEffect } from "react";
 import { NotificationBell } from "./notification-bell";
 import {
@@ -35,13 +40,7 @@ import { statusConfig } from "@/lib/types";
 import { RefObject } from "react";
 import { UseFormSetValue } from "react-hook-form";
 import { UploadDocumentInput } from "@/lib/schemas/documents";
-
-type Notification = {
-  id: number;
-  title: string;
-  body: string;
-  read?: boolean;
-};
+import { Notification } from "@/lib/types";
 
 type HeaderProps<T> = {
   headerTitle: string;
@@ -114,7 +113,13 @@ export function AppHeader<T>({
       .slice(0, 2)
       .toUpperCase() || "JD";
 
+  const { data: notificationData, isLoading } = useNotifications();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    const res = notificationData?.payload?.data || [];
+    setNotifications(res);
+  }, [isLoading, notificationData]);
 
   useEffect(() => {
     if (!message) return;
@@ -123,7 +128,7 @@ export function AppHeader<T>({
       const exists = current.some((item) => item.id === message.id);
       if (exists) return current;
 
-      return [{ ...message, read: false }, ...current];
+      return [{ ...message, is_read: false }, ...current];
     });
   }, [message]);
 

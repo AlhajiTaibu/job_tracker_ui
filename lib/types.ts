@@ -529,3 +529,22 @@ export interface TaskResponse {
   payload: TaskPayload
   error?: string
 }
+
+export interface Notification {
+  id: string
+  title: string
+  message: string
+  is_read: boolean
+  created_at: string
+}
+
+export interface NotificationPayload {
+  data?: Notification[]
+  next_cursor?: string | null
+}
+
+export interface NotificationResponse {
+  success?: boolean
+  payload: NotificationPayload
+  error?: string
+}
