@@ -8,12 +8,10 @@ import {
   File,
   FileCheck,
   FileText,
-  Filter,
   FolderOpen,
   Link2,
   Paperclip,
   RefreshCw,
-  Search,
   Trash2,
   Loader2,
   Upload,
@@ -23,7 +21,6 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AppSidebar } from "@/components/app-sidebar";
-import { Hamburger } from "@/components/ui/hamburger";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,12 +33,10 @@ import {
 import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Document,
   DocumentStatus,
   DocumentPurpose,
   JobApplication,
   JobApplicationResponse,
-  documentsConfig,
 } from "@/lib/types";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -61,6 +56,7 @@ import {
 import { useJobs } from "@/hooks/use-jobs";
 import DocumentEditFormModal from "@/components/ui/document-edit-form-modal";
 import { useDocumentStore } from "@/hooks/use-document-store";
+import { AppHeader } from "@/components/app-header";
 
 const DocumentPurposes: {
   value: DocumentPurpose;
@@ -275,6 +271,9 @@ export function DocumentManager() {
     reset();
   };
 
+  const description =
+    "Upload, review, track, and link documents to multiple applications.";
+
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
@@ -283,100 +282,18 @@ export function DocumentManager() {
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
-
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-foreground sm:text-xl">
-                Documents
-              </h1>
-              <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-                Upload, review, track, and link documents to multiple
-                applications.
-              </p>
-            </div>
-
-            <div className="sm:hidden">
-              <input
-                ref={quickUploadInputRef}
-                type="file"
-                multiple
-                accept=".pdf,.doc,.docx,.txt"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setValue("file", file, {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                    });
-                  }
-                }}
-              />
-              <Button onClick={() => quickUploadInputRef.current?.click()}>
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <div className="relative flex-1 sm:flex-none">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search documents via company..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 sm:w-64"
-              />
-            </div>
-
-            <Select
-              value={purposeFilter}
-              onValueChange={(v) =>
-                setPurposeFilter(v as DocumentPurpose | "all")
-              }
-            >
-              <SelectTrigger className="w-[120px] sm:w-[220px] h-8 sm:h-10 text-xs sm:text-sm px-2 sm:px-3 shrink-0">
-                <Filter className="mr-2 h-4 w-4" />
-                <SelectValue placeholder="Filter" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Purpose</SelectItem>
-                {(Object.keys(documentsConfig) as DocumentPurpose[]).map(
-                  (purpose) => (
-                    <SelectItem key={purpose} value={purpose}>
-                      {documentsConfig[purpose].label}
-                    </SelectItem>
-                  ),
-                )}
-              </SelectContent>
-            </Select>
-
-            <div className="hidden sm:block">
-              <input
-                ref={uploadInputRef}
-                type="file"
-                multiple
-                accept=".pdf,.doc,.docx,.txt,.png,.jpg,.jpeg"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setValue("file", file, {
-                      shouldValidate: true,
-                      shouldDirty: true,
-                    });
-                  }
-                }}
-              />
-              <Button onClick={() => uploadInputRef.current?.click()}>
-                <Upload className="mr-2 h-4 w-4" />
-                Upload Document
-              </Button>
-            </div>
-          </div>
-        </header>
+        <AppHeader
+          headerTitle="Documents"
+          headerDescription={description}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          setMobileOpen={setMobileOpen}
+          purposeFilter={purposeFilter}
+          setPurposeFilter={setPurposeFilter}
+          uploadInputRef={uploadInputRef}
+          quickUploadInputRef={quickUploadInputRef}
+          setValue={setValue}
+        />
 
         <main className="flex-1 overflow-auto p-4 sm:p-6">
           <div className="mx-auto max-w-7xl space-y-6">
@@ -579,12 +496,12 @@ export function DocumentManager() {
                       {isSubmitting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Uploading.....
+                          Submitting.....
                         </>
                       ) : (
                         <>
                           <Upload className="mr-2 h-4 w-4" />
-                          Upload Document
+                          Submit Document
                         </>
                       )}
                     </Button>

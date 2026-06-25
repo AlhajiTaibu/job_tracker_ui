@@ -445,6 +445,68 @@ export type TaskStatus = "pending" | "completed" | "snoozed" | "cancelled"
 
 export type TaskType = "follow_up" | "confirm" | "reminder" | "thank_you" | "review" | "other"
 
+export const taskStatusType: Record<
+  TaskStatus,
+  { label: string; color: string; bgColor: string }
+> = {
+  pending: {
+    label: "Pending",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-100",
+  },
+  completed: {
+    label: "Completed",
+    color: "text-green-700",
+    bgColor: "bg-green-100",
+  },
+  cancelled: {
+    label: "Cancelled",
+    color: "text-red-700",
+    bgColor: "bg-red-100",
+  },
+  snoozed: {
+    label: "Snoozed",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
+  },
+};
+
+export const taskTypeConfig: Record<
+  TaskType,
+  { label: string; color: string; bgColor: string }
+> = {
+  follow_up: {
+    label: "Follow Up",
+    color: "text-yellow-700",
+    bgColor: "bg-yellow-100",
+  },
+  thank_you: {
+    label: "Thank You",
+    color: "text-green-700",
+    bgColor: "bg-green-100",
+  },
+  confirm: {
+    label: "Confirmation",
+    color: "text-red-700",
+    bgColor: "bg-red-100",
+  },
+  reminder: {
+    label: "Reminder",
+    color: "text-blue-700",
+    bgColor: "bg-blue-100",
+  },
+  review: {
+    label: "Review",
+    color: "text-purple-700",
+    bgColor: "bg-purple-100",
+  },
+  other: {
+    label: "Other",
+    color: "text-gray-700",
+    bgColor: "bg-gray-100",
+  },
+};
+
 export interface Task {
   id: string
   job_application_id?: string
@@ -465,5 +527,24 @@ export interface TaskPayload {
 export interface TaskResponse {
   success?: boolean
   payload: TaskPayload
+  error?: string
+}
+
+export interface Notification {
+  id: string
+  title: string
+  message: string
+  is_read: boolean
+  created_at: string
+}
+
+export interface NotificationPayload {
+  data?: Notification[]
+  next_cursor?: string | null
+}
+
+export interface NotificationResponse {
+  success?: boolean
+  payload: NotificationPayload
   error?: string
 }

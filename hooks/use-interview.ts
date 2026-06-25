@@ -213,7 +213,9 @@ const useAddInterview = () => {
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["upcoming-interviews"] });
             queryClient.invalidateQueries({ queryKey: ["interviews-history"] });
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
+            queryClient.invalidateQueries({ queryKey: ["analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["interview-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ['jobs'] })
         },
     });
 }
@@ -260,7 +262,9 @@ const useUpdateInterview = () => {
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["upcoming-interviews"] });
             queryClient.invalidateQueries({ queryKey: ["interviews-history"] });
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
+            queryClient.invalidateQueries({ queryKey: ["analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["interview-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ['jobs'] })
         },
     });
 }
@@ -302,7 +306,9 @@ const useDeleteInterview = () => {
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["upcoming-interviews"] });
             queryClient.invalidateQueries({ queryKey: ["interviews-history"] });
-            queryClient.invalidateQueries({ queryKey: ['jobs'] })
+            queryClient.invalidateQueries({ queryKey: ["analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ["interview-analytics"] }),
+                queryClient.invalidateQueries({ queryKey: ['jobs'] })
         },
     });
 }

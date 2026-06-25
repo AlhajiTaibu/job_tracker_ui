@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Plus,
   Search,
@@ -14,7 +14,6 @@ import {
   Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { AppSidebar } from "@/components/app-sidebar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -26,13 +25,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { Hamburger } from "@/components/ui/hamburger";
-import { Contact } from "@/lib/types";
+import { Contact, ContactType } from "@/lib/types";
 import { AddContactSheet } from "@/components/add-contact-sheet";
 import { ViewContactSheet } from "@/components/view-contact-sheet";
 import { useContactStore } from "@/hooks/use-contact-store";
 import { useContacts, useHandleDeleteContact } from "@/hooks/use-contact";
 import LinkContactToApplicationSheet from "@/components/link-contact-to-application-sheet";
+import { AppHeader } from "@/components/app-header";
 
 const typeConfig = {
   recruiter: {
@@ -123,6 +122,7 @@ export default function ContactsClient() {
   }, [searchQuery]);
 
   const filteredContacts = contacts;
+  const description = `${filteredContacts.length} professional contact ${filteredContacts.length === 1 ? "" : "s"}`;
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -132,45 +132,16 @@ export default function ContactsClient() {
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-foreground sm:text-xl">
-                Contacts
-              </h1>
-              <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-                {filteredContacts.length} professional contact
-                {filteredContacts.length === 1 ? "" : "s"}
-              </p>
-            </div>
-            <Button
-              size="sm"
-              className="sm:hidden"
-              onClick={() => handleAddClick("referral")}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="relative flex-1 sm:flex-none">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search contacts..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 sm:w-64"
-              />
-            </div>
-            <Button
-              className="hidden sm:flex"
-              onClick={() => handleAddClick("referral")}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Contact
-            </Button>
-          </div>
-        </header>
+        <AppHeader<ContactType>
+          headerTitle="Contacts"
+          headerDescription={description}
+          searchQuery={searchQuery}
+          defaultAddValue={"referral" as ContactType}
+          addNewText="Add Contact"
+          setSearchQuery={setSearchQuery}
+          setMobileOpen={setMobileOpen}
+          onAddNew={handleAddClick}
+        />
 
         <main className="flex-1 overflow-auto p-4 sm:p-6">
           {filteredContacts.length === 0 ? (
