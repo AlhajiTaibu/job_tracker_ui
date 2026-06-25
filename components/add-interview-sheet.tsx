@@ -596,7 +596,7 @@ export function AddInterviewSheet({
                     id="date"
                     type="date"
                     {...register("date")}
-                    required
+                    // required
                   />
                 </InputGroup>
               </Field>
@@ -619,7 +619,7 @@ export function AddInterviewSheet({
                     id="time"
                     type="time"
                     {...register("time")}
-                    required
+                    // required
                   />
                 </InputGroup>
               </Field>

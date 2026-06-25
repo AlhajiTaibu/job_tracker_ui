@@ -34,9 +34,9 @@ import {
   useHandleUploadAvatar,
   useProfileStore,
 } from "@/hooks/use-profile";
-import { Hamburger } from "@/components/ui/hamburger";
 import { Profile } from "@/lib/types";
 import { useTheme } from "next-themes";
+import { AppHeader } from "@/components/app-header";
 
 export default function SettingsClient() {
   const router = useRouter();
@@ -157,19 +157,11 @@ export default function SettingsClient() {
       />
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-foreground sm:text-xl">
-                Settings
-              </h1>
-              <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-                Manage your account and preferences{" "}
-              </p>
-            </div>
-          </div>
-        </header>
+        <AppHeader
+          headerTitle="Settings"
+          headerDescription={"Manage your account and preferences"}
+          setMobileOpen={setMobileOpen}
+        />
 
         <main className="flex-1 overflow-auto p-4 sm:p-6">
           <div className="mx-auto max-w-2xl space-y-6">

@@ -1,22 +1,17 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Menu, Plus, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { AppSidebar } from "@/components/app-sidebar";
 import { KanbanColumn } from "@/components/kanban-column";
 import { AddJobSheet } from "@/components/add-job-sheet";
 import { ViewJobSheet } from "@/components/view-job-sheet";
 import type { JobApplication, JobStatus } from "@/lib/types";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useJobs } from "@/hooks/use-jobs";
 import {
   DndContext,
   DragEndEvent,
   DragStartEvent,
-  PointerSensor,
   MouseSensor,
   TouchSensor,
   useSensor,
@@ -25,8 +20,8 @@ import {
 import { useJobStore } from "@/hooks/use-job-store";
 import { useHandleMove } from "@/hooks/use-jobs";
 import { useProfile } from "@/hooks/use-profile";
-import { Hamburger } from "@/components/ui/hamburger";
 import { Profile } from "@/lib/types";
+import { AppHeader } from "@/components/app-header";
 
 const columns: { status: JobStatus; title: string; color: string }[] = [
   { status: "saved", title: "Saved", color: "bg-slate-400" },
@@ -181,15 +176,9 @@ export default function DashboardClient() {
   ).length;
   const { data: profileData } = useProfile();
   const profile = profileData?.payload ?? ({} as Profile);
-  const initials =
-    `${profile?.first_name} ${profile?.last_name}`
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "JD";
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const description = `${activeApplications} active out of ${totalApplications} total`;
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -200,59 +189,17 @@ export default function DashboardClient() {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex flex-col gap-4 border-b border-border bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <Hamburger setMobileOpen={() => setMobileOpen((prev) => !prev)} />
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-foreground sm:text-xl">
-                Dashboard
-              </h1>
-              <p className="mt-0.5 text-xs text-muted-foreground sm:text-sm">
-                {activeApplications} active out of {totalApplications} total
-              </p>
-            </div>
-            <Button
-              size="sm"
-              onClick={() => handleAddClick("saved")}
-              className="sm:hidden"
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="relative flex-1 sm:flex-none">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 sm:w-64"
-              />
-            </div>
-
-            <Button
-              onClick={() => handleAddClick("saved")}
-              className="hidden sm:flex"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Application
-            </Button>
-            <button
-              onClick={() => router.push("/settings")}
-              className="inline-flex rounded-full hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            >
-              <Avatar className="h-9 w-9 ">
-                <AvatarImage
-                  src={profile?.avatar_url || ""}
-                  alt={initials || "User avatar"}
-                />
-                <AvatarFallback className="bg-primary/10 text-lg text-primary">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-            </button>
-          </div>
-        </header>
+        <AppHeader<JobStatus>
+          headerTitle="Dashboard"
+          headerDescription={description}
+          searchQuery={searchQuery}
+          profile={profile}
+          defaultAddValue={"saved" as JobStatus}
+          addNewText="Add Application"
+          setSearchQuery={setSearchQuery}
+          setMobileOpen={setMobileOpen}
+          onAddNew={handleAddClick}
+        />
 
         {/* Kanban Board */}
         <main className="flex-1 overflow-auto p-4 sm:p-6">
